@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class GridBlock 
 {
-    public Vector3 location;
+    //public Vector3 location;
+    public Vector2Int location;
     public bool isOccupied;
     public GameObject objectOnBlock;
 
     // Constructor
-    public GridBlock(float x, float y, float z)
+    public GridBlock(int x, int y)
     {
-        this.location = new Vector3(x, y, z);
+        this.location = new Vector2Int(x, y);
         this.isOccupied = false;
         this.objectOnBlock = null;
     }

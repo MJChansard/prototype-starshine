@@ -14,7 +14,7 @@ public class PlayerManager : MonoBehaviour
 
     #region Public Attributes
 
-    public Vector3 playerMoveTo;
+    public Vector3 playerDestination;
     public GridBlock parentBlock;
     
     public int playerX
@@ -30,13 +30,13 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
     #region Private Attributes
-    Experiment gameManager;
+    GridManager gridManager;
 
     #endregion
 
     private void Start()
     {
-        gameManager = GameObject.FindWithTag("GameController").GetComponent<Experiment>();
+        gridManager = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
     }
 
     void Update()
@@ -50,32 +50,32 @@ public class PlayerManager : MonoBehaviour
         {
 
             transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
-            playerMoveTo = transform.position + new Vector3(0f, 1f, 0f);            
+            playerDestination = transform.position + new Vector3(0f, 1f, 0f);            
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
             transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
-            playerMoveTo = transform.position + new Vector3(0f, -1f, 0f);
+            playerDestination = transform.position + new Vector3(0f, -1f, 0f);
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
-            playerMoveTo = transform.position + new Vector3(-1f, 0f, 0f);
+            playerDestination = transform.position + new Vector3(-1f, 0f, 0f);
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
-            playerMoveTo = transform.position + new Vector3(1f, 0f, 0f);
+            playerDestination = transform.position + new Vector3(1f, 0f, 0f);
         }
         
-        Debug.Log("Current Vector3: " + transform.position + ". Target Vector3: " + playerMoveTo);
+        //Debug.Log("Current Vector3: " + transform.position + ". Target Vector3: " + playerMoveTo);
         
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            gameManager.RequestMove(this.gameObject, transform.position, playerMoveTo);
+            gridManager.RequestMove(this.gameObject, playerDestination);
         }
     }
 
