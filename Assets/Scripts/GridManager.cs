@@ -43,27 +43,9 @@ public class GridManager : MonoBehaviour
 
         InitializeGrid(debugGridPrefab, 0f);
 
-        Instantiate
-        (
-            playerPrefab,
-            //levelGrid[3, 4].location,
-            GridToWorld(new Vector2Int(5, 4)),
-            Quaternion.identity
-        );
-
-        player = GameObject.FindGameObjectWithTag("Player");
+        player = Instantiate(playerPrefab);
+        PlaceObject(player, new Vector2Int(5, 4));
         playerManager = player.GetComponent<PlayerManager>();
-
-        AssignObject
-        (
-            levelGrid
-            [
-                playerManager.playerX,
-                playerManager.playerY
-            ],
-            player
-        );
-
     }
 
 
@@ -120,7 +102,7 @@ public class GridManager : MonoBehaviour
                 Instantiate
                 (
                     gridPoint,
-                    new Vector3(y + offset, x + offset, 0f),    
+                    new Vector3(y + offset, x + offset, 0f),
                     Quaternion.identity,
                     gameController.transform
                 );
@@ -150,44 +132,57 @@ public class GridManager : MonoBehaviour
             (int)worldLocation.x * gridSpacing,
             (int)worldLocation.y * gridSpacing
         );
-            
+
     }
 
 
-    private void AssignObject(GridBlock gridBlock, GameObject gameObject)
+    public void PlaceObject(GameObject gameObject, Vector2Int position)
     {
-        // The gridBlock parameter needs to reference the GridBlock in levelGrid
-        // The gameObject parameter needs to reference the object in the GridBlock
-        // IsOccupied parameter needs to be updated
-
-        GridBlock target = levelGrid[(int)gridBlock.location.x, (int)gridBlock.location.y];
+        GridBlock target = levelGrid[position.x, position.y];  // Watch for out of bounds values
         if (!target.isOccupied)
         {
             target.isOccupied = true;
             target.objectOnBlock = gameObject;
+
+            gameObject.transform.position = GridToWorld(position);
         }
 
         return;
     }
 
-    /*  Update to 
-     * 
-     * 
-     * 
-     */
-    public void RequestMove(GameObject gameObject, Vector3 destination)
+    public void RequestMoveRelative(GameObject gameObject, Vector2Int delta)
     {
-        int currentGridRow = WorldToGrid(gameObject.transform.position).x;
-        int currentGridCol = WorldToGrid(gameObject.transform.position).y;
-        GridBlock fromBlock = levelGrid[currentGridRow, currentGridCol];
+        for (int x = 0; x < levelGrid.GetLength(0); x++)
+        {
+            // Iterate through rows.
+            for (int y = 0; y < levelGrid.GetLength(1); y++)
+            {
+                if (levelGrid[x, y].objectOnBlock == gameObject)
+                {
+                    Debug.Log("GridBlock located.");
+                    Vector2Int position = new Vector2Int(x, y);
+                    RequestMove(levelGrid[x, y].objectOnBlock, position, position + delta);
+                    return;
+                }
+            }
+        }
 
-        int targetGridRow = WorldToGrid(destination).x;
-        int targetGridCol = WorldToGrid(destination).y;
-        GridBlock toBlock = levelGrid[targetGridRow, targetGridCol];
-        
+        Debug.LogError("Game Object not found!");
+    }
+
+
+    public void RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
+    {
+        GridBlock fromBlock = levelGrid[from.x, from.y];
+        GridBlock toBlock = levelGrid[to.x, to.y];
+
         if (!toBlock.isOccupied)
         {
             PerformMove(gameObject, fromBlock, toBlock);
+        }
+        else
+        {
+            Debug.Log("Destination block is occupied fool!");
         }
     }
 
@@ -199,10 +194,18 @@ public class GridManager : MonoBehaviour
         // Update [to.isOccupied] = true
         // update [from.IsOccupied] = false
 
-        gameObject.transform.position = new Vector3(to.location.x, to.location.y, 0f);
+        gameObject.transform.position = GridToWorld(to.location);
         to.isOccupied = true;
         to.objectOnBlock = gameObject;
         from.isOccupied = false;
         from.objectOnBlock = null;
     }
+
+    public void updateBoard()
+    {
+        // This Method will need to gather all of the non-player objects on the board
+        // and update the board with each of their behavior.
+
+    }
+
 }

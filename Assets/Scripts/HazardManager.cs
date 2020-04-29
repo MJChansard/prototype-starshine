@@ -6,7 +6,7 @@ public class HazardManager : MonoBehaviour
 {
     #region Inspector Attributes
     [SerializeField]
-    GameObject[] hazardArray;
+    GameObject[] hazardPrefabs;
     #endregion
 
     #region
@@ -17,12 +17,8 @@ public class HazardManager : MonoBehaviour
     {
         gm = GetComponent<GridManager>();
 
-        Instantiate
-        (
-            hazardArray[0],
-            gm.GridToWorld(new Vector2Int(7, 7)),
-            Quaternion.identity
-        );
+        GameObject asteroid = Instantiate(hazardPrefabs[0]);
+        gm.PlaceObject(asteroid, new Vector2Int(7, 7));
     }
 
     // Update is called once per frame
