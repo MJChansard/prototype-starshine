@@ -60,14 +60,11 @@ public class PlayerManager : MonoBehaviour
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
             delta = Vector2Int.right;
         }
-        
-        //Debug.Log("Current Vector3: " + transform.position + ". Target Vector3: " + playerMoveTo);
-        
+               
         if (Input.GetKeyDown(KeyCode.Space))
         {
             gridManager.RequestMoveRelative(this.gameObject, delta);
-            Debug.Log("Move requested.");
-            //gridManger.UpdateBoard();
+            gridManager.UpdateBoard();
         }
     }
 }

@@ -18,7 +18,8 @@ public class HazardManager : MonoBehaviour
         gm = GetComponent<GridManager>();
 
         GameObject asteroid = Instantiate(hazardPrefabs[0]);
-        gm.PlaceObject(asteroid, new Vector2Int(7, 7));
+        gm.PlaceObject(asteroid, new Vector2Int(6, 6));
+        gm.hazards.Add(asteroid);
     }
 
     // Update is called once per frame

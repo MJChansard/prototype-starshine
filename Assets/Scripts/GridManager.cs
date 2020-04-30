@@ -5,10 +5,9 @@ using UnityEngine;
 public class GridManager : MonoBehaviour
 {
     #region Public Attributes
-
     public GridBlock[,] levelGrid;
-    //public bool 
-
+    public List<GameObject> hazards = new List<GameObject>();
+    //public List<int> hazards = new List<int>();
     #endregion
 
 
@@ -170,30 +169,38 @@ public class GridManager : MonoBehaviour
         Debug.LogError("Game Object not found!");
     }
 
-
     public void RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
     {
+        // Debug.Log(gameObject.name + " requesting move " + from + " to "+ to + ".");
+        // QUESTION: Is nesting ifs better than multiple conditionals?
         GridBlock fromBlock = levelGrid[from.x, from.y];
-        GridBlock toBlock = levelGrid[to.x, to.y];
+        GridBlock toBlock;
 
-        if (!toBlock.isOccupied)
+        // Ensure destination exists within the grid
+        if (to.x >= 0 && to.x <= levelGrid.GetLength(0) && to.y >= 0 && to.y <= levelGrid.GetLength(1))
         {
-            PerformMove(gameObject, fromBlock, toBlock);
+            toBlock = levelGrid[to.x, to.y];
+
+            if (!toBlock.isOccupied)
+            {
+                PerformMove(gameObject, fromBlock, toBlock);
+            }
+            else
+            {
+                Debug.Log("Destination block is occupied fool!");
+            }
         }
         else
         {
-            Debug.Log("Destination block is occupied fool!");
+            Debug.Log(gameObject.name + " requesting a move to an off-grid destination.");
+            RemoveObject(gameObject, fromBlock);
         }
+                
+        
     }
-
 
     private void PerformMove(GameObject gameObject, GridBlock from, GridBlock to)
     {
-        // Convert [to] to a Vector3 and store as [destination]
-        // Move [gameObject] to [destination]
-        // Update [to.isOccupied] = true
-        // update [from.IsOccupied] = false
-
         gameObject.transform.position = GridToWorld(to.location);
         to.isOccupied = true;
         to.objectOnBlock = gameObject;
@@ -201,11 +208,32 @@ public class GridManager : MonoBehaviour
         from.objectOnBlock = null;
     }
 
-    public void updateBoard()
+    private void RemoveObject(GameObject gameObject, GridBlock last)
+    {
+        Debug.Log("RemoveObject() called.");
+        Debug.Log("Number of hazards prior to removal: " + hazards.Count);
+        Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
+        hazards.Remove(gameObject);
+        Debug.Log("Number of hazards following removal: " + hazards.Count);
+        Destroy(gameObject);
+        last.isOccupied = false;
+        
+    }
+
+    public void UpdateBoard()
     {
         // This Method will need to gather all of the non-player objects on the board
         // and update the board with each of their behavior.
 
+        if (hazards.Count > 0)
+        {
+            foreach (GameObject hazard in hazards)
+            {
+                MovePattern move = hazard.GetComponent<MovePattern>();
+                Debug.Log(hazard.name + " is moving by " + move.delta);
+                RequestMoveRelative(hazard, move.delta);
+            }
+        }
+        else return;
     }
-
 }

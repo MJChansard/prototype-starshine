@@ -211,6 +211,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 031d87d41a04ea540bdde3ddb13339a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hazards: []
   gridColumns: 10
   gridRows: 8
   gridSpacing: 1
@@ -244,7 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3068bf11eca49e64ab1537dfbc9c5d19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hazardArray:
+  hazardPrefabs:
   - {fileID: 226724313900393986, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
 --- !u!1 &534669902
 GameObject:
