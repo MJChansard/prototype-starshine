@@ -247,6 +247,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hazardPrefabs:
   - {fileID: 226724313900393986, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
+  - {fileID: 1184875554948233082, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
 --- !u!1 &534669902
 GameObject:
   m_ObjectHideFlags: 0

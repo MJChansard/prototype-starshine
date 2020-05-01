@@ -12,15 +12,15 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
 
-    #region Public Attributes
+    #region Public Properties
 
-    public GridBlock parentBlock;
+    
 
     #endregion
 
-    #region Private Attributes
-    GridManager gridManager;
-    Vector2Int delta = Vector2Int.zero;
+    #region Private Fields
+    private GridManager gridManager;
+    private Vector2Int delta = Vector2Int.zero;
 
     #endregion
 

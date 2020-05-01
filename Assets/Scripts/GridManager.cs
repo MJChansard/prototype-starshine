@@ -4,20 +4,19 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    #region Public Attributes
+    #region Public Properties
+    
     public GridBlock[,] levelGrid;
+    public int gridWidth = 10;  //QUESTION: Make this private fields but have a public property?
+    public int gridHeight = 8;
+
     public List<GameObject> hazards = new List<GameObject>();
     //public List<int> hazards = new List<int>();
+
     #endregion
 
 
-    #region Inspector Attributes
-    [SerializeField]
-    private int gridColumns = 10;
-
-    [SerializeField]
-    private int gridRows = 8;
-
+    #region Inspector Attributes    
     [SerializeField]
     private int gridSpacing = 1;
 
@@ -57,21 +56,32 @@ public class GridManager : MonoBehaviour
 
     private void InitializeGrid()
     {
-        levelGrid = new GridBlock[gridRows, gridColumns];
+        levelGrid = new GridBlock[gridWidth, gridHeight];
         Debug.Log("Object: [levelGrid] created.");
         Debug.Log(levelGrid.Length);
 
         // Iterate through columns.
-        for (int x = 0; x < gridRows; x++)
+        for (int x = 0; x < gridWidth; x++)
         {
             // Iterate through rows.
-            for (int y = 0; y < gridColumns; y++)
+            for (int y = 0; y < gridHeight; y++)
             {
                 // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
 
                 // Add Vector2Int objects
                 levelGrid[x, y].location = new Vector2Int(x, y);
+
+                // Update canSpawn property
+                if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                }
+
+                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                }
             }
         }
 
@@ -81,15 +91,15 @@ public class GridManager : MonoBehaviour
 
     private void InitializeGrid(GameObject gridPoint, float offset)
     {
-        levelGrid = new GridBlock[gridRows, gridColumns];
+        levelGrid = new GridBlock[gridWidth, gridHeight];
         Debug.Log("Object: [levelGrid] created.");
         Debug.Log(levelGrid.Length);
 
         // Iterate through columns.
-        for (int x = 0; x < gridRows; x++)
+        for (int x = 0; x < gridWidth; x++)
         {
             // Iterate through rows.
-            for (int y = 0; y < gridColumns; y++)
+            for (int y = 0; y < gridHeight; y++)
             {
                 // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
@@ -97,11 +107,22 @@ public class GridManager : MonoBehaviour
                 // Add Vector2Int objects
                 levelGrid[x, y].location = new Vector2Int(x, y);
 
+                // Update canSpawn property
+                if(levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                }
+
+                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                }
+
                 // Create Debug grid.  Note y and x are inversed in the Vector3 intentionally
                 Instantiate
                 (
                     gridPoint,
-                    new Vector3(y + offset, x + offset, 0f),
+                    new Vector3(x + offset, y + offset, 0f),
                     Quaternion.identity,
                     gameController.transform
                 );
@@ -171,11 +192,12 @@ public class GridManager : MonoBehaviour
 
     public void RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
     {
-        // Debug.Log(gameObject.name + " requesting move " + from + " to "+ to + ".");
-        // QUESTION: Is nesting ifs better than multiple conditionals?
+        Debug.Log(gameObject.name + " requesting move " + from + " to "+ to + ".");
+        
         GridBlock fromBlock = levelGrid[from.x, from.y];
         GridBlock toBlock;
 
+        // QUESTION: Is nesting ifs better than multiple conditionals?
         // Ensure destination exists within the grid
         if (to.x >= 0 && to.x <= levelGrid.GetLength(0) && to.y >= 0 && to.y <= levelGrid.GetLength(1))
         {
@@ -195,8 +217,6 @@ public class GridManager : MonoBehaviour
             Debug.Log(gameObject.name + " requesting a move to an off-grid destination.");
             RemoveObject(gameObject, fromBlock);
         }
-                
-        
     }
 
     private void PerformMove(GameObject gameObject, GridBlock from, GridBlock to)
@@ -216,8 +236,7 @@ public class GridManager : MonoBehaviour
         hazards.Remove(gameObject);
         Debug.Log("Number of hazards following removal: " + hazards.Count);
         Destroy(gameObject);
-        last.isOccupied = false;
-        
+        last.isOccupied = false;   
     }
 
     public void UpdateBoard()
