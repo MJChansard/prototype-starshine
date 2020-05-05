@@ -7,7 +7,7 @@ public class GridManager : MonoBehaviour
     #region Public Properties
     
     public GridBlock[,] levelGrid;
-    public int gridWidth = 10;  //QUESTION: Make this private fields but have a public property?
+    public int gridWidth = 10;  //QUESTION: Make these private fields but have a public property?
     public int gridHeight = 8;
 
     public List<GameObject> hazards = new List<GameObject>();

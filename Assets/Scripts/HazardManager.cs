@@ -11,10 +11,24 @@ public class HazardManager : MonoBehaviour
 
     #region Private Fields
     private GridManager gm;
-    private List<GridBlock> availableSpawns = new List<GridBlock>();
+
+    private int gridCornerLL;
+    private int gridCornerLR;
+    private int gridCornerUL;
+    private int gridCornerUR;
+
+    private int gridMinX;
+    private int gridMaxX;
+    private int gridMinY;
+    private int gridMaxY;
     
+    private List<GridBlock> spawnMoveUp = new List<GridBlock>();
+    private List<GridBlock> spawnMoveDown = new List<GridBlock>();
+    private List<GridBlock> spawnMoveLeft = new List<GridBlock>();
+    private List<GridBlock> spawnMoveRight = new List<GridBlock>();
+    //private List<GridBlock> spawnMultiMove = new List<GridBlock>();
     #endregion
-    
+
     void Start()
     {
         gm = GetComponent<GridManager>();
@@ -36,105 +50,90 @@ public class HazardManager : MonoBehaviour
     }
 
     private void UpdateSpawnLocations()
-    { 
-        // Generate List of available hazard spawn locations
-        for (int x = 0; x < gm.gridWidth; x ++)
+    {
+        int colRange = gm.gridWidth - 1;    // 10 - 1 = 9
+        int rowRange = gm.gridHeight - 1;   // 8 - 1 = 7
+
+        // Populate spawnMoveUp List and populate spawnMoveDown List
+        for (int x = 1; x < colRange; x++)
         {
-            for (int y = 0; y < gm.gridHeight; y++)
+            if (gm.levelGrid[x, 0].canSpawn)
             {
-                if (!gm.levelGrid[x, y].isOccupied && gm.levelGrid[x, y].canSpawn == true)
-                {
-                    availableSpawns.Add(gm.levelGrid[x, y]);
-                }
+                spawnMoveUp.Add(gm.levelGrid[x, 0]);
+
+            }
+
+            if (gm.levelGrid[x, rowRange].canSpawn)
+            {
+                spawnMoveDown.Add(gm.levelGrid[x, rowRange]);
+            }
+        }
+
+        // Populate spawnMoveRight List and populate spawnMoveLeft List
+        for (int y = 1; y < rowRange; y++)
+        {
+            if (gm.levelGrid[0, y].canSpawn)
+            {
+                spawnMoveRight.Add(gm.levelGrid[0, y]);
+                
+            }
+
+            if(gm.levelGrid[colRange, y].canSpawn)
+            {
+                spawnMoveLeft.Add(gm.levelGrid[colRange, y]);
             }
         }
     }
 
     private void PrepareHazard()
     {
-        int locationIndex = Random.Range(0, availableSpawns.Count);
+        /*  SUMMARY
+         *   - Randomly select a spawn location
+         *   - Randomly select a hazard to spawn
+         *   - Activate hazard spawn movement pattern based on spawn location
+         * * * */
+
+        // Local variables
         int hazardType = Random.Range(0, hazardPrefabs.Length);
+        int spawnAxis = Random.Range(1, 4);
+        int spawnIndex;
+        Vector2Int spawnPosition = new Vector2Int();
 
+        // Spawn hazard & save reference to its <MovePattern>
         GameObject spawn = Instantiate(hazardPrefabs[hazardType]);
+        Debug.Log("Hazard to Spawn: " + spawn);
         MovePattern spawnMovement = spawn.GetComponent<MovePattern>();
-        
-        Vector2Int position = availableSpawns[locationIndex].location;
 
-        int randomlyMove = Random.Range(1, 10);
-        // Handle hazards spawning on left side of grid
-        if (position.x == 0)
+        switch (spawnAxis)
         {
-            if (position.y > 0 && position.y < gm.gridHeight)
-            {
-                spawnMovement.SetMovePatternRight(spawnMovement.moveRate);
-            }
-            else if (position.y == 0)
-            {
-                if (randomlyMove < 5)
-                {
-                    spawnMovement.SetMovePatternRight(spawnMovement.moveRate);
-                }
-                else
-                {
-                    spawnMovement.SetMovePatternUp(spawnMovement.moveRate);
-                }
-            }
-            else
-            {               
-                if (randomlyMove < 5)
-                {
-                    spawnMovement.SetMovePatternRight(spawnMovement.moveRate);
-                }
-                else
-                {
-                    spawnMovement.SetMovePatternDown(spawnMovement.moveRate);
-                }
-            }
-        }
+            case 1:
+                spawnIndex = Random.Range(0, spawnMoveUp.Count);
+                spawnPosition = spawnMoveUp[spawnIndex].location;
+                spawnMovement.SetMovePatternUp(spawnMovement.moveRate);
 
-        // Handle hazards spawning on right side of grid
-        if (position.x == gm.gridWidth - 1)
-        {
-            if (position.y > 0 && position.y < gm.gridHeight - 1)
-            {
+                Debug.Log("Selected spawnPosition: " + spawnPosition);
+                break;
+            case 2:
+                spawnIndex = Random.Range(0, spawnMoveDown.Count);
+                spawnPosition = spawnMoveDown[spawnIndex].location;
+                spawnMovement.SetMovePatternDown(spawnMovement.moveRate);
+                break;
+            case 3:
+                spawnIndex = Random.Range(0, spawnMoveLeft.Count);
+                spawnPosition = spawnMoveLeft[spawnIndex].location;
                 spawnMovement.SetMovePatternLeft(spawnMovement.moveRate);
-            }
-            else if (position.y == 0)
-            {
-                if (randomlyMove < 5)
-                {
-                    spawnMovement.SetMovePatternLeft(spawnMovement.moveRate);
-                }
-                else
-                {
-                    spawnMovement.SetMovePatternUp(spawnMovement.moveRate);
-                }
-            }
-            else
-            {
-                if (randomlyMove < 5)
-                {
-                    spawnMovement.SetMovePatternLeft(spawnMovement.moveRate);
-                }
-                else
-                {
-                    spawnMovement.SetMovePatternDown(spawnMovement.moveRate);
-                }
-            }
+                break;
+            case 4:
+                spawnIndex = Random.Range(0, spawnMoveRight.Count);
+                spawnPosition = spawnMoveRight[spawnIndex].location;
+                spawnMovement.SetMovePatternRight(spawnMovement.moveRate);
+                break;
         }
+        Debug.Log("Selected spawnPosition: " + spawnPosition);
+        Debug.Log("Selected hazard move rate: " + spawnMovement.moveRate);
+        Debug.Log("Selected hazard move delta: " + spawnMovement.delta);
 
-        // Handle hazard spawning on bottom of grid
-        if (position.y == 0 && position.x < gm.gridWidth - 1)
-        { 
-            spawnMovement.SetMovePatternUp(spawnMovement.moveRate);
-        }
-        
-        if (position.y == gm.gridHeight - 1)
-        {
-            spawnMovement.SetMovePatternDown(spawnMovement.moveRate);
-        }
-            
-        gm.PlaceObject(spawn, position);
+        gm.PlaceObject(spawn, spawnPosition);
         gm.hazards.Add(spawn);
 
         // TODO
