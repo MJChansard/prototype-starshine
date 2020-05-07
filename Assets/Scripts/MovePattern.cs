@@ -6,6 +6,7 @@ public class MovePattern : MonoBehaviour
 {
     public Vector2Int delta;
     public int moveRate;
+    // ticksPerMove;
 
     public Vector2Int SetMovePatternUp(int distance)
     {
@@ -15,6 +16,11 @@ public class MovePattern : MonoBehaviour
         }
 
         return delta;
+
+        // Store velocity float
+        // If velocity == 0.5, add value
+        // When value hits threshold PerformMove()
+        // Subtract 1 from value to "reset"
     }
 
     public Vector2Int SetMovePatternDown(int distance)

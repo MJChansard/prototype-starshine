@@ -211,9 +211,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 031d87d41a04ea540bdde3ddb13339a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridWidth: 10
+  gridHeight: 8
   hazards: []
-  gridColumns: 10
-  gridRows: 8
   gridSpacing: 1
   debugGridPrefab: {fileID: 8729873483316762884, guid: 8da4799ec3257044095208a94e8a610b,
     type: 3}

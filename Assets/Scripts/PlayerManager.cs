@@ -8,6 +8,10 @@ public class PlayerManager : MonoBehaviour
 
     [SerializeField]
     private float speed = 2.0f;
+    [SerializeField]
+    private Transform weaponSource;
+    [SerializeField]
+    private GameObject missile;
 
     #endregion
 
@@ -32,6 +36,7 @@ public class PlayerManager : MonoBehaviour
     void Update()
     {
         Movement();
+        FireWeapon();
     }
 
     void Movement()
@@ -63,8 +68,17 @@ public class PlayerManager : MonoBehaviour
                
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            gridManager.RequestMoveRelative(this.gameObject, delta);
+            GridBlock current = gridManager.FindGridBlockContainingObject(this.gameObject);
+            gridManager.RequestMove(this.gameObject, current.location, current.location + delta);
             gridManager.UpdateBoard();
+        }
+    }
+
+    void FireWeapon()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Instantiate(missile, weaponSource.position, weaponSource.rotation);
         }
     }
 }

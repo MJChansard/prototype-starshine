@@ -7,13 +7,7 @@ public class GridBlock
     public Vector2Int location;
     public GameObject objectOnBlock;
     public bool isOccupied;
-    
     public bool canSpawn;
-    public bool validMoveUp;
-    public bool validMoveDown;
-    public bool validMoveLeft;
-    public bool validMoveRight;
-    
 
     // Constructor
     public GridBlock(int x, int y)

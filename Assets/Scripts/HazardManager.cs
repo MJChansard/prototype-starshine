@@ -32,9 +32,10 @@ public class HazardManager : MonoBehaviour
     void Start()
     {
         gm = GetComponent<GridManager>();
+ //     gm.OnUpdateBoard += //new function goes here when event is heard
 
-        Debug.Log("gridWidth: " + gm.gridWidth);
-        Debug.Log("gridHeight: " + gm.gridHeight);
+        Debug.Log("gridWidth: " + gm.GridWidth);
+        Debug.Log("gridHeight: " + gm.GridHeight);
 
         UpdateSpawnLocations();
         PrepareHazard();
@@ -51,8 +52,8 @@ public class HazardManager : MonoBehaviour
 
     private void UpdateSpawnLocations()
     {
-        int colRange = gm.gridWidth - 1;    // 10 - 1 = 9
-        int rowRange = gm.gridHeight - 1;   // 8 - 1 = 7
+        int colRange = gm.GridWidth - 1;    // 10 - 1 = 9
+        int rowRange = gm.GridHeight - 1;   // 8 - 1 = 7
 
         // Populate spawnMoveUp List and populate spawnMoveDown List
         for (int x = 1; x < colRange; x++)
@@ -136,9 +137,6 @@ public class HazardManager : MonoBehaviour
         gm.PlaceObject(spawn, spawnPosition);
         gm.hazards.Add(spawn);
 
-        // TODO
-        // All spawned hazard currently progress down the grid 
-        // I need to update MovePattern based on the starting GridBlock
     }
 
 }

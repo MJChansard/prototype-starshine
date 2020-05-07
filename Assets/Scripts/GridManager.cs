@@ -5,13 +5,22 @@ using UnityEngine;
 public class GridManager : MonoBehaviour
 {
     #region Public Properties
-    
+
     public GridBlock[,] levelGrid;
-    public int gridWidth = 10;  //QUESTION: Make these private fields but have a public property?
-    public int gridHeight = 8;
+    public int GridWidth
+    {
+        get { return gridWidth;}
+    }
+    
+    public int GridHeight
+    {
+        get { return gridHeight; }
+    }
 
     public List<GameObject> hazards = new List<GameObject>();
     //public List<int> hazards = new List<int>();
+
+    public System.Action OnUpdateBoard;
 
     #endregion
 
@@ -19,6 +28,10 @@ public class GridManager : MonoBehaviour
     #region Inspector Attributes    
     [SerializeField]
     private int gridSpacing = 1;
+
+    [SerializeField]
+    private int gridWidth = 10;
+    private int gridHeight = 8;
 
     [SerializeField]
     private GameObject debugGridPrefab;
@@ -169,8 +182,9 @@ public class GridManager : MonoBehaviour
 
         return;
     }
+    
 
-    public void RequestMoveRelative(GameObject gameObject, Vector2Int delta)
+    public GridBlock FindGridBlockContainingObject(GameObject gameObject)
     {
         for (int x = 0; x < levelGrid.GetLength(0); x++)
         {
@@ -180,17 +194,17 @@ public class GridManager : MonoBehaviour
                 if (levelGrid[x, y].objectOnBlock == gameObject)
                 {
                     Debug.Log("GridBlock located.");
-                    Vector2Int position = new Vector2Int(x, y);
-                    RequestMove(levelGrid[x, y].objectOnBlock, position, position + delta);
-                    return;
-                }
+                    return levelGrid[x, y];
+                }   
             }
         }
 
         Debug.LogError("Game Object not found!");
+        return null;
     }
 
-    public void RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
+
+    public bool RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
     {
         Debug.Log(gameObject.name + " requesting move " + from + " to "+ to + ".");
         
@@ -199,25 +213,28 @@ public class GridManager : MonoBehaviour
 
         // QUESTION: Is nesting ifs better than multiple conditionals?
         // Ensure destination exists within the grid
-        if (to.x >= 0 && to.x <= levelGrid.GetLength(0) && to.y >= 0 && to.y <= levelGrid.GetLength(1))
+        if (to.x >= 0 && to.x < GridWidth && to.y >= 0 && to.y < GridHeight)
         {
             toBlock = levelGrid[to.x, to.y];
 
             if (!toBlock.isOccupied)
             {
                 PerformMove(gameObject, fromBlock, toBlock);
+                return true;
             }
             else
             {
                 Debug.Log("Destination block is occupied fool!");
+                return false;
             }
         }
         else
         {
             Debug.Log(gameObject.name + " requesting a move to an off-grid destination.");
-            RemoveObject(gameObject, fromBlock);
+            return false;
         }
     }
+
 
     private void PerformMove(GameObject gameObject, GridBlock from, GridBlock to)
     {
@@ -228,31 +245,61 @@ public class GridManager : MonoBehaviour
         from.objectOnBlock = null;
     }
 
+
     private void RemoveObject(GameObject gameObject, GridBlock last)
     {
         Debug.Log("RemoveObject() called.");
         Debug.Log("Number of hazards prior to removal: " + hazards.Count);
         Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
-        hazards.Remove(gameObject);
-        Debug.Log("Number of hazards following removal: " + hazards.Count);
+                
         Destroy(gameObject);
         last.isOccupied = false;   
     }
 
+
     public void UpdateBoard()
     {
-        // This Method will need to gather all of the non-player objects on the board
-        // and update the board with each of their behavior.
-
         if (hazards.Count > 0)
         {
+            List<GameObject> hazardsToRemove = new List<GameObject>();
+           
+            // Could store objectsToRemove in GridManager
+            // Once all the movement has taken place, then remove objects contained in the List
+
             foreach (GameObject hazard in hazards)
             {
                 MovePattern move = hazard.GetComponent<MovePattern>();
                 Debug.Log(hazard.name + " is moving by " + move.delta);
-                RequestMoveRelative(hazard, move.delta);
+                             
+                GridBlock gridBlock = FindGridBlockContainingObject(hazard);
+                if (gridBlock != null)
+                {
+                    bool successful  = RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
+                    if (!successful)
+                    {
+                        hazardsToRemove.Add(hazard);
+                    }
+                }
             }
+
+            foreach(GameObject hazard in hazardsToRemove)
+            {
+                GridBlock gridBlock = FindGridBlockContainingObject(hazard);
+                RemoveObject(hazard, gridBlock);
+                hazards.Remove(hazard);
+            }
+
+            // TODO
+            // Callback events OnBoardUpdate();
+            // Unity.System.Action
+            // HazardManager should listen for that update event
+
         }
         else return;
+
+        if (OnUpdateBoard != null)
+        {
+            OnUpdateBoard();
+        }
     }
 }
