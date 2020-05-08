@@ -16,12 +16,9 @@ public class GridManager : MonoBehaviour
     {
         get { return gridHeight; }
     }
-
-    public List<GameObject> hazards = new List<GameObject>();
-    //public List<int> hazards = new List<int>();
-
+   
     public System.Action OnUpdateBoard;
-
+    
     #endregion
 
 
@@ -246,57 +243,17 @@ public class GridManager : MonoBehaviour
     }
 
 
-    private void RemoveObject(GameObject gameObject, GridBlock last)
+    public void RemoveObject(GameObject gameObject, GridBlock last)
     {
         Debug.Log("RemoveObject() called.");
-        Debug.Log("Number of hazards prior to removal: " + hazards.Count);
-        Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
-                
+                        
         Destroy(gameObject);
         last.isOccupied = false;   
     }
 
 
     public void UpdateBoard()
-    {
-        if (hazards.Count > 0)
-        {
-            List<GameObject> hazardsToRemove = new List<GameObject>();
-           
-            // Could store objectsToRemove in GridManager
-            // Once all the movement has taken place, then remove objects contained in the List
-
-            foreach (GameObject hazard in hazards)
-            {
-                MovePattern move = hazard.GetComponent<MovePattern>();
-                Debug.Log(hazard.name + " is moving by " + move.delta);
-                             
-                GridBlock gridBlock = FindGridBlockContainingObject(hazard);
-                if (gridBlock != null)
-                {
-                    bool successful  = RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
-                    if (!successful)
-                    {
-                        hazardsToRemove.Add(hazard);
-                    }
-                }
-            }
-
-            foreach(GameObject hazard in hazardsToRemove)
-            {
-                GridBlock gridBlock = FindGridBlockContainingObject(hazard);
-                RemoveObject(hazard, gridBlock);
-                hazards.Remove(hazard);
-            }
-
-            // TODO
-            // Callback events OnBoardUpdate();
-            // Unity.System.Action
-            // HazardManager should listen for that update event
-
-        }
-        else return;
-
+    { 
         if (OnUpdateBoard != null)
         {
             OnUpdateBoard();

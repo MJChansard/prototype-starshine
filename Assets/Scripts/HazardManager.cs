@@ -27,12 +27,14 @@ public class HazardManager : MonoBehaviour
     private List<GridBlock> spawnMoveLeft = new List<GridBlock>();
     private List<GridBlock> spawnMoveRight = new List<GridBlock>();
     //private List<GridBlock> spawnMultiMove = new List<GridBlock>();
+
+    public List<GameObject> hazards = new List<GameObject>();
     #endregion
 
     void Start()
     {
         gm = GetComponent<GridManager>();
- //     gm.OnUpdateBoard += //new function goes here when event is heard
+        gm.OnUpdateBoard += MoveHazard;
 
         Debug.Log("gridWidth: " + gm.GridWidth);
         Debug.Log("gridHeight: " + gm.GridHeight);
@@ -40,9 +42,6 @@ public class HazardManager : MonoBehaviour
         UpdateSpawnLocations();
         PrepareHazard();
 
-        //GameObject asteroid = Instantiate(hazardPrefabs[0]);
-        //gm.PlaceObject(asteroid, new Vector2Int(6, 6));
-        //gm.hazards.Add(asteroid);
     }
 
     void Update()
@@ -135,8 +134,45 @@ public class HazardManager : MonoBehaviour
         Debug.Log("Selected hazard move delta: " + spawnMovement.delta);
 
         gm.PlaceObject(spawn, spawnPosition);
-        gm.hazards.Add(spawn);
+        hazards.Add(spawn);
 
     }
 
+    private void MoveHazard()
+    {
+        if (hazards.Count > 0)
+        {
+            List<GameObject> hazardsToRemove = new List<GameObject>();
+
+            // Could store objectsToRemove in GridManager
+            // Once all the movement has taken place, then remove objects contained in the List
+
+            foreach (GameObject hazard in hazards)
+            {
+                MovePattern move = hazard.GetComponent<MovePattern>();
+                Debug.Log(hazard.name + " is moving by " + move.delta);
+
+                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                if (gridBlock != null)
+                {
+                    bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
+                    if (!successful)
+                    {
+                        hazardsToRemove.Add(hazard);
+                    }
+                }
+            }
+
+            foreach (GameObject hazard in hazardsToRemove)
+            {
+                Debug.Log("Number of hazards prior to removal: " + hazards.Count);
+                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                gm.RemoveObject(hazard, gridBlock);
+                
+                Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
+                hazards.Remove(hazard);
+            }
+        }
+        else return;
+    }
 }
