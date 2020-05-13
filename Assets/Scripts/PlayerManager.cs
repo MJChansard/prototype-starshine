@@ -17,9 +17,6 @@ public class PlayerManager : MonoBehaviour
 
 
     #region Public Properties
-
-    
-
     #endregion
 
     #region Private Fields
@@ -27,6 +24,9 @@ public class PlayerManager : MonoBehaviour
     private Vector2Int delta = Vector2Int.zero;
 
     #endregion
+
+
+    public System.Action OnPlayerAdvance;
 
     private void Start()
     {
@@ -68,10 +68,17 @@ public class PlayerManager : MonoBehaviour
                
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            GridBlock current = gridManager.FindGridBlockContainingObject(this.gameObject);
-            gridManager.RequestMove(this.gameObject, current.location, current.location + delta);
-            gridManager.UpdateBoard();
+            if (OnPlayerAdvance != null)
+            {
+                OnPlayerAdvance();
+            }
         }
+    }
+
+    public void MovePlayer()
+    {
+        GridBlock current = gridManager.FindGridBlockContainingObject(this.gameObject);
+        gridManager.RequestMove(this.gameObject, current.location, current.location + delta);
     }
 
     void FireWeapon()

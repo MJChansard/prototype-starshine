@@ -34,8 +34,7 @@ public class HazardManager : MonoBehaviour
     void Start()
     {
         gm = GetComponent<GridManager>();
-        gm.OnUpdateBoard += MoveHazard;
-
+        
         Debug.Log("gridWidth: " + gm.GridWidth);
         Debug.Log("gridHeight: " + gm.GridHeight);
 
@@ -138,7 +137,7 @@ public class HazardManager : MonoBehaviour
 
     }
 
-    private void MoveHazard()
+    public void MoveHazards()
     {
         if (hazards.Count > 0)
         {

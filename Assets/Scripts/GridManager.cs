@@ -18,9 +18,10 @@ public class GridManager : MonoBehaviour
     }
    
     public System.Action OnUpdateBoard;
+
+    public Transform gridContainer;
     
     #endregion
-
 
     #region Inspector Attributes    
     [SerializeField]
@@ -33,29 +34,20 @@ public class GridManager : MonoBehaviour
     [SerializeField]
     private GameObject debugGridPrefab;
 
-    [SerializeField]
-    GameObject playerPrefab;
+
     #endregion
 
 
     #region Private Attributes
-    GameObject player;
-    PlayerManager playerManager;
-    GameObject gameController;
+    
     #endregion
 
     // Start is called before the first frame update
-    void Start()
+    public void Init()
     {
-        gameController = GameObject.FindGameObjectWithTag("GameController");
-
+       
         InitializeGrid(debugGridPrefab, 0f);
-
-        player = Instantiate(playerPrefab);
-        PlaceObject(player, new Vector2Int(5, 4));
-        playerManager = player.GetComponent<PlayerManager>();
     }
-
 
     // Update is called once per frame
     void Update()
@@ -134,7 +126,7 @@ public class GridManager : MonoBehaviour
                     gridPoint,
                     new Vector3(x + offset, y + offset, 0f),
                     Quaternion.identity,
-                    gameController.transform
+                    gridContainer
                 );
 
             }
@@ -242,7 +234,6 @@ public class GridManager : MonoBehaviour
         from.objectOnBlock = null;
     }
 
-
     public void RemoveObject(GameObject gameObject, GridBlock last)
     {
         Debug.Log("RemoveObject() called.");
@@ -251,12 +242,4 @@ public class GridManager : MonoBehaviour
         last.isOccupied = false;   
     }
 
-
-    public void UpdateBoard()
-    { 
-        if (OnUpdateBoard != null)
-        {
-            OnUpdateBoard();
-        }
-    }
 }
