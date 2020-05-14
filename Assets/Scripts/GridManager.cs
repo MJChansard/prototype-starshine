@@ -5,22 +5,15 @@ using UnityEngine;
 public class GridManager : MonoBehaviour
 {
     #region Public Properties
-
-    public GridBlock[,] levelGrid;
     public int GridWidth
     {
         get { return gridWidth;}
     }
-    
     public int GridHeight
     {
         get { return gridHeight; }
     }
-   
-    public System.Action OnUpdateBoard;
-
     public Transform gridContainer;
-    
     #endregion
 
     #region Inspector Attributes    
@@ -33,29 +26,18 @@ public class GridManager : MonoBehaviour
 
     [SerializeField]
     private GameObject debugGridPrefab;
-
-
     #endregion
 
+    public System.Action OnUpdateBoard;
+    public GridBlock[,] levelGrid;
 
-    #region Private Attributes
-    
-    #endregion
-
-    // Start is called before the first frame update
     public void Init()
     {
        
         InitializeGrid(debugGridPrefab, 0f);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-
+    
     private void InitializeGrid()
     {
         levelGrid = new GridBlock[gridWidth, gridHeight];
@@ -194,14 +176,11 @@ public class GridManager : MonoBehaviour
 
 
     public bool RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
-    {
-        Debug.Log(gameObject.name + " requesting move " + from + " to "+ to + ".");
-        
+    {        
         GridBlock fromBlock = levelGrid[from.x, from.y];
         GridBlock toBlock;
 
-        // QUESTION: Is nesting ifs better than multiple conditionals?
-        // Ensure destination exists within the grid
+        // Ensure valid destination
         if (to.x >= 0 && to.x < GridWidth && to.y >= 0 && to.y < GridHeight)
         {
             toBlock = levelGrid[to.x, to.y];
@@ -233,6 +212,7 @@ public class GridManager : MonoBehaviour
         from.isOccupied = false;
         from.objectOnBlock = null;
     }
+
 
     public void RemoveObject(GameObject gameObject, GridBlock last)
     {

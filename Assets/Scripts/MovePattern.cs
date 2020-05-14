@@ -8,48 +8,27 @@ public class MovePattern : MonoBehaviour
     public int moveRate;
     // ticksPerMove;
 
-    public Vector2Int SetMovePatternUp(int distance)
+    public Vector2Int SetMovePatternUp()
     {
-        for (int i = 0; i < distance; i++)
-        {
-            delta += Vector2Int.up;
-        }
-
-        return delta;
-
-        // Store velocity float
-        // If velocity == 0.5, add value
-        // When value hits threshold PerformMove()
-        // Subtract 1 from value to "reset"
-    }
-
-    public Vector2Int SetMovePatternDown(int distance)
-    {
-        for (int i = 0;  i < distance; i++)
-        {
-            delta += Vector2Int.down;
-        }
-
+        delta += Vector2Int.up;
         return delta;
     }
 
-    public Vector2Int SetMovePatternLeft(int distance)
+    public Vector2Int SetMovePatternDown()
     {
-        for (int i = 0; i < distance; i++)
-        {
-            delta += Vector2Int.left;
-        }
-
+        delta += Vector2Int.down;
         return delta;
     }
 
-    public Vector2Int SetMovePatternRight(int distance)
+    public Vector2Int SetMovePatternLeft()
     {
-        for (int i = 0; i < distance; i++)
-        {
-            delta += Vector2Int.right;
-        }
+        delta += Vector2Int.left;
+        return delta;
+    }
 
+    public Vector2Int SetMovePatternRight()
+    {
+        delta += Vector2Int.right;
         return delta;
     }
 }

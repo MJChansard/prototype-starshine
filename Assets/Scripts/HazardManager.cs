@@ -9,8 +9,9 @@ public class HazardManager : MonoBehaviour
     GameObject[] hazardPrefabs;
     #endregion
 
-    #region Private Fields
+    #region Private Fields    
     private GridManager gm;
+    private int currentTick;
 
     private int gridCornerLL;
     private int gridCornerLR;
@@ -27,26 +28,25 @@ public class HazardManager : MonoBehaviour
     private List<GridBlock> spawnMoveLeft = new List<GridBlock>();
     private List<GridBlock> spawnMoveRight = new List<GridBlock>();
     //private List<GridBlock> spawnMultiMove = new List<GridBlock>();
-
-    public List<GameObject> hazards = new List<GameObject>();
     #endregion
 
+    private List<GameObject> hazards = new List<GameObject>();
+    
     void Start()
     {
-        gm = GetComponent<GridManager>();
+        gm = GetComponent<GridManager>();      
         
         Debug.Log("gridWidth: " + gm.GridWidth);
         Debug.Log("gridHeight: " + gm.GridHeight);
+    }
 
+    public void Init()
+    {
         UpdateSpawnLocations();
         PrepareHazard();
-
+        currentTick = 1;
     }
 
-    void Update()
-    {
-        
-    }
 
     private void UpdateSpawnLocations()
     {
@@ -58,12 +58,14 @@ public class HazardManager : MonoBehaviour
         {
             if (gm.levelGrid[x, 0].canSpawn)
             {
+                Debug.Log("Populating [spawnMoveUp].");
                 spawnMoveUp.Add(gm.levelGrid[x, 0]);
 
             }
 
             if (gm.levelGrid[x, rowRange].canSpawn)
             {
+                Debug.Log("Populating [spawnMoveDown].");
                 spawnMoveDown.Add(gm.levelGrid[x, rowRange]);
             }
         }
@@ -84,13 +86,14 @@ public class HazardManager : MonoBehaviour
         }
     }
 
+
     private void PrepareHazard()
     {
         /*  SUMMARY
          *   - Randomly select a spawn location
          *   - Randomly select a hazard to spawn
          *   - Activate hazard spawn movement pattern based on spawn location
-         * * * */
+         */
 
         // Local variables
         int hazardType = Random.Range(0, hazardPrefabs.Length);
@@ -108,56 +111,53 @@ public class HazardManager : MonoBehaviour
             case 1:
                 spawnIndex = Random.Range(0, spawnMoveUp.Count);
                 spawnPosition = spawnMoveUp[spawnIndex].location;
-                spawnMovement.SetMovePatternUp(spawnMovement.moveRate);
+                spawnMovement.SetMovePatternUp();
 
                 Debug.Log("Selected spawnPosition: " + spawnPosition);
                 break;
             case 2:
                 spawnIndex = Random.Range(0, spawnMoveDown.Count);
                 spawnPosition = spawnMoveDown[spawnIndex].location;
-                spawnMovement.SetMovePatternDown(spawnMovement.moveRate);
+                spawnMovement.SetMovePatternDown();
                 break;
             case 3:
                 spawnIndex = Random.Range(0, spawnMoveLeft.Count);
                 spawnPosition = spawnMoveLeft[spawnIndex].location;
-                spawnMovement.SetMovePatternLeft(spawnMovement.moveRate);
+                spawnMovement.SetMovePatternLeft();
                 break;
             case 4:
                 spawnIndex = Random.Range(0, spawnMoveRight.Count);
                 spawnPosition = spawnMoveRight[spawnIndex].location;
-                spawnMovement.SetMovePatternRight(spawnMovement.moveRate);
+                spawnMovement.SetMovePatternRight();
                 break;
         }
-        Debug.Log("Selected spawnPosition: " + spawnPosition);
-        Debug.Log("Selected hazard move rate: " + spawnMovement.moveRate);
-        Debug.Log("Selected hazard move delta: " + spawnMovement.delta);
 
         gm.PlaceObject(spawn, spawnPosition);
         hazards.Add(spawn);
 
     }
 
-    public void MoveHazards()
+
+    public void MoveHazards(int currentTurn)
     {
         if (hazards.Count > 0)
         {
             List<GameObject> hazardsToRemove = new List<GameObject>();
 
-            // Could store objectsToRemove in GridManager
-            // Once all the movement has taken place, then remove objects contained in the List
-
             foreach (GameObject hazard in hazards)
             {
                 MovePattern move = hazard.GetComponent<MovePattern>();
-                Debug.Log(hazard.name + " is moving by " + move.delta);
-
-                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-                if (gridBlock != null)
+                if (move.moveRate == 1 || currentTurn % move.moveRate == 0)
                 {
-                    bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
-                    if (!successful)
+                    Debug.Log(hazard.name + " is moving by " + move.delta);
+                    GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                    if (gridBlock != null)
                     {
-                        hazardsToRemove.Add(hazard);
+                        bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
+                        if (!successful)
+                        {
+                            hazardsToRemove.Add(hazard);
+                        }
                     }
                 }
             }
@@ -173,5 +173,15 @@ public class HazardManager : MonoBehaviour
             }
         }
         else return;
+    }
+
+    public void OnTickUpdate()
+    {
+        currentTick++;
+
+        if (currentTick % 4 == 0)
+        {
+            PrepareHazard();
+        }
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     #region Public Properties
-    public int CurrentTurn = 1;
+    public int CurrentTick = 1;
     public int CurrentLevel = 1;
     #endregion
 
@@ -25,21 +25,22 @@ public class GameManager : MonoBehaviour
         gm = GetComponent<GridManager>();
         gm.Init();
         
-        hm = GetComponent<HazardManager>();    
-        
+        hm = GetComponent<HazardManager>();
+        hm.Init();
+
         em = GetComponent<EnemyManager>();
 
         GameObject player = Instantiate(playerPrefab);
         gm.PlaceObject(player, new Vector2Int(5, 4));
         pm = player.GetComponent<PlayerManager>();
         pm.OnPlayerAdvance += OnTick;
-
     }
 
     private void OnTick()
     {
         pm.MovePlayer();
-        hm.MoveHazards();
-        CurrentTurn += 1;
+        hm.MoveHazards(CurrentTick);
+        hm.OnTickUpdate();
+        CurrentTick += 1;
     }
 }
