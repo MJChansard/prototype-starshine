@@ -11,7 +11,11 @@ public class HazardManager : MonoBehaviour
 
     #region Private Fields    
     private GridManager gm;
+
     private int currentTick;
+    private int ticksUntilNewSpawn;
+    private int minTicksUntilSpawn = 4;
+    private int maxTicksUntilSpawn = 8;
 
     private int gridCornerLL;
     private int gridCornerLR;
@@ -38,6 +42,8 @@ public class HazardManager : MonoBehaviour
         
         Debug.Log("gridWidth: " + gm.GridWidth);
         Debug.Log("gridHeight: " + gm.GridHeight);
+
+        ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
 
     public void Init()
@@ -175,11 +181,19 @@ public class HazardManager : MonoBehaviour
         else return;
     }
 
+
     public void OnTickUpdate()
     {
         currentTick++;
+        ticksUntilNewSpawn--;
 
-        if (currentTick % 4 == 0)
+        if (ticksUntilNewSpawn == 0)
+        {
+            PrepareHazard();
+            ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
+        }
+
+        if (hazards.Count == 0)
         {
             PrepareHazard();
         }
