@@ -277,7 +277,6 @@ MonoBehaviour:
   hazardPrefabs:
   - {fileID: 226724313900393986, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
   - {fileID: 1184875554948233082, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
-  hazards: []
 --- !u!114 &477210642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -290,7 +289,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2ef85c4c86c0e546b597ed36a8baace, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CurrentTurn: 1
+  CurrentTick: 1
   CurrentLevel: 1
   playerPrefab: {fileID: 7481129662563630788, guid: 71ffd1ff440611f478f08b815eb14737,
     type: 3}

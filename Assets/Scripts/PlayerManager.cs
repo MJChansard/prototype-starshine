@@ -15,12 +15,10 @@ public class PlayerManager : MonoBehaviour
 
     #endregion
 
-
-    #region Public Properties
-    #endregion
-
     #region Private Fields
-    private GridManager gridManager;
+    private GridManager gm;
+
+    private string currentlyFacing = "";
     private Vector2Int delta = Vector2Int.zero;
 
     #endregion
@@ -30,13 +28,18 @@ public class PlayerManager : MonoBehaviour
 
     private void Start()
     {
-        gridManager = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
+        gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
     }
 
     void Update()
     {
         Movement();
-        FireWeapon();
+        FireCannon();
+
+        if(Input.GetKeyDown(KeyCode.T))
+        {
+            Debug.Log("Currently facing: " + currentlyFacing);
+        }
     }
 
     void Movement()
@@ -45,24 +48,28 @@ public class PlayerManager : MonoBehaviour
         {
 
             transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
+            currentlyFacing = "Up";
             delta = Vector2Int.up;
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
             transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
+            currentlyFacing = "Down";
             delta = Vector2Int.down;
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
+            currentlyFacing = "Left";
             delta = Vector2Int.left;
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
+            currentlyFacing = "Right";
             delta = Vector2Int.right;
         }
                
@@ -77,15 +84,77 @@ public class PlayerManager : MonoBehaviour
 
     public void MovePlayer()
     {
-        GridBlock current = gridManager.FindGridBlockContainingObject(this.gameObject);
-        gridManager.RequestMove(this.gameObject, current.location, current.location + delta);
+        GridBlock current = gm.FindGridBlockContainingObject(this.gameObject);
+        gm.RequestMove(this.gameObject, current.location, current.location + delta);
     }
 
-    void FireWeapon()
+    void FireCannon()
     {
+       
+        
         if (Input.GetKeyDown(KeyCode.F))
         {
-            Instantiate(missile, weaponSource.position, weaponSource.rotation);
+            FindCannonTarget();
         }
     }
+
+    private GridBlock FindCannonTarget()
+    {
+        /*  STEPS
+             *   - Need to find current location on the grid (GridBlock)
+             *   - Determine which direction player is facing
+             *   - Gather all GridBlocks on the cannon trajectory
+             *   - Test each block for a destructible GameObject
+             *   - Apply damage to the first detected GameObject
+             *   - Update Tick
+             */
+
+        GridBlock currentlyAt = gm.FindGridBlockContainingObject(this.gameObject);
+        
+        // Determine weapon path
+        List<GridBlock> possibleTargets = new List<GridBlock>();
+        switch (currentlyFacing)
+        {
+            // Facing forward
+            case "Up":
+                for (int y = currentlyAt.location.y + 1; y < gm.GridHeight; y++)
+                {
+                    possibleTargets.Add(gm.levelGrid[currentlyAt.location.x, y]);
+                }
+                break;
+            // Facing down
+            case "Down":
+                for (int y = currentlyAt.location.y - 1; y >= 0; y--)
+                {
+                    possibleTargets.Add(gm.levelGrid[currentlyAt.location.x, y]);
+                }
+                break;
+            // Facing left
+            case "Left":
+                for (int x = currentlyAt.location.x -1 ; x >= 0; x--)
+                {
+                    possibleTargets.Add(gm.levelGrid[x, currentlyAt.location.y]);
+                }
+                break;
+            // Facing right
+            case "Right":
+                for (int x = currentlyAt.location.x + 1; x > gm.GridWidth; x++)
+                {
+                    possibleTargets.Add(gm.levelGrid[x, currentlyAt.location.y]);
+                }
+                break;
+        }
+
+        foreach (GridBlock target in possibleTargets)
+        {
+            if (target.isOccupied == true)
+            {
+                Debug.Log("Cannon target located:" + target.objectOnBlock);
+                return target;       
+            }
+        }
+
+        return null;
+    }
+
 }
