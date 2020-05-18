@@ -33,8 +33,8 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        Movement();
-        FireCannon();
+        PlayerMovementInput();
+        PlayerWeaponInput();
 
         if(Input.GetKeyDown(KeyCode.T))
         {
@@ -42,7 +42,8 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    void Movement()
+
+    void PlayerMovementInput()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
@@ -82,32 +83,54 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+
     public void MovePlayer()
     {
         GridBlock current = gm.FindGridBlockContainingObject(this.gameObject);
         gm.RequestMove(this.gameObject, current.location, current.location + delta);
     }
 
-    void FireCannon()
+    void PlayerWeaponInput()
     {
-       
-        
         if (Input.GetKeyDown(KeyCode.F))
         {
-            FindCannonTarget();
+
+            GridBlock returnedTargetBlock = FindCannonTarget();
+
+            if (returnedTargetBlock != null)
+            {
+                ParticleSystem ps = GetComponent<ParticleSystem>();
+                ps.Play();
+                // TODO: Delay the object destruction by a moment 
+                GameObject returnedTargetObject = returnedTargetBlock.objectOnBlock;
+                gm.RemoveObject(returnedTargetObject, returnedTargetBlock);
+            }
+
         }
+    }
+    void FireCannon()
+    {
+        // TODO: Rename this function once all weapons are implemented
+        
+        //ps.trigger.GetCollider(1);
+        //returnedTarget.objectOnBlock.GetComponent<Tra>
     }
 
     private GridBlock FindCannonTarget()
     {
+        /*  NOTES
+         *   - Might be helpful to re-tool this to be FindWeaponTarget()
+         *   - Add a parameter for the weapon type to execute specific behavior
+         */
+
         /*  STEPS
-             *   - Need to find current location on the grid (GridBlock)
-             *   - Determine which direction player is facing
-             *   - Gather all GridBlocks on the cannon trajectory
-             *   - Test each block for a destructible GameObject
-             *   - Apply damage to the first detected GameObject
-             *   - Update Tick
-             */
+         *   - Need to find current location on the grid (GridBlock)
+         *   - Determine which direction player is facing
+         *   - Gather all GridBlocks on the cannon trajectory
+         *   - Test each block for a destructible GameObject
+         *   - Apply damage to the first detected GameObject
+         *   - Update Tick
+         */
 
         GridBlock currentlyAt = gm.FindGridBlockContainingObject(this.gameObject);
         
