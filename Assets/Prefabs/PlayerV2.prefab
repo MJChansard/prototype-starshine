@@ -3858,10 +3858,8 @@ ParticleSystem:
     interiorCollisions: 0
   TriggerModule:
     enabled: 1
-    collisionShape0: {fileID: 5728885461923159536, guid: 63d749065d8ba1043a1f176714f6e892,
-      type: 3}
-    collisionShape1: {fileID: 1184875554948233086, guid: 7fcde91555449fb4c8e825405c0f7c71,
-      type: 3}
+    collisionShape0: {fileID: 0}
+    collisionShape1: {fileID: 0}
     collisionShape2: {fileID: 0}
     collisionShape3: {fileID: 0}
     collisionShape4: {fileID: 0}

@@ -90,6 +90,7 @@ public class PlayerManager : MonoBehaviour
         gm.RequestMove(this.gameObject, current.location, current.location + delta);
     }
 
+
     void PlayerWeaponInput()
     {
         if (Input.GetKeyDown(KeyCode.F))
@@ -97,24 +98,13 @@ public class PlayerManager : MonoBehaviour
 
             GridBlock returnedTargetBlock = FindCannonTarget();
 
-            if (returnedTargetBlock != null)
+            if (returnedTargetBlock != null) 
             {
-                ParticleSystem ps = GetComponent<ParticleSystem>();
-                ps.Play();
-                // TODO: Delay the object destruction by a moment 
-                GameObject returnedTargetObject = returnedTargetBlock.objectOnBlock;
-                gm.RemoveObject(returnedTargetObject, returnedTargetBlock);
+                StartCoroutine(FireParticleSystem(returnedTargetBlock));
             }
-
         }
     }
-    void FireCannon()
-    {
-        // TODO: Rename this function once all weapons are implemented
-        
-        //ps.trigger.GetCollider(1);
-        //returnedTarget.objectOnBlock.GetComponent<Tra>
-    }
+
 
     private GridBlock FindCannonTarget()
     {
@@ -161,7 +151,7 @@ public class PlayerManager : MonoBehaviour
                 break;
             // Facing right
             case "Right":
-                for (int x = currentlyAt.location.x + 1; x > gm.GridWidth; x++)
+                for (int x = currentlyAt.location.x + 1; x < gm.GridWidth; x++)
                 {
                     possibleTargets.Add(gm.levelGrid[x, currentlyAt.location.y]);
                 }
@@ -180,4 +170,32 @@ public class PlayerManager : MonoBehaviour
         return null;
     }
 
+
+    private IEnumerator FireParticleSystem(GridBlock target)
+    {
+        // Question for Pat: Thoughts on explicit typing vs using 'var'?
+        ParticleSystem ps = GetComponent<ParticleSystem>();
+        var trigger = ps.trigger;
+        trigger.enabled = true;
+        
+        trigger.SetCollider(0, target.objectOnBlock.GetComponent<Collider>());
+        trigger.radiusScale = 0.5f;
+
+        ps.Play();
+        
+        yield return new WaitForSeconds(2.0f);
+
+        // Will eventually be ApplyDamage()
+        GameObject returnedTargetObject = target.objectOnBlock;
+        gm.RemoveObject(returnedTargetObject, target);
+    }
+
+
+    void FireCannon()
+    {
+        // TODO: Rename this function once all weapons are implemented
+
+        //ps.trigger.GetCollider(1);
+        //returnedTarget.objectOnBlock.GetComponent<Tra>
+    }
 }

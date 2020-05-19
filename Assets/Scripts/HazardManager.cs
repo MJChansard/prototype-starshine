@@ -109,7 +109,7 @@ public class HazardManager : MonoBehaviour
 
         // Spawn hazard & save reference to its <MovePattern>
         GameObject spawn = Instantiate(hazardPrefabs[hazardType]);
-        Debug.Log("Hazard to Spawn: " + spawn);
+        //Debug.Log("Hazard to Spawn: " + spawn);
         MovePattern spawnMovement = spawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)

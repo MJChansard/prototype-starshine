@@ -164,7 +164,6 @@ public class GridManager : MonoBehaviour
             {
                 if (levelGrid[x, y].objectOnBlock == gameObject)
                 {
-                    Debug.Log("GridBlock located.");
                     return levelGrid[x, y];
                 }   
             }
