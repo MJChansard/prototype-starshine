@@ -35,7 +35,8 @@ public class HazardManager : MonoBehaviour
     #endregion
 
     private List<GameObject> hazards = new List<GameObject>();
-    
+    private List<GameObject> hazardsToRemove = new List<GameObject>();
+
     void Start()
     {
         gm = GetComponent<GridManager>();      
@@ -148,8 +149,6 @@ public class HazardManager : MonoBehaviour
     {
         if (hazards.Count > 0)
         {
-            List<GameObject> hazardsToRemove = new List<GameObject>();
-
             foreach (GameObject hazard in hazards)
             {
                 MovePattern move = hazard.GetComponent<MovePattern>();
@@ -163,22 +162,31 @@ public class HazardManager : MonoBehaviour
                         if (!successful)
                         {
                             hazardsToRemove.Add(hazard);
+                            RemoveHazard();
                         }
                     }
                 }
             }
-
-            foreach (GameObject hazard in hazardsToRemove)
-            {
-                Debug.Log("Number of hazards prior to removal: " + hazards.Count);
-                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-                gm.RemoveObject(hazard, gridBlock);
-                
-                Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
-                hazards.Remove(hazard);
-            }
         }
         else return;
+    }
+
+    public void RemoveHazard()
+    { 
+        foreach (GameObject hazard in hazardsToRemove)
+        {
+            Debug.Log("Number of hazards prior to removal: " + hazards.Count);
+            GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+            gm.RemoveObject(hazard, gridBlock);
+                
+            Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
+            hazards.Remove(hazard);
+        }
+    }
+
+    public void InsertHazardToRemove(GameObject hazard)
+    {
+        hazardsToRemove.Add(hazard);
     }
 
 

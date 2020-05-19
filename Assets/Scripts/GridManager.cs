@@ -212,7 +212,7 @@ public class GridManager : MonoBehaviour
         from.objectOnBlock = null;
     }
 
-
+   
     public void RemoveObject(GameObject gameObject, GridBlock last)
     {
         Debug.Log("RemoveObject() called.");

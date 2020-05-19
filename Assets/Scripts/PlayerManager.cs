@@ -96,7 +96,7 @@ public class PlayerManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F))
         {
 
-            GridBlock returnedTargetBlock = FindCannonTarget();
+            GridBlock returnedTargetBlock = FindWeaponTarget();
 
             if (returnedTargetBlock != null) 
             {
@@ -106,7 +106,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    private GridBlock FindCannonTarget()
+    private GridBlock FindWeaponTarget()
     {
         /*  NOTES
          *   - Might be helpful to re-tool this to be FindWeaponTarget()
@@ -182,8 +182,8 @@ public class PlayerManager : MonoBehaviour
         trigger.radiusScale = 0.5f;
 
         ps.Play();
-        
         yield return new WaitForSeconds(2.0f);
+        ps.Stop();
 
         // Will eventually be ApplyDamage()
         GameObject returnedTargetObject = target.objectOnBlock;

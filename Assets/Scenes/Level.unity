@@ -297,6 +297,11 @@ PrefabInstance:
         type: 3}
       propertyPath: TriggerModule.collisionShape0
       value: 
+      objectReference: {fileID: 1651019778}
+    - target: {fileID: 8811313596657191756, guid: 9ab49f8076cd02c40a29a71d2acd39f1,
+        type: 3}
+      propertyPath: TriggerModule.collisionShape1
+      value: 
       objectReference: {fileID: 342033107}
     - target: {fileID: 8811313596657191757, guid: 9ab49f8076cd02c40a29a71d2acd39f1,
         type: 3}
@@ -559,7 +564,7 @@ PrefabInstance:
     - target: {fileID: 5728885461923159536, guid: 63d749065d8ba1043a1f176714f6e892,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5728885461923159536, guid: 63d749065d8ba1043a1f176714f6e892,
         type: 3}
@@ -653,3 +658,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
+--- !u!224 &1651019778 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 5728885461923159536, guid: 63d749065d8ba1043a1f176714f6e892,
+    type: 3}
+  m_PrefabInstance: {fileID: 775183102}
+  m_PrefabAsset: {fileID: 0}
