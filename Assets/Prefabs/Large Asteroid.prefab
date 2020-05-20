@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 226724313900393984}
   - component: {fileID: 226724313900393987}
   - component: {fileID: 9008877383783918869}
+  - component: {fileID: 114194421757701184}
   m_Layer: 0
   m_Name: Large Asteroid
   m_TagString: Hazard
@@ -111,3 +112,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
   moveRate: 2
+--- !u!114 &114194421757701184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226724313900393986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 200

@@ -12,6 +12,12 @@ public class PlayerManager : MonoBehaviour
     private Transform weaponSource;
     [SerializeField]
     private GameObject missile;
+    [SerializeField]
+    private int CannonDamage;
+    [SerializeField]
+    private int MissileDamage;
+    [SerializeField]
+    private int RailDamage;
 
     #endregion
 
@@ -33,9 +39,8 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        PlayerMovementInput();
-        PlayerWeaponInput();
-
+        PlayerInput();
+        
         if(Input.GetKeyDown(KeyCode.T))
         {
             Debug.Log("Currently facing: " + currentlyFacing);
@@ -43,7 +48,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    void PlayerMovementInput()
+    void PlayerInput()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
@@ -73,13 +78,16 @@ public class PlayerManager : MonoBehaviour
             currentlyFacing = "Right";
             delta = Vector2Int.right;
         }
-               
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Attack();
+           // if (OnPlayerAdvance != null) OnPlayerAdvance();
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (OnPlayerAdvance != null)
-            {
-                OnPlayerAdvance();
-            }
+            if (OnPlayerAdvance != null) OnPlayerAdvance();
         }
     }
 
@@ -91,22 +99,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    void PlayerWeaponInput()
-    {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-
-            GridBlock returnedTargetBlock = FindWeaponTarget();
-
-            if (returnedTargetBlock != null) 
-            {
-                StartCoroutine(FireParticleSystem(returnedTargetBlock));
-            }
-        }
-    }
-
-
-    private GridBlock FindWeaponTarget()
+    private void Attack()
     {
         /*  NOTES
          *   - Might be helpful to re-tool this to be FindWeaponTarget()
@@ -162,12 +155,18 @@ public class PlayerManager : MonoBehaviour
         {
             if (target.isOccupied == true)
             {
-                Debug.Log("Cannon target located:" + target.objectOnBlock);
-                return target;       
+                Health hp = target.objectOnBlock.GetComponent<Health>();
+
+                if (hp != null)
+                {
+                    StartCoroutine(FireParticleSystem(target));
+                    hp.ApplyDamage(CannonDamage);
+                    Debug.Log("Target's current health: " + hp.CurrentHP);
+                }
+
+                break;       
             }
         }
-
-        return null;
     }
 
 
@@ -186,8 +185,8 @@ public class PlayerManager : MonoBehaviour
         ps.Stop();
 
         // Will eventually be ApplyDamage()
-        GameObject returnedTargetObject = target.objectOnBlock;
-        gm.RemoveObject(returnedTargetObject, target);
+        //GameObject returnedTargetObject = target.objectOnBlock;
+        //gm.RemoveObject(returnedTargetObject, target);
     }
 
 

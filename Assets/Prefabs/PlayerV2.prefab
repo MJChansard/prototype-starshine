@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 156808061715087580}
   - component: {fileID: 866001422934247516}
   - component: {fileID: 1707390075148107841}
+  - component: {fileID: 6554820305398486802}
   m_Layer: 0
   m_Name: PlayerV2
   m_TagString: Player
@@ -141,6 +142,9 @@ MonoBehaviour:
   speed: 2
   weaponSource: {fileID: 3076074588864472268}
   missile: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c, type: 3}
+  CannonDamage: 50
+  MissileDamage: 100
+  RailDamage: 200
 --- !u!199 &866001422934247516
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -4807,3 +4811,16 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!114 &6554820305398486802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7481129662563630788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 100

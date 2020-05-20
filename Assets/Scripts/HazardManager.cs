@@ -171,18 +171,18 @@ public class HazardManager : MonoBehaviour
         else return;
     }
 
+
     public void RemoveHazard()
     { 
         foreach (GameObject hazard in hazardsToRemove)
         {
-            Debug.Log("Number of hazards prior to removal: " + hazards.Count);
+            
             GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
             gm.RemoveObject(hazard, gridBlock);
-                
-            Debug.Log("Index of out of bounds element: " + hazards.IndexOf(gameObject));
             hazards.Remove(hazard);
         }
     }
+
 
     public void InsertHazardToRemove(GameObject hazard)
     {
@@ -205,5 +205,13 @@ public class HazardManager : MonoBehaviour
         {
             PrepareHazard();
         }
+
+        foreach (GameObject hazard in hazards)
+        {
+            Health hp = hazard.GetComponent<Health>();
+
+            if (hp.CurrentHP <= 0) hazardsToRemove.Add(hazard);
+        }
+        RemoveHazard();
     }
 }
