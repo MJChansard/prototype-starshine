@@ -14,10 +14,11 @@ public class Health : MonoBehaviour
     [SerializeField]
     private int maxHP;
 
-    private void Start()
+    private void Awake()
     {
         _currentHP = maxHP;
     }
+
 
     public void ApplyDamage(int damageAmount)
     {

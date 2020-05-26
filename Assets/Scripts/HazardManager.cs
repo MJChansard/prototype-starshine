@@ -35,8 +35,7 @@ public class HazardManager : MonoBehaviour
     #endregion
 
     private List<GameObject> hazards = new List<GameObject>();
- 
-
+    
 
     void Start()
     {
@@ -139,61 +138,44 @@ public class HazardManager : MonoBehaviour
         Debug.Log("Calling gm.PlaceObject");
         gm.PlaceObject(hazardToSpawn, spawnPosition);
         hazards.Add(hazardToSpawn);
-
     }
 
 
-    public void MoveHazards(int currentTurn)
+    public void RemoveHazard(GameObject hazard)
     {
-        if (hazards.Count > 0)
-        {
-            List<GameObject> hazardsToRemove = new List<GameObject>();
+        GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+        gm.RemoveObject(hazard, gridBlock);
+        hazards.Remove(hazard);
+    }
 
-            foreach (GameObject hazard in hazards)
+
+    public void OnTickUpdate()
+    { 
+        for (int i = hazards.Count - 1; i > -1; i--)
+        {
+            GameObject hazard = hazards[i];
+
+            Health hp = hazard.GetComponent<Health>();
+            if (hp.CurrentHP <= 0)
             {
-                MovePattern move = hazard.GetComponent<MovePattern>();
-                if (move.moveRate == 1 || currentTurn % move.moveRate == 0)
+                RemoveHazard(hazard);
+            }
+
+            MovePattern move = hazard.GetComponent<MovePattern>();
+            if (move.moveRate == 1 || currentTick % move.moveRate == 0)
+            {
+                Debug.Log(hazard.name + " is moving by " + move.delta);
+                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                if (gridBlock != null)
                 {
-                    Debug.Log(hazard.name + " is moving by " + move.delta);
-                    GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-                    if (gridBlock != null)
+                    bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
+                    if (!successful)
                     {
-                        bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
-                        if (!successful)
-                        {
-                            hazardsToRemove.Add(hazard);
-                        }
+                        RemoveHazard(hazard);
                     }
                 }
             }
-
-            foreach (GameObject hazard in hazardsToRemove)
-            {
-
-                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-                gm.RemoveObject(hazard, gridBlock);
-                hazards.Remove(hazard);
-            }
         }
-        else return;
-    }
-
-/*
-    public void RemoveHazard()
-    {
-        foreach (GameObject hazard in hazardsToRemove)
-        {
-
-            GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-            gm.RemoveObject(hazard, gridBlock);
-            hazards.Remove(hazard);
-        }
-    }
-*/
-
-    public void OnTickUpdate()
-    {
-        MoveHazards(currentTick);      
 
         if (ticksUntilNewSpawn == 0)
         {
@@ -206,13 +188,6 @@ public class HazardManager : MonoBehaviour
         {
             Debug.Log("Preparing Hazard: Hazard count condition.");
             PrepareHazard();
-        }
-
-        foreach (GameObject hazard in hazards)
-        {
-            Health hp = hazard.GetComponent<Health>();
-
-            //if (hp.CurrentHP <= 0) destroyedHazards.Add(hazard);
         }
 
         currentTick++;
