@@ -12,7 +12,7 @@ public class HazardManager : MonoBehaviour
     #region Private Fields    
     private GridManager gm;
 
-    private int currentTick;
+    private int currentTick = 0;
     private int ticksUntilNewSpawn;
     private int minTicksUntilSpawn = 4;
     private int maxTicksUntilSpawn = 8;
@@ -35,15 +35,13 @@ public class HazardManager : MonoBehaviour
     #endregion
 
     private List<GameObject> hazards = new List<GameObject>();
-    private List<GameObject> hazardsToRemove = new List<GameObject>();
+ 
+
 
     void Start()
     {
-        gm = GetComponent<GridManager>();      
+        gm = GetComponent<GridManager>(); 
         
-        Debug.Log("gridWidth: " + gm.GridWidth);
-        Debug.Log("gridHeight: " + gm.GridHeight);
-
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
 
@@ -109,9 +107,9 @@ public class HazardManager : MonoBehaviour
         Vector2Int spawnPosition = new Vector2Int();
 
         // Spawn hazard & save reference to its <MovePattern>
-        GameObject spawn = Instantiate(hazardPrefabs[hazardType]);
-        //Debug.Log("Hazard to Spawn: " + spawn);
-        MovePattern spawnMovement = spawn.GetComponent<MovePattern>();
+        GameObject hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
+        Debug.Log("Hazard to Spawn: " + hazardToSpawn);
+        MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)
         {
@@ -138,9 +136,9 @@ public class HazardManager : MonoBehaviour
                 spawnMovement.SetMovePatternRight();
                 break;
         }
-
-        gm.PlaceObject(spawn, spawnPosition);
-        hazards.Add(spawn);
+        Debug.Log("Calling gm.PlaceObject");
+        gm.PlaceObject(hazardToSpawn, spawnPosition);
+        hazards.Add(hazardToSpawn);
 
     }
 
@@ -149,6 +147,8 @@ public class HazardManager : MonoBehaviour
     {
         if (hazards.Count > 0)
         {
+            List<GameObject> hazardsToRemove = new List<GameObject>();
+
             foreach (GameObject hazard in hazards)
             {
                 MovePattern move = hazard.GetComponent<MovePattern>();
@@ -162,47 +162,49 @@ public class HazardManager : MonoBehaviour
                         if (!successful)
                         {
                             hazardsToRemove.Add(hazard);
-                            RemoveHazard();
                         }
                     }
                 }
+            }
+
+            foreach (GameObject hazard in hazardsToRemove)
+            {
+
+                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                gm.RemoveObject(hazard, gridBlock);
+                hazards.Remove(hazard);
             }
         }
         else return;
     }
 
-
+/*
     public void RemoveHazard()
-    { 
+    {
         foreach (GameObject hazard in hazardsToRemove)
         {
-            
+
             GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
             gm.RemoveObject(hazard, gridBlock);
             hazards.Remove(hazard);
         }
     }
-
-
-    public void InsertHazardToRemove(GameObject hazard)
-    {
-        hazardsToRemove.Add(hazard);
-    }
-
+*/
 
     public void OnTickUpdate()
     {
-        currentTick++;
-        ticksUntilNewSpawn--;
+        MoveHazards(currentTick);      
 
         if (ticksUntilNewSpawn == 0)
         {
+            Debug.Log("Preparing Hazard: tick condition.");
             PrepareHazard();
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
 
         if (hazards.Count == 0)
         {
+            Debug.Log("Preparing Hazard: Hazard count condition.");
             PrepareHazard();
         }
 
@@ -210,8 +212,11 @@ public class HazardManager : MonoBehaviour
         {
             Health hp = hazard.GetComponent<Health>();
 
-            if (hp.CurrentHP <= 0) hazardsToRemove.Add(hazard);
+            //if (hp.CurrentHP <= 0) destroyedHazards.Add(hazard);
         }
-        RemoveHazard();
+
+        currentTick++;
+        Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
+        ticksUntilNewSpawn--;
     }
 }

@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
     PlayerManager pm;
     EnemyManager em;
     GridManager gm;
-
     #endregion
 
     [SerializeField]
@@ -38,9 +37,21 @@ public class GameManager : MonoBehaviour
 
     private void OnTick()
     {
-        pm.MovePlayer();
-        hm.MoveHazards(CurrentTick);
+        StartCoroutine(OnTickCoroutine());
+    }
+
+    private IEnumerator OnTickCoroutine()
+    {
+        pm.OnPlayerAdvance -= OnTick;
+       
+        float delay = pm.OnTickUpdate();
+        yield return new WaitForSeconds(delay);
+
+        //hm.MoveHazards(CurrentTick);
         hm.OnTickUpdate();
+        
         CurrentTick += 1;
+        pm.OnPlayerAdvance += OnTick;
+        yield return null;
     }
 }

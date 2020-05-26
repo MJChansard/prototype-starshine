@@ -197,7 +197,7 @@ public class GridManager : MonoBehaviour
         }
         else
         {
-            Debug.Log(gameObject.name + " requesting a move to an off-grid destination.");
+            Debug.Log(gameObject.name + " requesting to leave grid.");
             return false;
         }
     }

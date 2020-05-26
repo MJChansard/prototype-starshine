@@ -12,6 +12,7 @@ public class PlayerManager : MonoBehaviour
     private Transform weaponSource;
     [SerializeField]
     private GameObject missile;
+    
     [SerializeField]
     private int CannonDamage;
     [SerializeField]
@@ -26,7 +27,11 @@ public class PlayerManager : MonoBehaviour
 
     private string currentlyFacing = "";
     private Vector2Int delta = Vector2Int.zero;
+    private bool isRequestingAttack = false;
 
+    private float attackWaitTime = 2.0f;
+    private float moveWaitTime = 0f;
+    private float waitWaitTime = 0.5f;
     #endregion
 
 
@@ -81,8 +86,8 @@ public class PlayerManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F))
         {
-            Attack();
-           // if (OnPlayerAdvance != null) OnPlayerAdvance();
+            isRequestingAttack = true;
+            if (OnPlayerAdvance != null) OnPlayerAdvance();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -92,7 +97,25 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    public void MovePlayer()
+    public float OnTickUpdate()
+    {
+        if (isRequestingAttack)
+        {
+            isRequestingAttack = false;
+            Attack();
+            return attackWaitTime;
+        }
+        else if (delta != Vector2Int.zero)
+        {
+            Move();
+            return moveWaitTime;
+        }
+        
+        return waitWaitTime;
+    }
+
+
+    private void Move()
     {
         GridBlock current = gm.FindGridBlockContainingObject(this.gameObject);
         gm.RequestMove(this.gameObject, current.location, current.location + delta);
