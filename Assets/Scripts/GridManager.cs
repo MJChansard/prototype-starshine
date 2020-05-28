@@ -31,6 +31,12 @@ public class GridManager : MonoBehaviour
     public System.Action OnUpdateBoard;
     public GridBlock[,] levelGrid;
 
+    
+    private void Update()
+    {
+        
+    }
+
     public void Init()
     {
        
@@ -174,7 +180,7 @@ public class GridManager : MonoBehaviour
     }
 
 
-    public bool RequestMove(GameObject gameObject, Vector2Int from, Vector2Int to)
+    public bool CheckIfMoveIsValid(GameObject gameObject, Vector2Int from, Vector2Int to)
     {        
         GridBlock fromBlock = levelGrid[from.x, from.y];
         GridBlock toBlock;
@@ -186,7 +192,7 @@ public class GridManager : MonoBehaviour
 
             if (!toBlock.isOccupied)
             {
-                PerformMove(gameObject, fromBlock, toBlock);
+                UpdateGridPosition(gameObject, fromBlock, toBlock);
                 return true;
             }
             else
@@ -203,9 +209,9 @@ public class GridManager : MonoBehaviour
     }
 
 
-    private void PerformMove(GameObject gameObject, GridBlock from, GridBlock to)
+    private void UpdateGridPosition(GameObject gameObject, GridBlock from, GridBlock to)
     {
-        gameObject.transform.position = GridToWorld(to.location);
+        //gameObject.transform.position = GridToWorld(to.location);
         to.isOccupied = true;
         to.objectOnBlock = gameObject;
         from.isOccupied = false;

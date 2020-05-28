@@ -29,9 +29,14 @@ public class GameManager : MonoBehaviour
 
         em = GetComponent<EnemyManager>();
 
+        // Prepare Player
         GameObject player = Instantiate(playerPrefab);
-        gm.PlaceObject(player, new Vector2Int(5, 4));
+        Vector2Int startLocation = new Vector2Int(5, 4);
+        gm.PlaceObject(player, startLocation);
         pm = player.GetComponent<PlayerManager>();
+        pm.currentWorldLocation = gm.GridToWorld(startLocation);
+        pm.targetWorldLocation = gm.GridToWorld(startLocation);
+        
         pm.OnPlayerAdvance += OnTick;
     }
 
@@ -47,7 +52,6 @@ public class GameManager : MonoBehaviour
         float delay = pm.OnTickUpdate();
         yield return new WaitForSeconds(delay);
 
-        //hm.MoveHazards(CurrentTick);
         hm.OnTickUpdate();
         
         CurrentTick += 1;

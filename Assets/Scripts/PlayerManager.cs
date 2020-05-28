@@ -5,7 +5,6 @@ using UnityEngine;
 public class PlayerManager : MonoBehaviour
 {
     #region Inspector Attributes
-
     [SerializeField]
     private float speed = 2.0f;
     [SerializeField]
@@ -19,27 +18,34 @@ public class PlayerManager : MonoBehaviour
     private int MissileDamage;
     [SerializeField]
     private int RailDamage;
-
     #endregion
 
-    #region Private Fields
     private GridManager gm;
 
+    #region Private Fields
     private string currentlyFacing = "";
     private Vector2Int delta = Vector2Int.zero;
     private bool isRequestingAttack = false;
+    //private bool isRequestingMove = false;
 
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 0f;
     private float waitWaitTime = 0.5f;
     #endregion
 
+    #region Movement Animation Properties
+    public Vector3 currentWorldLocation;
+    public Vector3 targetWorldLocation;
+    private float distance;
+    private float startTime;
+    #endregion
 
     public System.Action OnPlayerAdvance;
 
     private void Start()
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
+        currentWorldLocation = gm.GridToWorld(gm.FindGridBlockContainingObject(this.gameObject).location);
     }
 
     void Update()
@@ -50,6 +56,22 @@ public class PlayerManager : MonoBehaviour
         {
             Debug.Log("Currently facing: " + currentlyFacing);
         }
+
+        if (currentWorldLocation != targetWorldLocation)
+        {
+            //Calculate distance
+            distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
+            
+            // Distance moved equals elapsed time times speed..
+            float traveled = (Time.time - startTime) * 1.0f;
+
+            // Fraction of journey completed equals current distance divided by total distance.
+            float traveledAmount = traveled / distance;
+
+            // Set our position as a fraction of the distance between the markers.
+            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, traveledAmount);
+        }
+
     }
 
 
@@ -118,9 +140,28 @@ public class PlayerManager : MonoBehaviour
     private void Move()
     {
         GridBlock current = gm.FindGridBlockContainingObject(this.gameObject);
-        gm.RequestMove(this.gameObject, current.location, current.location + delta);
+        bool canMove = gm.CheckIfMoveIsValid(this.gameObject, current.location, current.location + delta);
+
+        if (canMove)
+        {
+            //isRequestingMove = true;
+            currentWorldLocation = gm.GridToWorld(current.location);
+            targetWorldLocation = gm.GridToWorld(current.location + delta);
+            startTime = Time.time;
+            FireThrusterParticles();
+        }
+
     }
 
+    private IEnumerator FireThrusterParticles()
+    {
+        ParticleSystem thruster = gameObject.GetComponent<ParticleSystem>();
+        thruster.Play();
+
+        yield return new WaitForSeconds(1.0f);
+
+        thruster.Stop();
+    }
 
     private void Attack()
     {
@@ -182,7 +223,7 @@ public class PlayerManager : MonoBehaviour
 
                 if (hp != null)
                 {
-                    StartCoroutine(FireParticleSystem(target));
+                    StartCoroutine(FireCannonParticles(target));
                     hp.ApplyDamage(CannonDamage);
                     Debug.Log("Target's current health: " + hp.CurrentHP);
                 }
@@ -193,7 +234,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    private IEnumerator FireParticleSystem(GridBlock target)
+    private IEnumerator FireCannonParticles(GridBlock target)
     {
         // Question for Pat: Thoughts on explicit typing vs using 'var'?
         ParticleSystem ps = GetComponent<ParticleSystem>();
@@ -206,10 +247,6 @@ public class PlayerManager : MonoBehaviour
         ps.Play();
         yield return new WaitForSeconds(2.0f);
         ps.Stop();
-
-        // Will eventually be ApplyDamage()
-        //GameObject returnedTargetObject = target.objectOnBlock;
-        //gm.RemoveObject(returnedTargetObject, target);
     }
 
 

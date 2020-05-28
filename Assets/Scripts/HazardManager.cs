@@ -168,7 +168,7 @@ public class HazardManager : MonoBehaviour
                 GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
                 if (gridBlock != null)
                 {
-                    bool successful = gm.RequestMove(hazard, gridBlock.location, gridBlock.location + move.delta);
+                    bool successful = gm.CheckIfMoveIsValid(hazard, gridBlock.location, gridBlock.location + move.delta);
                     if (!successful)
                     {
                         RemoveHazard(hazard);
