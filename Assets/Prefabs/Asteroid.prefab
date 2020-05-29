@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1184875554948233084}
   - component: {fileID: 1184875554948233083}
   - component: {fileID: 3772955649787461829}
+  - component: {fileID: 8115030682602689957}
   - component: {fileID: 7029301605206672595}
   - component: {fileID: 5131848284483638815}
   m_Layer: 0
@@ -108,6 +109,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
   moveRate: 1
+--- !u!114 &8115030682602689957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1184875554948233082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentWorldLocation: {x: 0, y: 0, z: 0}
+  targetWorldLocation: {x: 0, y: 0, z: 0}
 --- !u!114 &7029301605206672595
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,7 +169,7 @@ TrailRenderer:
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
+  m_LightmapParameters: {fileID: 15200, guid: 0000000000000000f000000000000000, type: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0

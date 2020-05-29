@@ -1,17 +1,24 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.UIElements;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    #region Inspector Attributes
+    #region Inspector Attributes   
     [SerializeField]
     private float speed = 2.0f;
     [SerializeField]
     private Transform weaponSource;
     [SerializeField]
     private GameObject missile;
-    
+
+    [Header("Player Components")]
+    [SerializeField]
+    private GameObject Thruster;
+    [SerializeField]
+    private GameObject Cannon;
+
     [SerializeField]
     private int CannonDamage;
     [SerializeField]
@@ -29,23 +36,30 @@ public class PlayerManager : MonoBehaviour
     //private bool isRequestingMove = false;
 
     private float attackWaitTime = 2.0f;
-    private float moveWaitTime = 0f;
+    private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.5f;
     #endregion
 
     #region Movement Animation Properties
     public Vector3 currentWorldLocation;
     public Vector3 targetWorldLocation;
-    private float distance;
-    private float startTime;
+    
+    private float moveSpeed = 1.0f;
+    private bool thrusterCoroutineIsRunning = false;
+    private bool moveCoroutineIsRunning = false;
+
+    //private float distance;
+    //private float startTime;
+    //    private float moveDuration = 1.0f;
+    //    private Vector3 velocity = Vector3.zero;
     #endregion
 
     public System.Action OnPlayerAdvance;
 
+
     private void Start()
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
-        currentWorldLocation = gm.GridToWorld(gm.FindGridBlockContainingObject(this.gameObject).location);
     }
 
     void Update()
@@ -57,21 +71,21 @@ public class PlayerManager : MonoBehaviour
             Debug.Log("Currently facing: " + currentlyFacing);
         }
 
-        if (currentWorldLocation != targetWorldLocation)
-        {
-            //Calculate distance
-            distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
-            
+/*      if (currentWorldLocation != targetWorldLocation)
+        {           
             // Distance moved equals elapsed time times speed..
-            float traveled = (Time.time - startTime) * 1.0f;
+            float traveled = (Time.time - startTime) * moveSpeed;
 
             // Fraction of journey completed equals current distance divided by total distance.
             float traveledAmount = traveled / distance;
 
             // Set our position as a fraction of the distance between the markers.
-            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, traveledAmount);
-        }
+            //transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, traveledAmount);
 
+            // Weird that this only works for the first movement
+            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0f, 1f, traveledAmount)); 
+        }
+*/
     }
 
 
@@ -114,7 +128,7 @@ public class PlayerManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (OnPlayerAdvance != null) OnPlayerAdvance();
+            if (OnPlayerAdvance != null && moveCoroutineIsRunning == false) OnPlayerAdvance();
         }
     }
 
@@ -144,24 +158,45 @@ public class PlayerManager : MonoBehaviour
 
         if (canMove)
         {
-            //isRequestingMove = true;
-            currentWorldLocation = gm.GridToWorld(current.location);
             targetWorldLocation = gm.GridToWorld(current.location + delta);
-            startTime = Time.time;
-            FireThrusterParticles();
+            
+            if (thrusterCoroutineIsRunning == false) StartCoroutine(FireThrusterParticles());
+            if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());   
         }
 
     }
 
     private IEnumerator FireThrusterParticles()
     {
-        ParticleSystem thruster = gameObject.GetComponent<ParticleSystem>();
-        thruster.Play();
-
+        ParticleSystem ps = Thruster.GetComponent<ParticleSystem>();
+        ps.Play();
         yield return new WaitForSeconds(1.0f);
-
-        thruster.Stop();
+        ps.Stop();
     }
+
+    private IEnumerator AnimateMovementCoroutine()
+    {
+        moveCoroutineIsRunning = true;
+
+        // D = s * t
+        float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
+        float startTime = Time.time;
+        float percentTraveled = 0.0f;
+
+        while (percentTraveled <= 1.0f)
+        {
+            float traveled = (Time.time - startTime) * moveSpeed;
+            percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
+            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0f, 1f, percentTraveled));
+
+            Debug.Log(percentTraveled);
+            yield return null;
+        }
+        
+        currentWorldLocation = targetWorldLocation;
+        moveCoroutineIsRunning = false;
+    }
+
 
     private void Attack()
     {
@@ -233,11 +268,9 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-
     private IEnumerator FireCannonParticles(GridBlock target)
     {
-        // Question for Pat: Thoughts on explicit typing vs using 'var'?
-        ParticleSystem ps = GetComponent<ParticleSystem>();
+        ParticleSystem ps = Cannon.GetComponent<ParticleSystem>();
         var trigger = ps.trigger;
         trigger.enabled = true;
         
@@ -247,14 +280,5 @@ public class PlayerManager : MonoBehaviour
         ps.Play();
         yield return new WaitForSeconds(2.0f);
         ps.Stop();
-    }
-
-
-    void FireCannon()
-    {
-        // TODO: Rename this function once all weapons are implemented
-
-        //ps.trigger.GetCollider(1);
-        //returnedTarget.objectOnBlock.GetComponent<Tra>
     }
 }

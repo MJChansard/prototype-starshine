@@ -16,16 +16,6 @@ public class HazardManager : MonoBehaviour
     private int ticksUntilNewSpawn;
     private int minTicksUntilSpawn = 4;
     private int maxTicksUntilSpawn = 8;
-
-    private int gridCornerLL;
-    private int gridCornerLR;
-    private int gridCornerUL;
-    private int gridCornerUR;
-
-    private int gridMinX;
-    private int gridMaxX;
-    private int gridMinY;
-    private int gridMaxY;
     
     private List<GridBlock> spawnMoveUp = new List<GridBlock>();
     private List<GridBlock> spawnMoveDown = new List<GridBlock>();
@@ -37,12 +27,13 @@ public class HazardManager : MonoBehaviour
     private List<GameObject> hazards = new List<GameObject>();
     
 
-    void Start()
+    private void Start()
     {
         gm = GetComponent<GridManager>(); 
         
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
+
 
     public void Init()
     {
@@ -62,14 +53,12 @@ public class HazardManager : MonoBehaviour
         {
             if (gm.levelGrid[x, 0].canSpawn)
             {
-                Debug.Log("Populating [spawnMoveUp].");
                 spawnMoveUp.Add(gm.levelGrid[x, 0]);
 
             }
 
             if (gm.levelGrid[x, rowRange].canSpawn)
             {
-                Debug.Log("Populating [spawnMoveDown].");
                 spawnMoveDown.Add(gm.levelGrid[x, rowRange]);
             }
         }
@@ -135,7 +124,6 @@ public class HazardManager : MonoBehaviour
                 spawnMovement.SetMovePatternRight();
                 break;
         }
-        Debug.Log("Calling gm.PlaceObject");
         gm.PlaceObject(hazardToSpawn, spawnPosition);
         hazards.Add(hazardToSpawn);
     }
@@ -172,6 +160,10 @@ public class HazardManager : MonoBehaviour
                     if (!successful)
                     {
                         RemoveHazard(hazard);
+                    }
+                    else
+                    {
+                        // Movement coroutine needs to go here
                     }
                 }
             }
