@@ -164,6 +164,10 @@ public class HazardManager : MonoBehaviour
                     else
                     {
                         // Movement coroutine needs to go here
+                        //Vector2Int[] parms = new Vector2Int[2] { gridBlock.location, gridBlock.location + move.delta };
+                        //StartCoroutine(MoveHazardCoroutine(parms));
+
+                        AnimateHazardMovement(hazard, gridBlock, move.delta);
                     }
                 }
             }
@@ -185,5 +189,30 @@ public class HazardManager : MonoBehaviour
         currentTick++;
         Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
         ticksUntilNewSpawn--;
+    }
+
+    private void AnimateHazardMovement(GameObject hazard, Vector2Int currentGridLocation, Vector2Int moveDirection)
+    {
+
+    }
+
+    private IEnumerator MoveHazardCoroutine(Vector2Int[] parms)
+    { 
+        Vector3 currentWorldLocation = gm.GridToWorld(parms[0]);
+        Vector3 targetWorldLocation = gm.GridToWorld(parms[1]);
+
+        float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
+        float startTime = Time.time;
+        float percentTraveled = 0.0f;
+
+        while (percentTraveled <= 1.0f)
+        {
+            float traveled = (Time.time - startTime) * 1.0f;
+            percentTraveled = traveled / distance;
+            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+
+            yield return null;
+        }
+
     }
 }
