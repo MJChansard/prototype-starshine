@@ -191,13 +191,8 @@ public class HazardManager : MonoBehaviour
         ticksUntilNewSpawn--;
     }
 
-    private void AnimateHazardMovement(GameObject hazard, Vector2Int currentGridLocation, Vector2Int moveDirection)
-    {
-
-    }
-
     private IEnumerator MoveHazardCoroutine(Vector2Int[] parms)
-    { 
+    {
         Vector3 currentWorldLocation = gm.GridToWorld(parms[0]);
         Vector3 targetWorldLocation = gm.GridToWorld(parms[1]);
 

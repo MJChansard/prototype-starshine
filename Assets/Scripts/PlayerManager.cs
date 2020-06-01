@@ -27,9 +27,9 @@ public class PlayerManager : MonoBehaviour
     private int RailDamage;
     #endregion
 
+    #region Private Fields
     private GridManager gm;
 
-    #region Private Fields
     private string currentlyFacing = "";
     private Vector2Int delta = Vector2Int.zero;
     private bool isRequestingAttack = false;
@@ -189,7 +189,6 @@ public class PlayerManager : MonoBehaviour
             percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
             transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0f, 1f, percentTraveled));
 
-            Debug.Log(percentTraveled);
             yield return null;
         }
         
