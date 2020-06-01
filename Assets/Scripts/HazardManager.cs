@@ -148,7 +148,6 @@ public class HazardManager : MonoBehaviour
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
-//            Hazard hazardData = hazardObject.GetComponent<Hazard>();
             Health hazardHealth = hazardObject.GetComponent<Health>();
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
@@ -156,6 +155,7 @@ public class HazardManager : MonoBehaviour
             if (hazardHealth.CurrentHP <= 0)
             {
                 RemoveHazard(hazardsInPlay[i]);
+                continue;
             }
 
             
@@ -163,22 +163,20 @@ public class HazardManager : MonoBehaviour
             {
                 Debug.Log(hazardObject.name + " is moving by " + move.delta);
 
-                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazardObject);
-                if (gridBlock != null)
+                GridBlock currentGridBlock = gm.FindGridBlockContainingObject(hazardObject);
+                Vector2Int targetGridLocation = currentGridBlock.location + move.delta;
+
+                if (currentGridBlock != null)
                 {
-                    bool successful = gm.CheckIfMoveIsValid(hazardObject, gridBlock.location, gridBlock.location + move.delta);
+                    bool successful = gm.CheckIfMoveIsValid(hazardObject, currentGridBlock.location, currentGridBlock.location + move.delta);
                     if (!successful)
                     {
                         RemoveHazard(hazardsInPlay[i]);
                     }
                     else
                     {
-                        Vector2Int targetGridLocation = gridBlock.location + move.delta;
+                        
                         hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(targetGridLocation);
-
-                        //Vector2Int[] parms = new Vector2Int[2] { gridBlock.location, gridBlock.location + move.delta };
-                        //StartCoroutine(MoveHazardCoroutine(parms));
-
                         StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
                     }
                 }
