@@ -24,7 +24,7 @@ public class HazardManager : MonoBehaviour
     //private List<GridBlock> spawnMultiMove = new List<GridBlock>();
     #endregion
 
-    private List<GameObject> hazards = new List<GameObject>();
+    private List<Hazard> hazardsInPlay = new List<Hazard>();
     
 
     private void Start()
@@ -94,9 +94,9 @@ public class HazardManager : MonoBehaviour
         int spawnIndex;
         Vector2Int spawnPosition = new Vector2Int();
 
-        // Spawn hazard & save reference to its <MovePattern>
+        // Spawn hazard & store component references
         GameObject hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
-        Debug.Log("Hazard to Spawn: " + hazardToSpawn);
+        Hazard hazardData = hazardToSpawn.GetComponent<Hazard>();
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)
@@ -125,49 +125,61 @@ public class HazardManager : MonoBehaviour
                 break;
         }
         gm.PlaceObject(hazardToSpawn, spawnPosition);
-        hazards.Add(hazardToSpawn);
+
+        // Update Hazard data
+        hazardData.currentWorldLocation = gm.GridToWorld(spawnPosition);
+        hazardData.targetWorldLocation = gm.GridToWorld(spawnPosition);
+
+        hazardsInPlay.Add(hazardToSpawn.GetComponent<Hazard>());
     }
 
 
-    public void RemoveHazard(GameObject hazard)
+    public void RemoveHazard(Hazard hazard)
     {
-        GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
-        gm.RemoveObject(hazard, gridBlock);
-        hazards.Remove(hazard);
+        GameObject hazardToRemove = hazard.gameObject;
+        GridBlock gridBlock = gm.FindGridBlockContainingObject(hazardToRemove);
+        gm.RemoveObject(hazardToRemove, gridBlock);
+        hazardsInPlay.Remove(hazard);
     }
 
 
     public void OnTickUpdate()
     { 
-        for (int i = hazards.Count - 1; i > -1; i--)
+        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
-            GameObject hazard = hazards[i];
+            GameObject hazardObject = hazardsInPlay[i].gameObject;
+//            Hazard hazardData = hazardObject.GetComponent<Hazard>();
+            Health hazardHealth = hazardObject.GetComponent<Health>();
+            MovePattern move = hazardObject.GetComponent<MovePattern>();
 
-            Health hp = hazard.GetComponent<Health>();
-            if (hp.CurrentHP <= 0)
+
+            if (hazardHealth.CurrentHP <= 0)
             {
-                RemoveHazard(hazard);
+                RemoveHazard(hazardsInPlay[i]);
             }
 
-            MovePattern move = hazard.GetComponent<MovePattern>();
+            
             if (move.moveRate == 1 || currentTick % move.moveRate == 0)
             {
-                Debug.Log(hazard.name + " is moving by " + move.delta);
-                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazard);
+                Debug.Log(hazardObject.name + " is moving by " + move.delta);
+
+                GridBlock gridBlock = gm.FindGridBlockContainingObject(hazardObject);
                 if (gridBlock != null)
                 {
-                    bool successful = gm.CheckIfMoveIsValid(hazard, gridBlock.location, gridBlock.location + move.delta);
+                    bool successful = gm.CheckIfMoveIsValid(hazardObject, gridBlock.location, gridBlock.location + move.delta);
                     if (!successful)
                     {
-                        RemoveHazard(hazard);
+                        RemoveHazard(hazardsInPlay[i]);
                     }
                     else
                     {
-                        // Movement coroutine needs to go here
+                        Vector2Int targetGridLocation = gridBlock.location + move.delta;
+                        hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(targetGridLocation);
+
                         //Vector2Int[] parms = new Vector2Int[2] { gridBlock.location, gridBlock.location + move.delta };
                         //StartCoroutine(MoveHazardCoroutine(parms));
 
-                        AnimateHazardMovement(hazard, gridBlock, move.delta);
+                        StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
                     }
                 }
             }
@@ -180,7 +192,7 @@ public class HazardManager : MonoBehaviour
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
 
-        if (hazards.Count == 0)
+        if (hazardsInPlay.Count == 0)
         {
             Debug.Log("Preparing Hazard: Hazard count condition.");
             PrepareHazard();
@@ -191,23 +203,22 @@ public class HazardManager : MonoBehaviour
         ticksUntilNewSpawn--;
     }
 
-    private IEnumerator MoveHazardCoroutine(Vector2Int[] parms)
+    private IEnumerator MoveHazardCoroutine(Hazard hazardToMove)
     {
-        Vector3 currentWorldLocation = gm.GridToWorld(parms[0]);
-        Vector3 targetWorldLocation = gm.GridToWorld(parms[1]);
-
-        float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
+        // QUESTION FOR PAT:  Should I store local copies of the data here or keep referencing hazardToRemove?
         float startTime = Time.time;
         float percentTraveled = 0.0f;
 
         while (percentTraveled <= 1.0f)
         {
             float traveled = (Time.time - startTime) * 1.0f;
-            percentTraveled = traveled / distance;
-            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+            percentTraveled = traveled / hazardToMove.Distance;
+            hazardToMove.transform.position = Vector3.Lerp(hazardToMove.currentWorldLocation, hazardToMove.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
 
             yield return null;
         }
+
+        hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
 
     }
 }

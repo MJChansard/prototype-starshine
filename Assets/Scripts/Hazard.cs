@@ -7,9 +7,10 @@ public class Hazard : MonoBehaviour
     public Vector3 currentWorldLocation;
     public Vector3 targetWorldLocation;
     
-    private float distance;
-    private float startTime;
+    public  float Distance
+    {
+        get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
+    }
+
     private float moveSpeed = 1.0f;
-
-
 }

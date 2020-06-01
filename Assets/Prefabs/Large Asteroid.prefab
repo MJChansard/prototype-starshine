@@ -12,8 +12,9 @@ GameObject:
   - component: {fileID: 226724313900393985}
   - component: {fileID: 226724313900393984}
   - component: {fileID: 226724313900393987}
-  - component: {fileID: 9008877383783918869}
+  - component: {fileID: 4813689670967235141}
   - component: {fileID: 114194421757701184}
+  - component: {fileID: 9008877383783918869}
   m_Layer: 0
   m_Name: Large Asteroid
   m_TagString: Hazard
@@ -98,6 +99,33 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4813689670967235141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226724313900393986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentWorldLocation: {x: 0, y: 0, z: 0}
+  targetWorldLocation: {x: 0, y: 0, z: 0}
+--- !u!114 &114194421757701184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226724313900393986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 200
 --- !u!114 &9008877383783918869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112,16 +140,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
   moveRate: 2
---- !u!114 &114194421757701184
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 226724313900393986}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHP: 200
