@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.UIElements;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
@@ -45,13 +46,12 @@ public class PlayerManager : MonoBehaviour
     public Vector3 targetWorldLocation;
     
     private float moveSpeed = 1.0f;
-    private bool thrusterCoroutineIsRunning = false;
-    private bool moveCoroutineIsRunning = false;
+    #endregion
 
-    //private float distance;
-    //private float startTime;
-    //    private float moveDuration = 1.0f;
-    //    private Vector3 velocity = Vector3.zero;
+    #region Coroutine Status
+    private bool thrusterCoroutineIsRunning = false;
+    private bool cannonCoroutineIsRunning = false;
+    private bool moveCoroutineIsRunning = false;
     #endregion
 
     public System.Action OnPlayerAdvance;
@@ -91,44 +91,51 @@ public class PlayerManager : MonoBehaviour
 
     void PlayerInput()
     {
-        if (Input.GetKeyDown(KeyCode.W))
+        if (thrusterCoroutineIsRunning == false && moveCoroutineIsRunning == false && cannonCoroutineIsRunning == false)
         {
+            if (Input.GetKeyDown(KeyCode.W))
+            {
 
-            transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
-            currentlyFacing = "Up";
-            delta = Vector2Int.up;
+                transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
+                currentlyFacing = "Up";
+                delta = Vector2Int.up;
+            }
+
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
+                currentlyFacing = "Down";
+                delta = Vector2Int.down;
+            }
+
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
+                currentlyFacing = "Left";
+                delta = Vector2Int.left;
+            }
+
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
+                currentlyFacing = "Right";
+                delta = Vector2Int.right;
+            }
+
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                isRequestingAttack = true;
+                if (OnPlayerAdvance != null) OnPlayerAdvance();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (OnPlayerAdvance != null) OnPlayerAdvance();
+            }
         }
-
-        if (Input.GetKeyDown(KeyCode.S))
+        else
         {
-            transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
-            currentlyFacing = "Down";
-            delta = Vector2Int.down;
-        }
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
-            currentlyFacing = "Left";
-            delta = Vector2Int.left;
-        }
-
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
-            currentlyFacing = "Right";
-            delta = Vector2Int.right;
-        }
-
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            isRequestingAttack = true;
-            if (OnPlayerAdvance != null) OnPlayerAdvance();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (OnPlayerAdvance != null && moveCoroutineIsRunning == false) OnPlayerAdvance();
+            return;
         }
     }
 
@@ -140,6 +147,7 @@ public class PlayerManager : MonoBehaviour
             isRequestingAttack = false;
             Attack();
             return attackWaitTime;
+
         }
         else if (delta != Vector2Int.zero)
         {
@@ -160,18 +168,22 @@ public class PlayerManager : MonoBehaviour
         {
             targetWorldLocation = gm.GridToWorld(current.location + delta);
             
-            if (thrusterCoroutineIsRunning == false) StartCoroutine(FireThrusterParticles());
+            if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
             if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());   
         }
 
     }
 
-    private IEnumerator FireThrusterParticles()
+    private IEnumerator AnimateThrusterCoroutine()
     {
+        thrusterCoroutineIsRunning = true;
+
         ParticleSystem ps = Thruster.GetComponent<ParticleSystem>();
         ps.Play();
         yield return new WaitForSeconds(1.0f);
         ps.Stop();
+
+        thrusterCoroutineIsRunning = false;
     }
 
     private IEnumerator AnimateMovementCoroutine()
@@ -257,7 +269,7 @@ public class PlayerManager : MonoBehaviour
 
                 if (hp != null)
                 {
-                    StartCoroutine(FireCannonParticles(target));
+                    StartCoroutine(AnimateCannonCoroutine(target));
                     hp.ApplyDamage(CannonDamage);
                     Debug.Log("Target's current health: " + hp.CurrentHP);
                 }
@@ -267,8 +279,10 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private IEnumerator FireCannonParticles(GridBlock target)
+    private IEnumerator AnimateCannonCoroutine(GridBlock target)
     {
+        cannonCoroutineIsRunning = true;
+
         ParticleSystem ps = Cannon.GetComponent<ParticleSystem>();
         var trigger = ps.trigger;
         trigger.enabled = true;
@@ -279,5 +293,7 @@ public class PlayerManager : MonoBehaviour
         ps.Play();
         yield return new WaitForSeconds(2.0f);
         ps.Stop();
+
+        cannonCoroutineIsRunning = false;
     }
 }
