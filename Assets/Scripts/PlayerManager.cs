@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.UIElements;
 using UnityEditorInternal;
@@ -7,25 +8,16 @@ using UnityEngine;
 public class PlayerManager : MonoBehaviour
 {
     #region Inspector Attributes   
-    [SerializeField]
-    private float speed = 2.0f;
-    [SerializeField]
-    private Transform weaponSource;
-    [SerializeField]
-    private GameObject missile;
+    [SerializeField] private float speed = 2.0f;
+    [SerializeField] private Transform weaponSource;
 
     [Header("Player Components")]
-    [SerializeField]
-    private GameObject Thruster;
-    [SerializeField]
-    private GameObject Cannon;
+    [SerializeField] private GameObject Thruster;
+    [SerializeField] private GameObject Cannon;
 
-    [SerializeField]
-    private int CannonDamage;
-    [SerializeField]
-    private int MissileDamage;
-    [SerializeField]
-    private int RailDamage;
+    [SerializeField] private int CannonDamage;
+    [SerializeField] private int MissileDamage;
+    [SerializeField] private int RailDamage;
     #endregion
 
     #region Private Fields
@@ -54,12 +46,17 @@ public class PlayerManager : MonoBehaviour
     private bool moveCoroutineIsRunning = false;
     #endregion
 
+    [Header("Weapon Inventory")]
+    [SerializeField] private Weapon[] weaponInventory;
+    Weapon currentWeapon;
+
     public System.Action OnPlayerAdvance;
 
 
     private void Start()
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
+        currentWeapon = weaponInventory[0];
     }
 
     void Update()
@@ -91,6 +88,18 @@ public class PlayerManager : MonoBehaviour
 
     void PlayerInput()
     {
+        // Weapon Selection
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            SelectWeapon(-1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            SelectWeapon(1);
+        }
+
+        // Player Movement & turn advancement
         if (thrusterCoroutineIsRunning == false && moveCoroutineIsRunning == false && cannonCoroutineIsRunning == false)
         {
             if (Input.GetKeyDown(KeyCode.W))
@@ -145,7 +154,7 @@ public class PlayerManager : MonoBehaviour
         if (isRequestingAttack)
         {
             isRequestingAttack = false;
-            Attack();
+            Attack(currentWeapon);
             return attackWaitTime;
 
         }
@@ -158,6 +167,24 @@ public class PlayerManager : MonoBehaviour
         return waitWaitTime;
     }
 
+
+    private void SelectWeapon(int choice)
+    {
+        int weaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
+        if (choice == -1 && weaponIndex > 0)
+        {
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
+            currentWeapon = weaponInventory[weaponIndex - 1];
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
+        }
+
+        if (choice == 1 && weaponIndex < weaponInventory.Length -1)
+        {
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
+            currentWeapon = weaponInventory[weaponIndex + 1];
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
+        }
+    }
 
     private void Move()
     {
@@ -209,7 +236,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    private void Attack()
+    private void Attack(Weapon withWeapon)
     {
         /*  NOTES
          *   - Might be helpful to re-tool this to be FindWeaponTarget()
@@ -226,7 +253,8 @@ public class PlayerManager : MonoBehaviour
          */
 
         GridBlock currentlyAt = gm.FindGridBlockContainingObject(this.gameObject);
-        
+        var weapon = withWeapon.GetType();
+
         // Determine weapon path
         List<GridBlock> possibleTargets = new List<GridBlock>();
         switch (currentlyFacing)
@@ -269,31 +297,17 @@ public class PlayerManager : MonoBehaviour
 
                 if (hp != null)
                 {
-                    StartCoroutine(AnimateCannonCoroutine(target));
-                    hp.ApplyDamage(CannonDamage);
+
+                    withWeapon.StartAnimationCoroutine(target);
+                    //StartCoroutine(AnimateCannonCoroutine(target));
+                    hp.ApplyDamage(withWeapon.Damage);
                     Debug.Log("Target's current health: " + hp.CurrentHP);
                 }
 
-                break;       
+                break;
             }
         }
     }
 
-    private IEnumerator AnimateCannonCoroutine(GridBlock target)
-    {
-        cannonCoroutineIsRunning = true;
 
-        ParticleSystem ps = Cannon.GetComponent<ParticleSystem>();
-        var trigger = ps.trigger;
-        trigger.enabled = true;
-        
-        trigger.SetCollider(0, target.objectOnBlock.GetComponent<Collider>());
-        trigger.radiusScale = 0.5f;
-
-        ps.Play();
-        yield return new WaitForSeconds(2.0f);
-        ps.Stop();
-
-        cannonCoroutineIsRunning = false;
-    }
 }
