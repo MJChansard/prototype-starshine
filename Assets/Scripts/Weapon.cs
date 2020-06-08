@@ -22,9 +22,7 @@ public abstract class Weapon : MonoBehaviour
         }
     }
 
-    [SerializeField] GameObject projectilePrefab;
-
-    
+        
     abstract protected IEnumerator AnimationCoroutine(GridBlock target);
 
     public void StartAnimationCoroutine(GridBlock target)

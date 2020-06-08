@@ -21,6 +21,9 @@ public class MissileLauncher : Weapon
         }
     }
 
+    public GameObject projectilePrefab;
+
+
     override protected IEnumerator AnimationCoroutine(GridBlock target)
     {
         Debug.Log("Missile Launcher currently has no animation.");

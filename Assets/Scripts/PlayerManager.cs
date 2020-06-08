@@ -26,6 +26,8 @@ public class PlayerManager : MonoBehaviour
     private string currentlyFacing = "";
     private Vector2Int delta = Vector2Int.zero;
     private bool isRequestingAttack = false;
+
+    private bool PlayerTurnActive = false;
     //private bool isRequestingMove = false;
 
     private float attackWaitTime = 2.0f;
@@ -149,6 +151,23 @@ public class PlayerManager : MonoBehaviour
     }
 
 
+    private void SelectWeapon(int choice)
+    {
+        int weaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
+        if (choice == -1 && weaponIndex > 0)
+        {
+            currentWeapon = weaponInventory[weaponIndex - 1];
+            Debug.LogFormat("Weapon swap completed.  Current Weapon: {0}", currentWeapon.GetComponent<Weapon>().Name);
+        }
+
+        if (choice == 1 && weaponIndex < weaponInventory.Length - 1)
+        {            
+            currentWeapon = weaponInventory[weaponIndex + 1];
+            Debug.LogFormat("Weapon swap completed.  Current Weapon: {0}", currentWeapon.GetComponent<Weapon>().Name);
+        }
+    }
+
+   
     public float OnTickUpdate()
     {
         if (isRequestingAttack)
@@ -167,24 +186,6 @@ public class PlayerManager : MonoBehaviour
         return waitWaitTime;
     }
 
-
-    private void SelectWeapon(int choice)
-    {
-        int weaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
-        if (choice == -1 && weaponIndex > 0)
-        {
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
-            currentWeapon = weaponInventory[weaponIndex - 1];
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
-        }
-
-        if (choice == 1 && weaponIndex < weaponInventory.Length -1)
-        {
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
-            currentWeapon = weaponInventory[weaponIndex + 1];
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.name);
-        }
-    }
 
     private void Move()
     {
@@ -238,11 +239,6 @@ public class PlayerManager : MonoBehaviour
 
     private void Attack(Weapon withWeapon)
     {
-        /*  NOTES
-         *   - Might be helpful to re-tool this to be FindWeaponTarget()
-         *   - Add a parameter for the weapon type to execute specific behavior
-         */
-
         /*  STEPS
          *   - Need to find current location on the grid (GridBlock)
          *   - Determine which direction player is facing
@@ -253,7 +249,15 @@ public class PlayerManager : MonoBehaviour
          */
 
         GridBlock currentlyAt = gm.FindGridBlockContainingObject(this.gameObject);
-        var weapon = withWeapon.GetType();
+
+        if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
+        {
+            MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
+            GameObject missile = Instantiate(launcher.projectilePrefab, transform.position, Quaternion.identity);
+
+            gm.PlaceObject(missile, currentlyAt.location);
+            return;
+        }
 
         // Determine weapon path
         List<GridBlock> possibleTargets = new List<GridBlock>();
@@ -297,7 +301,6 @@ public class PlayerManager : MonoBehaviour
 
                 if (hp != null)
                 {
-
                     withWeapon.StartAnimationCoroutine(target);
                     //StartCoroutine(AnimateCannonCoroutine(target));
                     hp.ApplyDamage(withWeapon.Damage);
