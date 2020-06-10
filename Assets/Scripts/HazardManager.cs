@@ -6,7 +6,7 @@ public class HazardManager : MonoBehaviour
 {
     #region Inspector Attributes
     [SerializeField]
-    GameObject[] hazardPrefabs;
+    Hazard[] hazardPrefabs;
     #endregion
 
     #region Private Fields    
@@ -88,6 +88,8 @@ public class HazardManager : MonoBehaviour
          *   - Activate hazard spawn movement pattern based on spawn location
          */
 
+        Debug.Log("PrepareHazard() called.");
+
         // Local variables
         int hazardType = Random.Range(0, hazardPrefabs.Length);
         int spawnAxis = Random.Range(1, 4);
@@ -95,8 +97,7 @@ public class HazardManager : MonoBehaviour
         Vector2Int spawnPosition = new Vector2Int();
 
         // Spawn hazard & store component references
-        GameObject hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
-        Hazard hazardData = hazardToSpawn.GetComponent<Hazard>();
+        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]) as Hazard;
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)
@@ -124,13 +125,20 @@ public class HazardManager : MonoBehaviour
                 spawnMovement.SetMovePatternRight();
                 break;
         }
-        gm.PlaceObject(hazardToSpawn, spawnPosition);
 
-        // Update Hazard data
-        hazardData.currentWorldLocation = gm.GridToWorld(spawnPosition);
-        hazardData.targetWorldLocation = gm.GridToWorld(spawnPosition);
+        AddHazard(hazardToSpawn, spawnPosition);
+    }
 
-        hazardsInPlay.Add(hazardToSpawn.GetComponent<Hazard>());
+
+    public void AddHazard(Hazard hazard, Vector2Int position)
+    {
+        Debug.Log("AddHazard() called.");
+        gm.PlaceObject(hazard.gameObject, position);
+
+        hazard.currentWorldLocation = gm.GridToWorld(position);
+        hazard.targetWorldLocation = gm.GridToWorld(position);
+
+        hazardsInPlay.Add(hazard);
     }
 
 
@@ -143,6 +151,8 @@ public class HazardManager : MonoBehaviour
     }
 
 
+
+
     public void OnTickUpdate()
     { 
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
@@ -151,8 +161,7 @@ public class HazardManager : MonoBehaviour
             Health hazardHealth = hazardObject.GetComponent<Health>();
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
-
-            if (hazardHealth.CurrentHP <= 0)
+            if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
             {
                 RemoveHazard(hazardsInPlay[i]);
                 continue;
@@ -175,7 +184,6 @@ public class HazardManager : MonoBehaviour
                     }
                     else
                     {
-                        
                         hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(targetGridLocation);
                         StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
                     }
@@ -203,7 +211,6 @@ public class HazardManager : MonoBehaviour
 
     private IEnumerator MoveHazardCoroutine(Hazard hazardToMove)
     {
-        // QUESTION FOR PAT:  Should I store local copies of the data here or keep referencing hazardToRemove?
         float startTime = Time.time;
         float percentTraveled = 0.0f;
 
@@ -217,6 +224,5 @@ public class HazardManager : MonoBehaviour
         }
 
         hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
-
     }
 }

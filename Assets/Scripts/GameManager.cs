@@ -48,14 +48,22 @@ public class GameManager : MonoBehaviour
     private IEnumerator OnTickCoroutine()
     {
         pm.OnPlayerAdvance -= OnTick;
-       
+
+        pm.OnPlayerAddHazard += OnAddHazard;
         float delay = pm.OnTickUpdate();
         yield return new WaitForSeconds(delay);
+        pm.OnPlayerAddHazard -= OnAddHazard;
 
         hm.OnTickUpdate();
         
         CurrentTick += 1;
         pm.OnPlayerAdvance += OnTick;
         yield return null;
+    }
+
+    private void OnAddHazard(Hazard hazardToAdd, Vector2Int position)
+    {
+        Debug.Log("OnAddHazard() called.");
+        hm.AddHazard(hazardToAdd, position);
     }
 }

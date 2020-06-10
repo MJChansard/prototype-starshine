@@ -15,9 +15,9 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private GameObject Thruster;
     [SerializeField] private GameObject Cannon;
 
-    [SerializeField] private int CannonDamage;
-    [SerializeField] private int MissileDamage;
-    [SerializeField] private int RailDamage;
+//    [SerializeField] private int CannonDamage;
+//    [SerializeField] private int MissileDamage;
+//    [SerializeField] private int RailDamage;
     #endregion
 
     #region Private Fields
@@ -53,7 +53,7 @@ public class PlayerManager : MonoBehaviour
     Weapon currentWeapon;
 
     public System.Action OnPlayerAdvance;
-
+    public System.Action<Hazard, Vector2Int> OnPlayerAddHazard;
 
     private void Start()
     {
@@ -175,7 +175,6 @@ public class PlayerManager : MonoBehaviour
             isRequestingAttack = false;
             Attack(currentWeapon);
             return attackWaitTime;
-
         }
         else if (delta != Vector2Int.zero)
         {
@@ -254,8 +253,38 @@ public class PlayerManager : MonoBehaviour
         {
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
             GameObject missile = Instantiate(launcher.projectilePrefab, transform.position, Quaternion.identity);
+            Hazard missileHazard = missile.GetComponent<Hazard>();
 
-            gm.PlaceObject(missile, currentlyAt.location);
+            MovePattern movement = missile.GetComponent<MovePattern>();
+            switch (currentlyFacing)
+            {
+                case "Up":
+                    movement.SetMovePatternUp();
+                    break;
+
+                case "Down":
+                    movement.SetMovePatternDown();
+                    break;
+
+                case "Left":
+                    movement.SetMovePatternLeft();
+                    break;
+
+                case "Right":
+                    movement.SetMovePatternRight();
+                    break;
+            }
+
+            if (OnPlayerAddHazard != null)
+            {
+                Debug.Log("OnPlayerAddHazard() called.");
+                OnPlayerAddHazard(missileHazard, currentlyAt.location);
+            }
+            else
+            {
+                Debug.LogError("No subscribers to OnPlayerHazard().");
+            }
+           
             return;
         }
 
