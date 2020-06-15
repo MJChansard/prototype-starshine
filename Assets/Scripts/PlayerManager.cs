@@ -9,15 +9,15 @@ public class PlayerManager : MonoBehaviour
 {
     #region Inspector Attributes   
     [SerializeField] private float speed = 2.0f;
-    [SerializeField] private Transform weaponSource;
 
     [Header("Player Components")]
     [SerializeField] private GameObject Thruster;
     [SerializeField] private GameObject Cannon;
+    [SerializeField] private Transform weaponSource;
 
-//    [SerializeField] private int CannonDamage;
-//    [SerializeField] private int MissileDamage;
-//    [SerializeField] private int RailDamage;
+    [Header("Weapon Inventory")]
+    [SerializeField] private Weapon[] weaponInventory;
+    Weapon currentWeapon;
     #endregion
 
     #region Private Fields
@@ -48,10 +48,6 @@ public class PlayerManager : MonoBehaviour
     private bool moveCoroutineIsRunning = false;
     #endregion
 
-    [Header("Weapon Inventory")]
-    [SerializeField] private Weapon[] weaponInventory;
-    Weapon currentWeapon;
-
     public System.Action OnPlayerAdvance;
     public System.Action<Hazard, Vector2Int> OnPlayerAddHazard;
 
@@ -69,22 +65,6 @@ public class PlayerManager : MonoBehaviour
         {
             Debug.Log("Currently facing: " + currentlyFacing);
         }
-
-/*      if (currentWorldLocation != targetWorldLocation)
-        {           
-            // Distance moved equals elapsed time times speed..
-            float traveled = (Time.time - startTime) * moveSpeed;
-
-            // Fraction of journey completed equals current distance divided by total distance.
-            float traveledAmount = traveled / distance;
-
-            // Set our position as a fraction of the distance between the markers.
-            //transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, traveledAmount);
-
-            // Weird that this only works for the first movement
-            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0f, 1f, traveledAmount)); 
-        }
-*/
     }
 
 
@@ -247,44 +227,16 @@ public class PlayerManager : MonoBehaviour
          *   - Update Tick
          */
 
-        GridBlock currentlyAt = gm.FindGridBlockContainingObject(this.gameObject);
+        GridBlock currentGrid = gm.FindGridBlockContainingObject(this.gameObject);
 
         if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
         {
+            GridBlock targetGrid = gm.FindGridBlockByLocation(currentGrid.location + delta);
+
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
-            GameObject missile = Instantiate(launcher.projectilePrefab, transform.position, Quaternion.identity);
-            Hazard missileHazard = missile.GetComponent<Hazard>();
+            //launcher.LaunchMissile(currentGrid, targetGrid);
+            StartCoroutine(launcher.LaunchMissileCoroutine(currentGrid, targetGrid));
 
-            MovePattern movement = missile.GetComponent<MovePattern>();
-            switch (currentlyFacing)
-            {
-                case "Up":
-                    movement.SetMovePatternUp();
-                    break;
-
-                case "Down":
-                    movement.SetMovePatternDown();
-                    break;
-
-                case "Left":
-                    movement.SetMovePatternLeft();
-                    break;
-
-                case "Right":
-                    movement.SetMovePatternRight();
-                    break;
-            }
-
-            if (OnPlayerAddHazard != null)
-            {
-                Debug.Log("OnPlayerAddHazard() called.");
-                OnPlayerAddHazard(missileHazard, currentlyAt.location);
-            }
-            else
-            {
-                Debug.LogError("No subscribers to OnPlayerHazard().");
-            }
-           
             return;
         }
 
@@ -294,30 +246,30 @@ public class PlayerManager : MonoBehaviour
         {
             // Facing forward
             case "Up":
-                for (int y = currentlyAt.location.y + 1; y < gm.GridHeight; y++)
+                for (int y = currentGrid.location.y + 1; y < gm.GridHeight; y++)
                 {
-                    possibleTargets.Add(gm.levelGrid[currentlyAt.location.x, y]);
+                    possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
                 }
                 break;
             // Facing down
             case "Down":
-                for (int y = currentlyAt.location.y - 1; y >= 0; y--)
+                for (int y = currentGrid.location.y - 1; y >= 0; y--)
                 {
-                    possibleTargets.Add(gm.levelGrid[currentlyAt.location.x, y]);
+                    possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
                 }
                 break;
             // Facing left
             case "Left":
-                for (int x = currentlyAt.location.x -1 ; x >= 0; x--)
+                for (int x = currentGrid.location.x -1 ; x >= 0; x--)
                 {
-                    possibleTargets.Add(gm.levelGrid[x, currentlyAt.location.y]);
+                    possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
                 }
                 break;
             // Facing right
             case "Right":
-                for (int x = currentlyAt.location.x + 1; x < gm.GridWidth; x++)
+                for (int x = currentGrid.location.x + 1; x < gm.GridWidth; x++)
                 {
-                    possibleTargets.Add(gm.levelGrid[x, currentlyAt.location.y]);
+                    possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
                 }
                 break;
         }
@@ -331,7 +283,6 @@ public class PlayerManager : MonoBehaviour
                 if (hp != null)
                 {
                     withWeapon.StartAnimationCoroutine(target);
-                    //StartCoroutine(AnimateCannonCoroutine(target));
                     hp.ApplyDamage(withWeapon.Damage);
                     Debug.Log("Target's current health: " + hp.CurrentHP);
                 }

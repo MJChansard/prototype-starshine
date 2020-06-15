@@ -52,7 +52,7 @@ public class GameManager : MonoBehaviour
         pm.OnPlayerAddHazard += OnAddHazard;
         float delay = pm.OnTickUpdate();
         yield return new WaitForSeconds(delay);
-        pm.OnPlayerAddHazard -= OnAddHazard;
+        //pm.OnPlayerAddHazard -= OnAddHazard;
 
         hm.OnTickUpdate();
         
@@ -63,7 +63,7 @@ public class GameManager : MonoBehaviour
 
     private void OnAddHazard(Hazard hazardToAdd, Vector2Int position)
     {
-        Debug.Log("OnAddHazard() called.");
+        Debug.Log("GameManager.OnAddHazard() called.");
         hm.AddHazard(hazardToAdd, position);
     }
 }

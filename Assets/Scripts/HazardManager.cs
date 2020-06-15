@@ -106,19 +106,20 @@ public class HazardManager : MonoBehaviour
                 spawnIndex = Random.Range(0, spawnMoveUp.Count);
                 spawnPosition = spawnMoveUp[spawnIndex].location;
                 spawnMovement.SetMovePatternUp();
-
-                Debug.Log("Selected spawnPosition: " + spawnPosition);
                 break;
+
             case 2:
                 spawnIndex = Random.Range(0, spawnMoveDown.Count);
                 spawnPosition = spawnMoveDown[spawnIndex].location;
                 spawnMovement.SetMovePatternDown();
                 break;
+
             case 3:
                 spawnIndex = Random.Range(0, spawnMoveLeft.Count);
                 spawnPosition = spawnMoveLeft[spawnIndex].location;
                 spawnMovement.SetMovePatternLeft();
                 break;
+
             case 4:
                 spawnIndex = Random.Range(0, spawnMoveRight.Count);
                 spawnPosition = spawnMoveRight[spawnIndex].location;
@@ -132,13 +133,20 @@ public class HazardManager : MonoBehaviour
 
     public void AddHazard(Hazard hazard, Vector2Int position)
     {
-        Debug.Log("AddHazard() called.");
-        gm.PlaceObject(hazard.gameObject, position);
+        if(!gm.FindGridBlockByLocation(position).isOccupied)
+        {
+            Debug.Log("HazardManager.AddHazard() called.");
+            gm.PlaceObject(hazard.gameObject, position);
 
-        hazard.currentWorldLocation = gm.GridToWorld(position);
-        hazard.targetWorldLocation = gm.GridToWorld(position);
+            hazard.currentWorldLocation = gm.GridToWorld(position);
+            hazard.targetWorldLocation = gm.GridToWorld(position);
 
-        hazardsInPlay.Add(hazard);
+            hazardsInPlay.Add(hazard);
+        }
+        else
+        {
+
+        }
     }
 
 
@@ -167,7 +175,6 @@ public class HazardManager : MonoBehaviour
                 continue;
             }
 
-            
             if (move.moveRate == 1 || currentTick % move.moveRate == 0)
             {
                 Debug.Log(hazardObject.name + " is moving by " + move.delta);

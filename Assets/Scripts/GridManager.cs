@@ -151,8 +151,8 @@ public class GridManager : MonoBehaviour
         GridBlock target = levelGrid[position.x, position.y];  // Watch for out of bounds values
         if (!target.isOccupied)
         {
-            target.isOccupied = true;
             target.objectOnBlock = gameObject;
+            target.isOccupied = true;
 
             gameObject.transform.position = GridToWorld(position);
         }
@@ -165,7 +165,6 @@ public class GridManager : MonoBehaviour
     {
         for (int x = 0; x < levelGrid.GetLength(0); x++)
         {
-            // Iterate through rows.
             for (int y = 0; y < levelGrid.GetLength(1); y++)
             {
                 if (levelGrid[x, y].objectOnBlock == gameObject)
@@ -179,6 +178,22 @@ public class GridManager : MonoBehaviour
         return null;
     }
 
+    public GridBlock FindGridBlockByLocation(Vector2Int location)
+    {
+        for (int x = 0; x < levelGrid.GetLength(0); x++)
+        {
+            for (int y = 0; y < levelGrid.GetLength(1); y++)
+            {
+                if (levelGrid[x, y].location == location)
+                {
+                    return levelGrid[x, y];
+                }
+            }
+        }
+
+        Debug.LogError("No GridBlock found for provided location.");
+        return null;
+    }
 
     public bool CheckIfMoveIsValid(GameObject gameObject, Vector2Int from, Vector2Int to)
     {        
