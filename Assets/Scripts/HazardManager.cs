@@ -131,22 +131,53 @@ public class HazardManager : MonoBehaviour
     }
 
 
-    public void AddHazard(Hazard hazard, Vector2Int position)
+    public void AddHazard(Hazard hazard, Vector2Int position, bool placeOnGrid = true)
     {
-        if(!gm.FindGridBlockByLocation(position).isOccupied)
+        GridBlock targetGridLocation = gm.FindGridBlockByLocation(position);
+        Vector3 worldLocation = gm.GridToWorld(position);
+
+        if(targetGridLocation.isOccupied && placeOnGrid == false)
+        {
+            hazard.currentWorldLocation = worldLocation;
+            hazard.targetWorldLocation = worldLocation;            
+            //hazard.transform.position = worldLocation;
+
+            hazardsInPlay.Add(hazard);
+        }
+        else if(!targetGridLocation.isOccupied)
         {
             Debug.Log("HazardManager.AddHazard() called.");
             gm.PlaceObject(hazard.gameObject, position);
 
-            hazard.currentWorldLocation = gm.GridToWorld(position);
-            hazard.targetWorldLocation = gm.GridToWorld(position);
+            hazard.currentWorldLocation = worldLocation;
+            hazard.targetWorldLocation = worldLocation;
 
             hazardsInPlay.Add(hazard);
         }
-        else
+        /*
+        else    // Resolve collisions
         {
+            GameObject objectOnTargetGridBlock = targetGridLocation.objectOnBlock;
+            Hazard hazardOnTargetGridBlock = objectOnTargetGridBlock.GetComponent<Hazard>();
 
+            if (hazardOnTargetGridBlock != null)
+            {
+                
+                switch (hazardOnTargetGridBlock.HazardName)
+                {
+                    case "Small Asteroid":
+                        Health hp = hazardOnTargetGridBlock.GetComponent<Health>();
+                        break;
+
+                    case "Large Asteroid":
+                        break;
+
+                    case "Missile":
+                        break;
+                }
+            }
         }
+        */
     }
 
 
@@ -167,32 +198,37 @@ public class HazardManager : MonoBehaviour
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
             Health hazardHealth = hazardObject.GetComponent<Health>();
-            MovePattern move = hazardObject.GetComponent<MovePattern>();
 
             if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
             {
                 RemoveHazard(hazardsInPlay[i]);
                 continue;
             }
+            
+
+            MovePattern move = hazardObject.GetComponent<MovePattern>();
 
             if (move.moveRate == 1 || currentTick % move.moveRate == 0)
             {
                 Debug.Log(hazardObject.name + " is moving by " + move.delta);
 
-                GridBlock currentGridBlock = gm.FindGridBlockContainingObject(hazardObject);
-                Vector2Int targetGridLocation = currentGridBlock.location + move.delta;
+                Vector2Int currentGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+                Vector2Int targetGridLocation = currentGridLocation + move.delta;
+                GridBlock currentGridBlock = gm.FindGridBlockByLocation(currentGridLocation);
 
                 if (currentGridBlock != null)
                 {
-                    bool successful = gm.CheckIfMoveIsValid(hazardObject, currentGridBlock.location, currentGridBlock.location + move.delta);
-                    if (!successful)
-                    {
-                        RemoveHazard(hazardsInPlay[i]);
-                    }
-                    else
+                    bool moveIsValid = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsUnoccupied(targetGridLocation);
+                    
+                    if (moveIsValid)
                     {
                         hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(targetGridLocation);
                         StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+                        gm.UpdateGridPosition(hazardObject, currentGridLocation, targetGridLocation);
+                    }
+                    else
+                    {
+                        RemoveHazard(hazardsInPlay[i]);
                     }
                 }
             }

@@ -32,37 +32,19 @@ public class MissileLauncher : Weapon
     }
 
 
-    public IEnumerator LaunchMissileCoroutine(GridBlock currentGrid, GridBlock targetGrid)
+    public Hazard LaunchMissile(GridBlock currentGrid, Vector2Int facingDirection)
     {
         Vector3 currentWorldLocation = new Vector3(currentGrid.location.x, currentGrid.location.y, 0);
-        Vector3 targetWorldLocation = new Vector3(targetGrid.location.x, targetGrid.location.y, 0);
-
         GameObject missile = Instantiate(projectilePrefab, currentWorldLocation, transform.rotation);
-        
-        MovePattern movement = missile.GetComponent<MovePattern>();
-        Vector2Int facingDirection = targetGrid.location - currentGrid.location;
-        
-        if (facingDirection == new Vector2Int(0, 1)) movement.SetMovePatternUp();
-        else if (facingDirection == new Vector2Int(0, -1)) movement.SetMovePatternDown();
-        else if (facingDirection == new Vector2Int(-1, 0)) movement.SetMovePatternLeft();
-        else if (facingDirection == new Vector2Int(1, 0)) movement.SetMovePatternRight();
+        MovePattern movement = missile.GetComponent<MovePattern>();       
 
+        if (facingDirection == Vector2Int.up) movement.SetMovePatternUp();
+        else if (facingDirection == Vector2Int.down) movement.SetMovePatternDown();
+        else if (facingDirection == Vector2Int.left) movement.SetMovePatternLeft();
+        else if (facingDirection == Vector2Int.right) movement.SetMovePatternRight();
+        
         launchedMissile = missile.GetComponent<Hazard>();
-        launchedMissile.currentWorldLocation = currentWorldLocation;
-        launchedMissile.targetWorldLocation = targetWorldLocation;
-
-        StartCoroutine(AnimationCoroutine(targetGrid));
-        yield return new WaitForSeconds(4.0f);
-
-        if (pm.OnPlayerAddHazard != null)
-        {
-            Debug.Log("OnPlayerAddHazard() called.");
-            pm.OnPlayerAddHazard(launchedMissile, targetGrid.location);
-        }
-        else
-        {
-            Debug.LogError("No subscribers to OnPlayerHazard().");
-        }
+        return launchedMissile;
     }
 
     override protected IEnumerator AnimationCoroutine(GridBlock targetGrid)

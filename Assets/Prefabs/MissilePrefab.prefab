@@ -110,6 +110,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
+  moveSpeed: 1
+  hazardName: Missile
 --- !u!114 &880584383098535066
 MonoBehaviour:
   m_ObjectHideFlags: 0

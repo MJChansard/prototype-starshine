@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
@@ -20,22 +22,15 @@ public class GridManager : MonoBehaviour
     [SerializeField]
     private int gridSpacing = 1;
 
-    [SerializeField]
-    private int gridWidth = 10;
-    private int gridHeight = 8;
+    [SerializeField] private int gridWidth = 10;
+    [SerializeField] private int gridHeight = 8;
 
-    [SerializeField]
-    private GameObject debugGridPrefab;
+    [SerializeField] private GameObject debugGridPrefab;
+    [SerializeField] private bool gridBlockLabels = false;
     #endregion
 
     public System.Action OnUpdateBoard;
     public GridBlock[,] levelGrid;
-
-    
-    private void Update()
-    {
-        
-    }
 
     public void Init()
     {
@@ -77,7 +72,6 @@ public class GridManager : MonoBehaviour
 
         Debug.Log("Object: [levelGrid] successfully created.");
     }
-
 
     private void InitializeGrid(GameObject gridPoint, float offset)
     {
@@ -134,7 +128,6 @@ public class GridManager : MonoBehaviour
         );
     }
 
-
     public Vector2Int WorldToGrid(Vector3 worldLocation)
     {
         return new Vector2Int
@@ -148,7 +141,7 @@ public class GridManager : MonoBehaviour
 
     public void PlaceObject(GameObject gameObject, Vector2Int position)
     {
-        GridBlock target = levelGrid[position.x, position.y];  // Watch for out of bounds values
+        GridBlock target = levelGrid[position.x, position.y];  
         if (!target.isOccupied)
         {
             target.objectOnBlock = gameObject;
@@ -194,7 +187,7 @@ public class GridManager : MonoBehaviour
         Debug.LogError("No GridBlock found for provided location.");
         return null;
     }
-
+/*
     public bool CheckIfMoveIsValid(GameObject gameObject, Vector2Int from, Vector2Int to)
     {        
         GridBlock fromBlock = levelGrid[from.x, from.y];
@@ -207,7 +200,8 @@ public class GridManager : MonoBehaviour
 
             if (!toBlock.isOccupied)
             {
-                UpdateGridPosition(gameObject, fromBlock, toBlock);
+                // #HERE
+                UpdateGridPosition(gameObject, fromBlock.location, toBlock.location);
                 return true;
             }
             else
@@ -222,15 +216,34 @@ public class GridManager : MonoBehaviour
             return false;
         }
     }
-
-
-    private void UpdateGridPosition(GameObject gameObject, GridBlock from, GridBlock to)
+*/
+    public bool CheckIfGridBlockInBounds(Vector2Int gridLocation)
     {
-        //gameObject.transform.position = GridToWorld(to.location);
-        to.isOccupied = true;
-        to.objectOnBlock = gameObject;
-        from.isOccupied = false;
-        from.objectOnBlock = null;
+        if (gridLocation.x >= 0 && gridLocation.x < GridWidth && gridLocation.y >= 0 && gridLocation.y < GridHeight) return true;
+        else return false;
+    }
+
+    public bool CheckIfGridBlockIsUnoccupied(Vector2Int gridLocation)
+    {
+        GridBlock block = FindGridBlockByLocation(gridLocation);
+
+        if (block.isOccupied == true) return false;
+        else return true;
+    }
+
+
+    public void UpdateGridPosition(GameObject gameObject, Vector2Int from, Vector2Int to)
+    {
+        GridBlock fromGridBlock = FindGridBlockByLocation(from);
+        GridBlock toGridBlock = FindGridBlockByLocation(to);
+
+        toGridBlock.isOccupied = true;
+        toGridBlock.objectOnBlock = gameObject;
+        if(fromGridBlock.objectOnBlock == gameObject)
+        {
+            fromGridBlock.isOccupied = false;
+            fromGridBlock.objectOnBlock = null;
+        }
     }
 
    
@@ -242,4 +255,18 @@ public class GridManager : MonoBehaviour
         last.isOccupied = false;   
     }
 
+    private void OnDrawGizmos()
+    {
+        if (gridBlockLabels == true)
+        {
+            Gizmos.color = Color.blue;
+            foreach (GridBlock block in levelGrid)
+            {
+                if (block.isOccupied && block.objectOnBlock != null)
+                {
+                    Handles.Label(GridToWorld(block.location), block.objectOnBlock.name);
+                }
+            }
+        }
+    }
 }

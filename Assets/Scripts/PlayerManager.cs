@@ -23,7 +23,7 @@ public class PlayerManager : MonoBehaviour
     #region Private Fields
     private GridManager gm;
 
-    private string currentlyFacing = "";
+    private Vector2Int currentlyFacing = Vector2Int.up;
     private Vector2Int delta = Vector2Int.zero;
     private bool isRequestingAttack = false;
 
@@ -49,7 +49,7 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
     public System.Action OnPlayerAdvance;
-    public System.Action<Hazard, Vector2Int> OnPlayerAddHazard;
+    public System.Action<Hazard, Vector2Int, bool> OnPlayerAddHazard;
 
     private void Start()
     {
@@ -88,29 +88,26 @@ public class PlayerManager : MonoBehaviour
             {
 
                 transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
-                currentlyFacing = "Up";
-                delta = Vector2Int.up;
+                currentlyFacing = delta = Vector2Int.up;
+
             }
 
             if (Input.GetKeyDown(KeyCode.S))
             {
                 transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
-                currentlyFacing = "Down";
-                delta = Vector2Int.down;
+                currentlyFacing = delta = Vector2Int.down;
             }
 
             if (Input.GetKeyDown(KeyCode.A))
             {
                 transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
-                currentlyFacing = "Left";
-                delta = Vector2Int.left;
+                currentlyFacing = delta = Vector2Int.left;
             }
 
             if (Input.GetKeyDown(KeyCode.D))
             {
                 transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
-                currentlyFacing = "Right";
-                delta = Vector2Int.right;
+                currentlyFacing = delta = Vector2Int.right;
             }
 
             if (Input.GetKeyDown(KeyCode.F))
@@ -153,7 +150,7 @@ public class PlayerManager : MonoBehaviour
         if (isRequestingAttack)
         {
             isRequestingAttack = false;
-            Attack(currentWeapon);
+            Attack();
             return attackWaitTime;
         }
         else if (delta != Vector2Int.zero)
@@ -168,17 +165,23 @@ public class PlayerManager : MonoBehaviour
 
     private void Move()
     {
-        GridBlock current = gm.FindGridBlockContainingObject(this.gameObject);
-        bool canMove = gm.CheckIfMoveIsValid(this.gameObject, current.location, current.location + delta);
+        Vector2Int currentGridLocation = gm.FindGridBlockContainingObject(this.gameObject).location;
+        if (currentGridLocation == null) Debug.LogError("Unable to find Player object on the Grid.");
 
-        if (canMove)
+        Vector2Int destinationGridLocation = currentGridLocation + delta;
+
+        bool moveIsValid = gm.CheckIfGridBlockInBounds(currentGridLocation) && gm.CheckIfGridBlockIsUnoccupied(destinationGridLocation);
+        Debug.Log("Player move is validated: " + moveIsValid);
+        
+        if (moveIsValid)
         {
-            targetWorldLocation = gm.GridToWorld(current.location + delta);
+            targetWorldLocation = gm.GridToWorld(destinationGridLocation);
             
             if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
-            if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());   
-        }
+            if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());
 
+            gm.UpdateGridPosition(this.gameObject, currentGridLocation, destinationGridLocation);
+        }
     }
 
     private IEnumerator AnimateThrusterCoroutine()
@@ -216,7 +219,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    private void Attack(Weapon withWeapon)
+    private void Attack()
     {
         /*  STEPS
          *   - Need to find current location on the grid (GridBlock)
@@ -231,49 +234,56 @@ public class PlayerManager : MonoBehaviour
 
         if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
         {
-            GridBlock targetGrid = gm.FindGridBlockByLocation(currentGrid.location + delta);
+            //GridBlock targetGrid = gm.FindGridBlockByLocation(currentGrid.location + delta);
 
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
-            //launcher.LaunchMissile(currentGrid, targetGrid);
-            StartCoroutine(launcher.LaunchMissileCoroutine(currentGrid, targetGrid));
+            Hazard launchedMissile = launcher.LaunchMissile(currentGrid, currentlyFacing);
+
+            if (OnPlayerAddHazard != null)
+            {
+                Debug.Log("PlayerManager.OnPlayerAddHazard() called.");
+                //OnPlayerAddHazard(launchedMissile, targetGrid.location, false);
+                OnPlayerAddHazard(launchedMissile, currentGrid.location, false);
+            }
+            else
+            {
+                Debug.LogError("No subscribers to OnPlayerHazard().");
+            }
 
             return;
         }
 
-        // Determine weapon path
+        // Determine weapon path      
         List<GridBlock> possibleTargets = new List<GridBlock>();
-        switch (currentlyFacing)
+        if (currentlyFacing == Vector2Int.up)
         {
-            // Facing forward
-            case "Up":
-                for (int y = currentGrid.location.y + 1; y < gm.GridHeight; y++)
-                {
-                    possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
-                }
-                break;
-            // Facing down
-            case "Down":
-                for (int y = currentGrid.location.y - 1; y >= 0; y--)
-                {
-                    possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
-                }
-                break;
-            // Facing left
-            case "Left":
-                for (int x = currentGrid.location.x -1 ; x >= 0; x--)
-                {
-                    possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
-                }
-                break;
-            // Facing right
-            case "Right":
-                for (int x = currentGrid.location.x + 1; x < gm.GridWidth; x++)
-                {
-                    possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
-                }
-                break;
+            for (int y = currentGrid.location.y + 1; y < gm.GridHeight; y++)
+            {
+                possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
+            }
         }
-
+        else if (currentlyFacing == Vector2Int.down)
+        {
+            for (int y = currentGrid.location.y - 1; y >= 0; y--)
+            {
+                possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
+            }
+        }
+        else if (currentlyFacing == Vector2Int.left)
+        {
+            for (int x = currentGrid.location.x - 1; x >= 0; x--)
+            {
+                possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
+            }
+        }
+        else if (currentlyFacing == Vector2Int.right)
+        {
+            for (int x = currentGrid.location.x + 1; x < gm.GridWidth; x++)
+            {
+                possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
+            }
+        }
+ 
         foreach (GridBlock target in possibleTargets)
         {
             if (target.isOccupied == true)
@@ -282,8 +292,8 @@ public class PlayerManager : MonoBehaviour
 
                 if (hp != null)
                 {
-                    withWeapon.StartAnimationCoroutine(target);
-                    hp.ApplyDamage(withWeapon.Damage);
+                    currentWeapon.StartAnimationCoroutine(target);
+                    hp.ApplyDamage(currentWeapon.Damage);
                     Debug.Log("Target's current health: " + hp.CurrentHP);
                 }
 
@@ -291,6 +301,4 @@ public class PlayerManager : MonoBehaviour
             }
         }
     }
-
-
 }
