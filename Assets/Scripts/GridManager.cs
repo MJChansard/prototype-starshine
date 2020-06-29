@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GridManager : MonoBehaviour
 {
@@ -34,7 +36,6 @@ public class GridManager : MonoBehaviour
 
     public void Init()
     {
-       
         InitializeGrid(debugGridPrefab, 0f);
     }
 
@@ -76,13 +77,11 @@ public class GridManager : MonoBehaviour
     private void InitializeGrid(GameObject gridPoint, float offset)
     {
         levelGrid = new GridBlock[gridWidth, gridHeight];
-        Debug.Log("Object: [levelGrid] created.");
-        Debug.Log(levelGrid.Length);
-
-        // Iterate through columns.
+        
+        // Iterate through grid columns
         for (int x = 0; x < gridWidth; x++)
         {
-            // Iterate through rows.
+            // Iterate through grid rows
             for (int y = 0; y < gridHeight; y++)
             {
                 // Instantiate a GridBlock at each index in the 2D array
@@ -137,22 +136,7 @@ public class GridManager : MonoBehaviour
         );
 
     }
-
-
-    public void PlaceObject(GameObject gameObject, Vector2Int position)
-    {
-        GridBlock target = levelGrid[position.x, position.y];  
-        if (!target.isOccupied)
-        {
-            target.objectOnBlock = gameObject;
-            target.isOccupied = true;
-
-            gameObject.transform.position = GridToWorld(position);
-        }
-
-        return;
-    }
-    
+      
 
     public GridBlock FindGridBlockContainingObject(GameObject gameObject)
     {
@@ -160,10 +144,14 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < levelGrid.GetLength(1); y++)
             {
-                if (levelGrid[x, y].objectOnBlock == gameObject)
+                int objectsOnBlock = levelGrid[x, y].objectsOnBlock.Count;
+                if (objectsOnBlock > 0)
                 {
-                    return levelGrid[x, y];
-                }   
+                    for (int z = 0; z < objectsOnBlock ; z++)
+                    {
+                        if (levelGrid[x, y].objectsOnBlock[z] == gameObject) return levelGrid[x, y];
+                    }
+                }
             }
         }
 
@@ -187,74 +175,47 @@ public class GridManager : MonoBehaviour
         Debug.LogError("No GridBlock found for provided location.");
         return null;
     }
-/*
-    public bool CheckIfMoveIsValid(GameObject gameObject, Vector2Int from, Vector2Int to)
-    {        
-        GridBlock fromBlock = levelGrid[from.x, from.y];
-        GridBlock toBlock;
 
-        // Ensure valid destination
-        if (to.x >= 0 && to.x < GridWidth && to.y >= 0 && to.y < GridHeight)
-        {
-            toBlock = levelGrid[to.x, to.y];
 
-            if (!toBlock.isOccupied)
-            {
-                // #HERE
-                UpdateGridPosition(gameObject, fromBlock.location, toBlock.location);
-                return true;
-            }
-            else
-            {
-                Debug.Log("Destination block is occupied fool!");
-                return false;
-            }
-        }
-        else
-        {
-            Debug.Log(gameObject.name + " requesting to leave grid.");
-            return false;
-        }
-    }
-*/
     public bool CheckIfGridBlockInBounds(Vector2Int gridLocation)
     {
         if (gridLocation.x >= 0 && gridLocation.x < GridWidth && gridLocation.y >= 0 && gridLocation.y < GridHeight) return true;
         else return false;
     }
 
-    public bool CheckIfGridBlockIsUnoccupied(Vector2Int gridLocation)
+    public bool CheckIfGridBlockIsOccupied(Vector2Int gridLocation)
     {
         GridBlock block = FindGridBlockByLocation(gridLocation);
+        return block.IsOccupied;        
+    }   
 
-        if (block.isOccupied == true) return false;
-        else return true;
+  
+
+    public void AddObjectToGrid(GameObject gameObject, Vector2Int gridPosition)
+    {
+        GridBlock destination = levelGrid[gridPosition.x, gridPosition.y];
+        destination.objectsOnBlock.Add(gameObject);
     }
 
-
-    public void UpdateGridPosition(GameObject gameObject, Vector2Int from, Vector2Int to)
+    public void RemoveObjectFromGrid(GameObject gameObject, Vector2Int gridPosition)
     {
-        GridBlock fromGridBlock = FindGridBlockByLocation(from);
-        GridBlock toGridBlock = FindGridBlockByLocation(to);
+        GridBlock origin = levelGrid[gridPosition.x, gridPosition.y];
 
-        toGridBlock.isOccupied = true;
-        toGridBlock.objectOnBlock = gameObject;
-        if(fromGridBlock.objectOnBlock == gameObject)
+        if (origin.objectsOnBlock.Count > 0)
         {
-            fromGridBlock.isOccupied = false;
-            fromGridBlock.objectOnBlock = null;
+            for (int i = origin.objectsOnBlock.Count - 1; i == 0 ; i--)
+            {
+                if (gameObject == origin.objectsOnBlock[i])
+                {
+                    origin.objectsOnBlock.RemoveAt(i);
+                }
+                break;
+            }            
         }
+        else { return; }
     }
 
    
-    public void RemoveObject(GameObject gameObject, GridBlock last)
-    {
-        Debug.Log("RemoveObject() called.");
-                        
-        Destroy(gameObject);
-        last.isOccupied = false;   
-    }
-
     private void OnDrawGizmos()
     {
         if (gridBlockLabels == true)
@@ -262,11 +223,60 @@ public class GridManager : MonoBehaviour
             Gizmos.color = Color.blue;
             foreach (GridBlock block in levelGrid)
             {
-                if (block.isOccupied && block.objectOnBlock != null)
+                if (block.IsOccupied && block.objectsOnBlock != null)
                 {
-                    Handles.Label(GridToWorld(block.location), block.objectOnBlock.name);
+                    foreach (GameObject occupant in block.objectsOnBlock)
+                    {
+                        Handles.Label(GridToWorld(block.location), occupant.name);
+                    }
+                    
                 }
             }
         }
     }
 }
+/*
+    public void PlaceObject(GameObject gameObject, Vector2Int position)
+    {
+        GridBlock target = levelGrid[position.x, position.y];
+        if (!target.IsOccupied)
+        {
+            target.objectOnBlock = gameObject;
+            target.IsOccupied = true;
+
+            gameObject.transform.position = GridToWorld(position);
+        }
+
+        return;
+    }
+*/
+
+/*
+    public void RemoveObject(GameObject gameObject, GridBlock last)
+    {
+        // Main responsibilities
+        //   - Removing from GridBlock.objectsOnGrid
+        //   - No optional parameter to handle transform manipulation
+        //   - 
+        Debug.Log("RemoveObject() called.");
+
+        Destroy(gameObject);
+        last.isOccupied = false;   
+    }
+*/
+
+/*
+    public void UpdateGridPosition(GameObject gameObject, Vector2Int from, Vector2Int to)
+    {
+        GridBlock fromGridBlock = FindGridBlockByLocation(from);
+        GridBlock toGridBlock = FindGridBlockByLocation(to);
+
+        toGridBlock.IsOccupied = true;
+        toGridBlock.objectOnBlock = gameObject;
+        if (fromGridBlock.objectOnBlock == gameObject)
+        {
+            fromGridBlock.isOccupied = false;
+            fromGridBlock.objectOnBlock = null;
+        }
+    }
+*/

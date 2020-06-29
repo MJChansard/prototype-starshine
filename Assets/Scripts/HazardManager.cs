@@ -5,8 +5,7 @@ using UnityEngine;
 public class HazardManager : MonoBehaviour
 {
     #region Inspector Attributes
-    [SerializeField]
-    Hazard[] hazardPrefabs;
+    [SerializeField] Hazard[] hazardPrefabs;
     #endregion
 
     #region Private Fields    
@@ -54,7 +53,6 @@ public class HazardManager : MonoBehaviour
             if (gm.levelGrid[x, 0].canSpawn)
             {
                 spawnMoveUp.Add(gm.levelGrid[x, 0]);
-
             }
 
             if (gm.levelGrid[x, rowRange].canSpawn)
@@ -77,27 +75,26 @@ public class HazardManager : MonoBehaviour
                 spawnMoveLeft.Add(gm.levelGrid[colRange, y]);
             }
         }
+
+        Debug.Log("Spawn Locations successfully updated.");
     }
 
-
+ /*  SUMMARY
+ *   - Randomly select a spawn location
+ *   - Randomly select a hazard to spawn
+ *   - Activate hazard spawn movement pattern based on spawn location
+ */
     private void PrepareHazard()
     {
-        /*  SUMMARY
-         *   - Randomly select a spawn location
-         *   - Randomly select a hazard to spawn
-         *   - Activate hazard spawn movement pattern based on spawn location
-         */
+        Debug.Log("HazardManager.PrepareHazard() called.");
 
-        Debug.Log("PrepareHazard() called.");
-
-        // Local variables
-        int hazardType = Random.Range(0, hazardPrefabs.Length);
+        int hazardType = Random.Range(0, hazardPrefabs.Length - 1);
         int spawnAxis = Random.Range(1, 4);
         int spawnIndex;
         Vector2Int spawnPosition = new Vector2Int();
 
         // Spawn hazard & store component references
-        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]) as Hazard;
+        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)
@@ -131,23 +128,24 @@ public class HazardManager : MonoBehaviour
     }
 
 
-    public void AddHazard(Hazard hazard, Vector2Int position, bool placeOnGrid = true)
+    public void AddHazard(Hazard hazard, Vector2Int gridPosition, bool placeOnGrid = true)
     {
-        GridBlock targetGridLocation = gm.FindGridBlockByLocation(position);
-        Vector3 worldLocation = gm.GridToWorld(position);
+        Debug.Log("HazardManager.AddHazard() called.");
 
-        if(targetGridLocation.isOccupied && placeOnGrid == false)
+        GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridPosition);
+        Vector3 worldLocation = gm.GridToWorld(gridPosition);
+
+        if(destinationGridPosition.IsOccupied && placeOnGrid == false)
         {
             hazard.currentWorldLocation = worldLocation;
             hazard.targetWorldLocation = worldLocation;            
-            //hazard.transform.position = worldLocation;
 
             hazardsInPlay.Add(hazard);
         }
-        else if(!targetGridLocation.isOccupied)
+        else if(!destinationGridPosition.IsOccupied)
         {
-            Debug.Log("HazardManager.AddHazard() called.");
-            gm.PlaceObject(hazard.gameObject, position);
+            hazard.transform.position = worldLocation;
+            gm.AddObjectToGrid(hazard.gameObject, gridPosition);
 
             hazard.currentWorldLocation = worldLocation;
             hazard.targetWorldLocation = worldLocation;
@@ -180,12 +178,12 @@ public class HazardManager : MonoBehaviour
         */
     }
 
-
     public void RemoveHazard(Hazard hazard)
     {
         GameObject hazardToRemove = hazard.gameObject;
-        GridBlock gridBlock = gm.FindGridBlockContainingObject(hazardToRemove);
-        gm.RemoveObject(hazardToRemove, gridBlock);
+        Vector2Int gridPosition = gm.FindGridBlockContainingObject(hazardToRemove).location;
+        //gm.RemoveObject(hazardToRemove, gridBlock);
+        gm.RemoveObjectFromGrid(hazardToRemove, gridPosition);
         hazardsInPlay.Remove(hazard);
     }
 
@@ -212,24 +210,102 @@ public class HazardManager : MonoBehaviour
             {
                 Debug.Log(hazardObject.name + " is moving by " + move.delta);
 
-                Vector2Int currentGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
-                Vector2Int targetGridLocation = currentGridLocation + move.delta;
-                GridBlock currentGridBlock = gm.FindGridBlockByLocation(currentGridLocation);
+                Vector2Int originGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+                Vector2Int destinationGridPosition = originGridPosition + move.delta;
 
+                GridBlock currentGridBlock = gm.FindGridBlockByLocation(originGridPosition);
                 if (currentGridBlock != null)
                 {
-                    bool moveIsValid = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsUnoccupied(targetGridLocation);
-                    
-                    if (moveIsValid)
-                    {
-                        hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(targetGridLocation);
-                        StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
-                        gm.UpdateGridPosition(hazardObject, currentGridLocation, targetGridLocation);
-                    }
-                    else
+                    //bool moveIsValid = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsNotOccupied(targetGridLocation);
+                    //bool collisionImminent = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsNotOccupied(targetGridBlock);
+
+                    bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
+                    bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
+
+                    if (!moveInBounds)
                     {
                         RemoveHazard(hazardsInPlay[i]);
                     }
+                    else if (!collisionImminent)
+                    {
+                        hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
+                        StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+                        //gm.UpdateGridPosition(hazardObject, currentGridLocation, targetGridLocation);
+                        gm.AddObjectToGrid(hazardObject, destinationGridPosition);
+                        gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
+                    }
+                    // Tests for collisions need to go here
+                    // Checks need to be separated
+                    //  1. In bounds
+                    //  2. Available for occupation
+                    //  3. Collision
+                    /*
+                    else if (collisionImminent)
+                    {
+                        GameObject objectCollidedWith = gm.FindGridBlockByLocation(destinationGridPosition).objectOnBlock;
+                        Hazard hazardCollidedWith = objectCollidedWith.GetComponent<Hazard>();
+                        Health hazardCollidedWithHP = hazardCollidedWith.GetComponent<Health>();
+                        
+                        if (hazardCollidedWith != null)
+                        {
+                            switch (hazardsInPlay[i].HazardName)
+                            {
+                                case "Small Asteroid":
+                                    switch(hazardCollidedWith.HazardName)
+                                    {
+                                        case "Small Asteroid":
+                                            if (hazardCollidedWithHP != null)
+                                            {
+                                                hazardCollidedWithHP.ApplyDamage(100);
+                                            }
+                                            // TODO: Instantiate explosion
+                                            RemoveHazard(hazardsInPlay[i]);
+                                            break;
+                                        
+                                        case "Large Asteroid":
+                                            if (hazardCollidedWithHP != null)
+                                            {
+                                                hazardCollidedWithHP.ApplyDamage(100);
+                                            }
+                                            // TODO: Instantiate explosion
+                                            RemoveHazard(hazardsInPlay[i]);
+                                            break;
+
+                                        case "Missile":
+                                            {
+                                                hazardCollidedWithHP.ApplyDamage(1);
+                                            }
+                                            // TODO: Instantiate explosion
+                                            RemoveHazard(hazardsInPlay[i]);
+                                            break;
+                                    }
+                                    /*
+                                    if (hazardCollidedWith.HazardName == "Small Asteroid")
+                                    {
+                                        RemoveHazard(hazardsInPlay[i]);
+                                        //Instantiate explosion here
+                                    }
+                                    if (hazardCollidedWith.HazardName == "Missile")
+                                    {
+
+                                    }
+                                    
+                                    break;
+
+                                case "Large Asteroid":
+                                    if (hazardCollidedWith.HazardName == "Small Asteroid")
+                                    {
+                                        RemoveHazard(hazardCollidedWith);
+                                        // Worried about this because we're altering the <List>
+                                        // Maybe it would be better to set health to 0 so that element is removed at the appropriate 
+                                        // time (ie. when that element is being processed in the for loop)
+                                        //Instantiate explosion here
+                                    }
+                                    break;
+                            }
+                        
+                    }
+                    */
                 }
             }
         }

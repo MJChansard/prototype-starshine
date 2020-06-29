@@ -21,5 +21,9 @@ public class Hazard : MonoBehaviour
         get { return hazardName; }
     }    
 
+    public void OnCollision()
+    {
+
+    }
     
 }

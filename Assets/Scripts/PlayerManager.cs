@@ -165,22 +165,24 @@ public class PlayerManager : MonoBehaviour
 
     private void Move()
     {
-        Vector2Int currentGridLocation = gm.FindGridBlockContainingObject(this.gameObject).location;
-        if (currentGridLocation == null) Debug.LogError("Unable to find Player object on the Grid.");
+        Vector2Int originGridPosition = gm.FindGridBlockContainingObject(this.gameObject).location;
+        if (originGridPosition == null) Debug.LogError("Unable to find Player object on the Grid.");
 
-        Vector2Int destinationGridLocation = currentGridLocation + delta;
+        Vector2Int destinationGridPosition = originGridPosition + delta;
 
-        bool moveIsValid = gm.CheckIfGridBlockInBounds(currentGridLocation) && gm.CheckIfGridBlockIsUnoccupied(destinationGridLocation);
+        bool moveIsValid = gm.CheckIfGridBlockInBounds(originGridPosition) && !gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
         Debug.Log("Player move is validated: " + moveIsValid);
         
         if (moveIsValid)
         {
-            targetWorldLocation = gm.GridToWorld(destinationGridLocation);
+            targetWorldLocation = gm.GridToWorld(destinationGridPosition);
             
             if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
             if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());
 
-            gm.UpdateGridPosition(this.gameObject, currentGridLocation, destinationGridLocation);
+            //gm.UpdateGridPosition(this.gameObject, currentGridLocation, destinationGridLocation);
+            gm.AddObjectToGrid(this.gameObject, destinationGridPosition);
+            gm.RemoveObjectFromGrid(this.gameObject, originGridPosition);
         }
     }
 
@@ -230,20 +232,22 @@ public class PlayerManager : MonoBehaviour
          *   - Update Tick
          */
 
-        GridBlock currentGrid = gm.FindGridBlockContainingObject(this.gameObject);
+        GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
+        Vector2Int currentGridLocation = currentGridBlock.location;
+
 
         if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
         {
             //GridBlock targetGrid = gm.FindGridBlockByLocation(currentGrid.location + delta);
 
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
-            Hazard launchedMissile = launcher.LaunchMissile(currentGrid, currentlyFacing);
+            Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
 
             if (OnPlayerAddHazard != null)
             {
                 Debug.Log("PlayerManager.OnPlayerAddHazard() called.");
                 //OnPlayerAddHazard(launchedMissile, targetGrid.location, false);
-                OnPlayerAddHazard(launchedMissile, currentGrid.location, false);
+                OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
             }
             else
             {
@@ -253,51 +257,65 @@ public class PlayerManager : MonoBehaviour
             return;
         }
 
-        // Determine weapon path      
-        List<GridBlock> possibleTargets = new List<GridBlock>();
+        // Identify possible targets based on PlayerManager.currentlyFacing
+        List<GridBlock> possibleTargetBlocks = new List<GridBlock>();
         if (currentlyFacing == Vector2Int.up)
         {
-            for (int y = currentGrid.location.y + 1; y < gm.GridHeight; y++)
+            for (int y = currentGridLocation.y + 1; y < gm.GridHeight; y++)
             {
-                possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
+                if (gm.levelGrid[currentGridLocation.x, y].IsOccupied)
+                {
+                    possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
+                }
             }
         }
         else if (currentlyFacing == Vector2Int.down)
         {
-            for (int y = currentGrid.location.y - 1; y >= 0; y--)
+            for (int y = currentGridLocation.y - 1; y >= 0; y--)
             {
-                possibleTargets.Add(gm.levelGrid[currentGrid.location.x, y]);
+                if (gm.levelGrid[currentGridLocation.x, y].IsOccupied)
+                {
+                    possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
+                }
             }
         }
         else if (currentlyFacing == Vector2Int.left)
         {
-            for (int x = currentGrid.location.x - 1; x >= 0; x--)
+            for (int x = currentGridLocation.x - 1; x >= 0; x--)
             {
-                possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
+                if (gm.levelGrid[x, currentGridLocation.y].IsOccupied)
+                {
+                    possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
+                }
             }
         }
         else if (currentlyFacing == Vector2Int.right)
         {
-            for (int x = currentGrid.location.x + 1; x < gm.GridWidth; x++)
+            for (int x = currentGridLocation.x + 1; x < gm.GridWidth; x++)
             {
-                possibleTargets.Add(gm.levelGrid[x, currentGrid.location.y]);
+                if (gm.levelGrid[x, currentGridLocation.y].IsOccupied)
+                {
+                    possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
+                }
             }
         }
- 
-        foreach (GridBlock target in possibleTargets)
+
+        if (currentWeapon.GetComponent<Weapon>().Name == "AutoCannon")
         {
-            if (target.isOccupied == true)
+            foreach (GridBlock block in possibleTargetBlocks)
             {
-                Health hp = target.objectOnBlock.GetComponent<Health>();
-
-                if (hp != null)
+                foreach (GameObject target in block.objectsOnBlock)
                 {
-                    currentWeapon.StartAnimationCoroutine(target);
-                    hp.ApplyDamage(currentWeapon.Damage);
-                    Debug.Log("Target's current health: " + hp.CurrentHP);
-                }
+                    Health hp = target.GetComponent<Health>();
+                    if (hp != null)
+                    {
+                        currentWeapon.StartAnimationCoroutine(block);
+                        hp.ApplyDamage(currentWeapon.Damage);
+                        Debug.Log("Target's current health: " + hp.CurrentHP);
 
-                break;
+                        return;
+                    }
+                }
             }
         }
     }

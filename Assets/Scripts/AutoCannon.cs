@@ -22,20 +22,31 @@ public class AutoCannon : Weapon
         }
     }
 
-    override protected IEnumerator AnimationCoroutine(GridBlock target)
+    override protected IEnumerator AnimationCoroutine(GridBlock targetBlock)
     {
         //cannonCoroutineIsRunning = true;
 
         ParticleSystem ps = GetComponent<ParticleSystem>();
-        var trigger = ps.trigger;
-        trigger.enabled = true;
 
-        trigger.SetCollider(0, target.objectOnBlock.GetComponent<Collider>());
-        trigger.radiusScale = 0.5f;
+        foreach (GameObject target in targetBlock.objectsOnBlock)
+        {
+            Hazard hazardTest = target.GetComponent<Hazard>();
+            if (hazardTest != null)
+            {
+                var trigger = ps.trigger;
+                trigger.enabled = true;
 
-        ps.Play();
-        yield return new WaitForSeconds(2.0f);
-        ps.Stop();
+                trigger.SetCollider(0, target.GetComponent<Collider>());
+                trigger.radiusScale = 0.5f;
+
+                ps.Play();
+                yield return new WaitForSeconds(2.0f);
+                ps.Stop();
+
+                break;
+            }
+
+        }
 
         //cannonCoroutineIsRunning = false;
     }

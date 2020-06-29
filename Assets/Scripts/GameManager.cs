@@ -16,23 +16,25 @@ public class GameManager : MonoBehaviour
     GridManager gm;
     #endregion
 
-    [SerializeField]
-    GameObject playerPrefab;
+    [SerializeField] GameObject playerPrefab;
 
     private void Start()
     {
         gm = GetComponent<GridManager>();
         gm.Init();
         
+        
         hm = GetComponent<HazardManager>();
         hm.Init();
-
+        
         em = GetComponent<EnemyManager>();
 
         // Prepare Player
-        GameObject player = Instantiate(playerPrefab);
         Vector2Int startLocation = new Vector2Int(5, 4);
-        gm.PlaceObject(player, startLocation);
+        GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
+        Debug.Log(player.name + " has been instantiated.");
+
+        gm.AddObjectToGrid(player, startLocation);
         pm = player.GetComponent<PlayerManager>();
         pm.currentWorldLocation = gm.GridToWorld(startLocation);
         pm.targetWorldLocation = gm.GridToWorld(startLocation);
