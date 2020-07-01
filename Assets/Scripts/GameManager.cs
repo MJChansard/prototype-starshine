@@ -57,6 +57,8 @@ public class GameManager : MonoBehaviour
         pm.OnPlayerAddHazard -= OnAddHazard;
 
         hm.OnTickUpdate();
+        // pm.CheckHP();
+        
         
         CurrentTick += 1;
         pm.OnPlayerAdvance += OnTick;

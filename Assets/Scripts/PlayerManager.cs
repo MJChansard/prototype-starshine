@@ -310,7 +310,7 @@ public class PlayerManager : MonoBehaviour
                     if (hp != null)
                     {
                         currentWeapon.StartAnimationCoroutine(block);
-                        hp.ApplyDamage(currentWeapon.Damage);
+                        hp.SubtractHealth(currentWeapon.Damage);
                         Debug.Log("Target's current health: " + hp.CurrentHP);
 
                         return;

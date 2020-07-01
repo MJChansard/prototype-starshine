@@ -277,8 +277,10 @@ MonoBehaviour:
   gridContainer: {fileID: 239083873}
   gridSpacing: 1
   gridWidth: 10
+  gridHeight: 8
   debugGridPrefab: {fileID: 8729873483316762884, guid: 8da4799ec3257044095208a94e8a610b,
     type: 3}
+  gridBlockLabels: 1
 --- !u!4 &477210640
 Transform:
   m_ObjectHideFlags: 0

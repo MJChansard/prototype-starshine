@@ -182,16 +182,16 @@ public class HazardManager : MonoBehaviour
     {
         GameObject hazardToRemove = hazard.gameObject;
         Vector2Int gridPosition = gm.FindGridBlockContainingObject(hazardToRemove).location;
-        //gm.RemoveObject(hazardToRemove, gridBlock);
+        
         gm.RemoveObjectFromGrid(hazardToRemove, gridPosition);
         hazardsInPlay.Remove(hazard);
     }
 
 
-
-
     public void OnTickUpdate()
-    { 
+    {
+        List<GridBlock> collisionsToProcess = new List<GridBlock>();
+
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
@@ -199,10 +199,10 @@ public class HazardManager : MonoBehaviour
 
             if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
             {
+                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
                 RemoveHazard(hazardsInPlay[i]);
                 continue;
             }
-            
 
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
@@ -213,103 +213,73 @@ public class HazardManager : MonoBehaviour
                 Vector2Int originGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
                 Vector2Int destinationGridPosition = originGridPosition + move.delta;
 
-                GridBlock currentGridBlock = gm.FindGridBlockByLocation(originGridPosition);
-                if (currentGridBlock != null)
+                bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
+                bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
+
+                if (!moveInBounds)
                 {
-                    //bool moveIsValid = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsNotOccupied(targetGridLocation);
-                    //bool collisionImminent = gm.CheckIfGridBlockInBounds(targetGridLocation) && gm.CheckIfGridBlockIsNotOccupied(targetGridBlock);
-
-                    bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
-                    bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
-
-                    if (!moveInBounds)
-                    {
-                        RemoveHazard(hazardsInPlay[i]);
-                    }
-                    else if (!collisionImminent)
-                    {
-                        hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-                        StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
-                        //gm.UpdateGridPosition(hazardObject, currentGridLocation, targetGridLocation);
-                        gm.AddObjectToGrid(hazardObject, destinationGridPosition);
-                        gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
-                    }
-                    // Tests for collisions need to go here
-                    // Checks need to be separated
-                    //  1. In bounds
-                    //  2. Available for occupation
-                    //  3. Collision
-                    /*
-                    else if (collisionImminent)
-                    {
-                        GameObject objectCollidedWith = gm.FindGridBlockByLocation(destinationGridPosition).objectOnBlock;
-                        Hazard hazardCollidedWith = objectCollidedWith.GetComponent<Hazard>();
-                        Health hazardCollidedWithHP = hazardCollidedWith.GetComponent<Health>();
+                    StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                    RemoveHazard(hazardsInPlay[i]);
+                }
+                else
+                {
+                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
                         
-                        if (hazardCollidedWith != null)
-                        {
-                            switch (hazardsInPlay[i].HazardName)
-                            {
-                                case "Small Asteroid":
-                                    switch(hazardCollidedWith.HazardName)
-                                    {
-                                        case "Small Asteroid":
-                                            if (hazardCollidedWithHP != null)
-                                            {
-                                                hazardCollidedWithHP.ApplyDamage(100);
-                                            }
-                                            // TODO: Instantiate explosion
-                                            RemoveHazard(hazardsInPlay[i]);
-                                            break;
-                                        
-                                        case "Large Asteroid":
-                                            if (hazardCollidedWithHP != null)
-                                            {
-                                                hazardCollidedWithHP.ApplyDamage(100);
-                                            }
-                                            // TODO: Instantiate explosion
-                                            RemoveHazard(hazardsInPlay[i]);
-                                            break;
-
-                                        case "Missile":
-                                            {
-                                                hazardCollidedWithHP.ApplyDamage(1);
-                                            }
-                                            // TODO: Instantiate explosion
-                                            RemoveHazard(hazardsInPlay[i]);
-                                            break;
-                                    }
-                                    /*
-                                    if (hazardCollidedWith.HazardName == "Small Asteroid")
-                                    {
-                                        RemoveHazard(hazardsInPlay[i]);
-                                        //Instantiate explosion here
-                                    }
-                                    if (hazardCollidedWith.HazardName == "Missile")
-                                    {
-
-                                    }
-                                    
-                                    break;
-
-                                case "Large Asteroid":
-                                    if (hazardCollidedWith.HazardName == "Small Asteroid")
-                                    {
-                                        RemoveHazard(hazardCollidedWith);
-                                        // Worried about this because we're altering the <List>
-                                        // Maybe it would be better to set health to 0 so that element is removed at the appropriate 
-                                        // time (ie. when that element is being processed in the for loop)
-                                        //Instantiate explosion here
-                                    }
-                                    break;
-                            }
+                    gm.AddObjectToGrid(hazardObject, destinationGridPosition);
+                    gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
                         
+                    StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+
+                    if (collisionImminent)
+                    {
+                        GridBlock destinationGridBlock = gm.FindGridBlockByLocation(destinationGridPosition);
+                        collisionsToProcess.Add(destinationGridBlock);
                     }
-                    */
+                }                
+            }
+        }
+        
+        foreach (GridBlock gridBlock in collisionsToProcess)
+        {
+            // Iterate through collisionsToProcess
+            for (int i = 0; i < gridBlock.objectsOnBlock.Count - 1; i++)
+            {
+                GameObject gameObject = gridBlock.objectsOnBlock[i];
+                Health gameObjectHealth = gameObject.GetComponent<Health>();
+                ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
+
+                for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
+                {                    
+                    GameObject otherGameObject = gridBlock.objectsOnBlock[j];
+                    Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
+                    ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
+
+                    if (gameObjectDamage != null && otherGameObjectHealth != null)
+                    {
+                        otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
+                    }
+
+                    if (gameObjectHealth != null && otherGameObjectDamage != null)
+                    {
+                        gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
+                    }
                 }
             }
         }
 
+        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        {
+            GameObject hazardObject = hazardsInPlay[i].gameObject;
+            Health hazardHealth = hazardObject.GetComponent<Health>();
+
+            if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
+            {
+                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                RemoveHazard(hazardsInPlay[i]);
+            }
+        }
+
+        // Spawn stuff
         if (ticksUntilNewSpawn == 0)
         {
             Debug.Log("Preparing Hazard: tick condition.");
@@ -343,5 +313,15 @@ public class HazardManager : MonoBehaviour
         }
 
         hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
+    }
+
+    private IEnumerator DestroyHazardCoroutine(Hazard hazardToDestroy, float delay = 0.0f)
+    {
+        Debug.Log("DestroyHazardCoroutine() called.");
+        yield return new WaitForSeconds(delay);
+        Destroy(hazardToDestroy.gameObject);
+        Debug.Log("DestroyHazardCoroutine() ended.");
+        
+        //TODO: Spawn explosion here
     }
 }

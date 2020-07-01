@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 4883132956709499577}
   - component: {fileID: 2373175359141015207}
   - component: {fileID: 1972521667640024637}
-  - component: {fileID: 880584383098535066}
+  - component: {fileID: 868535179729277578}
   - component: {fileID: 7754017057097935033}
+  - component: {fileID: 880584383098535066}
   m_Layer: 0
   m_Name: MissilePrefab
   m_TagString: Untagged
@@ -113,6 +114,32 @@ MonoBehaviour:
   targetWorldLocation: {x: 0, y: 0, z: 0}
   moveSpeed: 1
   hazardName: Missile
+--- !u!114 &868535179729277578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 524358875914407805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d404c645065e0d34c95be8de3cd84507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageAmount: 200
+--- !u!114 &7754017057097935033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 524358875914407805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 1
 --- !u!114 &880584383098535066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127,16 +154,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
   moveRate: 1
---- !u!114 &7754017057097935033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 524358875914407805}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHP: 1

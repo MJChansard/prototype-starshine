@@ -172,7 +172,6 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        Debug.LogError("No GridBlock found for provided location.");
         return null;
     }
 
@@ -186,6 +185,7 @@ public class GridManager : MonoBehaviour
     public bool CheckIfGridBlockIsOccupied(Vector2Int gridLocation)
     {
         GridBlock block = FindGridBlockByLocation(gridLocation);
+        if (block == null) return false;
         return block.IsOccupied;        
     }   
 
@@ -209,7 +209,7 @@ public class GridManager : MonoBehaviour
                 {
                     origin.objectsOnBlock.RemoveAt(i);
                 }
-                break;
+                return;
             }            
         }
         else { return; }
@@ -221,15 +221,20 @@ public class GridManager : MonoBehaviour
         if (gridBlockLabels == true)
         {
             Gizmos.color = Color.blue;
-            foreach (GridBlock block in levelGrid)
+            if (levelGrid != null)
             {
-                if (block.IsOccupied && block.objectsOnBlock != null)
+                foreach (GridBlock block in levelGrid)
                 {
-                    foreach (GameObject occupant in block.objectsOnBlock)
+                    if (block.IsOccupied && block.objectsOnBlock != null)
                     {
-                        Handles.Label(GridToWorld(block.location), occupant.name);
+                        foreach (GameObject occupant in block.objectsOnBlock)
+                        {
+                            if (occupant != null)
+                            {
+                                Handles.Label(GridToWorld(block.location), occupant.name);
+                            }
+                        }
                     }
-                    
                 }
             }
         }

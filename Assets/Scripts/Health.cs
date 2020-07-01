@@ -20,7 +20,7 @@ public class Health : MonoBehaviour
     }
 
 
-    public void ApplyDamage(int damageAmount)
+    public void SubtractHealth(int damageAmount)
     {
         if (damageAmount > 0)
         {
