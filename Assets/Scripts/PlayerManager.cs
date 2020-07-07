@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
+    public bool InputActive = true;
+
     #region Inspector Attributes   
     [SerializeField] private float speed = 2.0f;
 
@@ -29,6 +31,7 @@ public class PlayerManager : MonoBehaviour
 
     private bool PlayerTurnActive = false;
     //private bool isRequestingMove = false;
+    
 
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 1.0f;
@@ -59,7 +62,7 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        PlayerInput();
+        if (InputActive) PlayerInput();
         
         if(Input.GetKeyDown(KeyCode.T))
         {
@@ -126,7 +129,6 @@ public class PlayerManager : MonoBehaviour
             return;
         }
     }
-
 
     private void SelectWeapon(int choice)
     {

@@ -165,8 +165,10 @@ public class HazardManager : MonoBehaviour
     }
 
 
-    public void OnTickUpdate()
+    public float OnTickUpdate()
     {
+        float delayTime = 2.0f;
+
         List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
 
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
@@ -191,7 +193,7 @@ public class HazardManager : MonoBehaviour
                 Vector2Int destinationGridPosition = originGridPosition + move.delta;
 
                 bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
-                // bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
+                bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
 
                 if (!moveInBounds)
                 {
@@ -271,6 +273,7 @@ public class HazardManager : MonoBehaviour
             }
         }
 
+        //TODO: CheckHazardHealth()
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
@@ -301,6 +304,8 @@ public class HazardManager : MonoBehaviour
         currentTick++;
         Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
         ticksUntilNewSpawn--;
+        
+        return delayTime;
     }
 
     private IEnumerator MoveHazardCoroutine(Hazard hazardToMove)

@@ -49,6 +49,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator OnTickCoroutine()
     {
+        pm.InputActive = false;
         pm.OnPlayerAdvance -= OnTick;
 
         pm.OnPlayerAddHazard += OnAddHazard;
@@ -56,10 +57,12 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         pm.OnPlayerAddHazard -= OnAddHazard;
 
-        hm.OnTickUpdate();
+        float hazardDelay = hm.OnTickUpdate();
+        yield return new WaitForSeconds(hazardDelay);
         // pm.CheckHP();
         
         CurrentTick += 1;
+        pm.InputActive = true;
         pm.OnPlayerAdvance += OnTick;
         yield return null;
     }
