@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class HazardManager : MonoBehaviour
@@ -152,30 +153,6 @@ public class HazardManager : MonoBehaviour
 
             hazardsInPlay.Add(hazard);
         }
-        /*
-        else    // Resolve collisions
-        {
-            GameObject objectOnTargetGridBlock = targetGridLocation.objectOnBlock;
-            Hazard hazardOnTargetGridBlock = objectOnTargetGridBlock.GetComponent<Hazard>();
-
-            if (hazardOnTargetGridBlock != null)
-            {
-                
-                switch (hazardOnTargetGridBlock.HazardName)
-                {
-                    case "Small Asteroid":
-                        Health hp = hazardOnTargetGridBlock.GetComponent<Health>();
-                        break;
-
-                    case "Large Asteroid":
-                        break;
-
-                    case "Missile":
-                        break;
-                }
-            }
-        }
-        */
     }
 
     public void RemoveHazard(Hazard hazard)
@@ -190,7 +167,7 @@ public class HazardManager : MonoBehaviour
 
     public void OnTickUpdate()
     {
-        List<GridBlock> collisionsToProcess = new List<GridBlock>();
+        List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
 
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
@@ -206,15 +183,15 @@ public class HazardManager : MonoBehaviour
 
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
-            if (move.moveRate == 1 || currentTick % move.moveRate == 0)
+            if (currentTick % move.moveRate == 0)
             {
-                Debug.Log(hazardObject.name + " is moving by " + move.delta);
+                Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
 
                 Vector2Int originGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
                 Vector2Int destinationGridPosition = originGridPosition + move.delta;
 
                 bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
-                bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
+                // bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
 
                 if (!moveInBounds)
                 {
@@ -223,26 +200,51 @@ public class HazardManager : MonoBehaviour
                 }
                 else
                 {
-                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-                        
-                    gm.AddObjectToGrid(hazardObject, destinationGridPosition);
                     gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
-                        
+                    Debug.Log("Removing " + hazardsInPlay[i].HazardName + " from " + originGridPosition.ToString());
+                    
+                    gm.AddObjectToGrid(hazardObject, destinationGridPosition);
+                    Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
+
+                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);                        
                     StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
 
-                    if (collisionImminent)
-                    {
-                        GridBlock destinationGridBlock = gm.FindGridBlockByLocation(destinationGridPosition);
-                        collisionsToProcess.Add(destinationGridBlock);
-                    }
+                    allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridPosition));
+
+                    /*
+                        if (collisionImminent)
+                        {
+                            GridBlock destinationGridBlock = gm.FindGridBlockByLocation(destinationGridPosition);
+                            collisionsToProcess.Add(destinationGridBlock);
+                        }
+                    */
                 }                
             }
-        }
+
+            // if (i > -1) Debug.Log("Movement for " + hazardsInPlay[i].HazardName + " completed.");
         
-        foreach (GridBlock gridBlock in collisionsToProcess)
+        }
+
+        List<GridBlock> uniqueListOfCollisions = allPossibleBlockCollisions.Distinct().ToList();
+        /*
+        foreach(GridBlock block in uniqueListOfCollisions)
         {
+            if (block.objectsOnBlock.Count > 1)
+            {
+                foreach (GameObject gameObject in block.objectsOnBlock)
+                {
+                    Hazard hazardObject = gameObject.GetComponent<Hazard>();
+                    Debug.Log("On " + block.location.ToString() + ": " + hazardObject.HazardName);
+                }
+            }
+        }
+        */
+
+        foreach (GridBlock gridBlock in uniqueListOfCollisions)
+        {
+            Debug.Log("Processing collision on " + gridBlock.location.ToString());
             // Iterate through collisionsToProcess
-            for (int i = 0; i < gridBlock.objectsOnBlock.Count - 1; i++)
+            for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
             {
                 GameObject gameObject = gridBlock.objectsOnBlock[i];
                 Health gameObjectHealth = gameObject.GetComponent<Health>();
@@ -256,11 +258,13 @@ public class HazardManager : MonoBehaviour
 
                     if (gameObjectDamage != null && otherGameObjectHealth != null)
                     {
+                        Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
                         otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
                     }
 
                     if (gameObjectHealth != null && otherGameObjectDamage != null)
                     {
+                        Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
                         gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
                     }
                 }
@@ -277,6 +281,7 @@ public class HazardManager : MonoBehaviour
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
                 RemoveHazard(hazardsInPlay[i]);
             }
+
         }
 
         // Spawn stuff

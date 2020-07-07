@@ -180,7 +180,6 @@ public class PlayerManager : MonoBehaviour
             if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
             if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());
 
-            //gm.UpdateGridPosition(this.gameObject, currentGridLocation, destinationGridLocation);
             gm.AddObjectToGrid(this.gameObject, destinationGridPosition);
             gm.RemoveObjectFromGrid(this.gameObject, originGridPosition);
         }
@@ -238,15 +237,12 @@ public class PlayerManager : MonoBehaviour
 
         if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
         {
-            //GridBlock targetGrid = gm.FindGridBlockByLocation(currentGrid.location + delta);
-
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
             Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
 
             if (OnPlayerAddHazard != null)
             {
                 Debug.Log("PlayerManager.OnPlayerAddHazard() called.");
-                //OnPlayerAddHazard(launchedMissile, targetGrid.location, false);
                 OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
             }
             else

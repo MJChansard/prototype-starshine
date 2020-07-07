@@ -4,15 +4,14 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
-    private int _currentHP;
-    [SerializeField]
+    [SerializeField] private int _currentHP;
+    
     public int CurrentHP
     {
         get { return _currentHP; }
     }            
 
-    [SerializeField]
-    private int maxHP;
+    [SerializeField] private int maxHP;
 
     private void Awake()
     {

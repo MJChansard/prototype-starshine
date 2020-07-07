@@ -59,7 +59,6 @@ public class GameManager : MonoBehaviour
         hm.OnTickUpdate();
         // pm.CheckHP();
         
-        
         CurrentTick += 1;
         pm.OnPlayerAdvance += OnTick;
         yield return null;

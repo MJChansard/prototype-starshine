@@ -199,18 +199,30 @@ public class GridManager : MonoBehaviour
 
     public void RemoveObjectFromGrid(GameObject gameObject, Vector2Int gridPosition)
     {
-        GridBlock origin = levelGrid[gridPosition.x, gridPosition.y];
+        GridBlock origin = FindGridBlockByLocation(gridPosition);
 
         if (origin.objectsOnBlock.Count > 0)
         {
-            for (int i = origin.objectsOnBlock.Count - 1; i == 0 ; i--)
+            
+            for (int i = origin.objectsOnBlock.Count - 1; i >= 0; i--)
             {
                 if (gameObject == origin.objectsOnBlock[i])
                 {
                     origin.objectsOnBlock.RemoveAt(i);
+                    return;
                 }
-                return;
-            }            
+            }
+            /*
+            for (int i = 0; i < origin.objectsOnBlock.Count; i++)
+            {
+                if (gameObject == origin.objectsOnBlock[i])
+                {
+                    origin.objectsOnBlock.RemoveAt(i);
+                    return;
+                }
+                
+            }
+            */
         }
         else { return; }
     }
@@ -225,13 +237,19 @@ public class GridManager : MonoBehaviour
             {
                 foreach (GridBlock block in levelGrid)
                 {
-                    if (block.IsOccupied && block.objectsOnBlock != null)
+                    if (block.IsOccupied)
                     {
                         foreach (GameObject occupant in block.objectsOnBlock)
                         {
                             if (occupant != null)
                             {
-                                Handles.Label(GridToWorld(block.location), occupant.name);
+                                GUIStyle GridObjectOccupantGizmoText = new GUIStyle();
+                                GridObjectOccupantGizmoText.normal.textColor = Color.red;
+                                GridObjectOccupantGizmoText.fontSize = 20;
+                                //GridObjectOccupantGizmoText.normal.background = Texture2D.blackTexture;
+
+                                //Handles.Label(GridToWorld(block.location), occupant.name);
+                                Handles.Label(GridToWorld(block.location), occupant.name, GridObjectOccupantGizmoText);
                             }
                         }
                     }
