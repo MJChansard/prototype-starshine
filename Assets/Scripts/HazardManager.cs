@@ -165,18 +165,36 @@ public class HazardManager : MonoBehaviour
     }
 
 
+    private bool CheckHazardHasHealth(GameObject hazardObject)
+    {
+        Health hazardHealth = hazardObject.GetComponent<Health>();
+        if (hazardHealth != null && hazardHealth.CurrentHP > 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public float OnTickUpdate()
     {
-        float delayTime = 2.0f;
+        #region Hazard Tick Duration
+        bool moveOccurredThisTick = false;
+        float moveDurationSeconds = 1.0f;
+
+        bool hazardDestroyedThisTick = false;
+        float destroyDurationSeconds = 2.0f;
+
+        float delayTime = 0.0f;
+        #endregion
 
         List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
+        Vector2Int[] allOriginGridPositions = new Vector2Int[hazardsInPlay.Count];
+        Vector2Int[] allDestinationGridPositions = new Vector2Int[hazardsInPlay.Count];
 
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
-            Health hazardHealth = hazardObject.GetComponent<Health>();
-
-            if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
+            if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
                 RemoveHazard(hazardsInPlay[i]);
@@ -192,6 +210,9 @@ public class HazardManager : MonoBehaviour
                 Vector2Int originGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
                 Vector2Int destinationGridPosition = originGridPosition + move.delta;
 
+                allOriginGridPositions[i] = originGridPosition;
+                allDestinationGridPositions[i] = destinationGridPosition;
+
                 bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
                 bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
 
@@ -204,48 +225,45 @@ public class HazardManager : MonoBehaviour
                 {
                     gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
                     Debug.Log("Removing " + hazardsInPlay[i].HazardName + " from " + originGridPosition.ToString());
-                    
+
                     gm.AddObjectToGrid(hazardObject, destinationGridPosition);
                     Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
 
-                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);                        
+                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
                     StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
 
                     allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridPosition));
 
-                    /*
-                        if (collisionImminent)
-                        {
-                            GridBlock destinationGridBlock = gm.FindGridBlockByLocation(destinationGridPosition);
-                            collisionsToProcess.Add(destinationGridBlock);
-                        }
-                    */
-                }                
-            }
-
-            // if (i > -1) Debug.Log("Movement for " + hazardsInPlay[i].HazardName + " completed.");
-        
-        }
-
-        List<GridBlock> uniqueListOfCollisions = allPossibleBlockCollisions.Distinct().ToList();
-        /*
-        foreach(GridBlock block in uniqueListOfCollisions)
-        {
-            if (block.objectsOnBlock.Count > 1)
-            {
-                foreach (GameObject gameObject in block.objectsOnBlock)
-                {
-                    Hazard hazardObject = gameObject.GetComponent<Hazard>();
-                    Debug.Log("On " + block.location.ToString() + ": " + hazardObject.HazardName);
+                    moveOccurredThisTick = true;
                 }
-            }
+            }        
         }
-        */
 
-        foreach (GridBlock gridBlock in uniqueListOfCollisions)
+        // Fly-By detection goes here
+        for (int i = 0; i < allOriginGridPositions.Length; i++)
+        {
+            for (int j = 0; j < allDestinationGridPositions.Length; j++)
+            {
+                if (i == j)
+                {
+                    continue;
+                }
+                
+                if (allOriginGridPositions[i] == allDestinationGridPositions[j] && allOriginGridPositions[j] == allDestinationGridPositions[i])
+                {
+                    // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
+                    // Do stuff here
+                    Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
+                }
+            }   
+        }
+
+        List<GridBlock> uniquePossibleBlockCollisions = allPossibleBlockCollisions.Distinct().ToList();
+
+        foreach (GridBlock gridBlock in uniquePossibleBlockCollisions)
         {
             Debug.Log("Processing collision on " + gridBlock.location.ToString());
-            // Iterate through collisionsToProcess
+            
             for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
             {
                 GameObject gameObject = gridBlock.objectsOnBlock[i];
@@ -273,18 +291,16 @@ public class HazardManager : MonoBehaviour
             }
         }
 
-        //TODO: CheckHazardHealth()
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
-            Health hazardHealth = hazardObject.GetComponent<Health>();
-
-            if (hazardHealth != null && hazardHealth.CurrentHP <= 0)
+            
+            if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
                 RemoveHazard(hazardsInPlay[i]);
+                hazardDestroyedThisTick = true;
             }
-
         }
 
         // Spawn stuff
@@ -304,7 +320,10 @@ public class HazardManager : MonoBehaviour
         currentTick++;
         Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
         ticksUntilNewSpawn--;
-        
+
+        //delayTime = 0.0f;
+        if (moveOccurredThisTick) delayTime += moveDurationSeconds;
+        if (hazardDestroyedThisTick) delayTime += destroyDurationSeconds;
         return delayTime;
     }
 
