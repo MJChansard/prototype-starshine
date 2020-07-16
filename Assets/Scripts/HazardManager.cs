@@ -155,7 +155,7 @@ public class HazardManager : MonoBehaviour
         }
     }
 
-    public void RemoveHazard(Hazard hazard)
+    public void RemoveHazardFromPlay(Hazard hazard)
     {
         GameObject hazardToRemove = hazard.gameObject;
         Vector2Int gridPosition = gm.FindGridBlockContainingObject(hazardToRemove).location;
@@ -167,6 +167,8 @@ public class HazardManager : MonoBehaviour
 
     private bool CheckHazardHasHealth(GameObject hazardObject)
     {
+        // This might better be suited as a Property in Helath.cs
+
         Health hazardHealth = hazardObject.GetComponent<Health>();
         if (hazardHealth != null && hazardHealth.CurrentHP > 0)
         {
@@ -191,16 +193,21 @@ public class HazardManager : MonoBehaviour
         Vector2Int[] allOriginGridPositions = new Vector2Int[hazardsInPlay.Count];
         Vector2Int[] allDestinationGridPositions = new Vector2Int[hazardsInPlay.Count];
 
+        // Hazard Health Check
+        // Needed in case Hazards were damaged during Player Turn
+        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        {
+            if (!CheckHazardHasHealth(hazardsInPlay[i].gameObject))
+            {
+                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
+                RemoveHazardFromPlay(hazardsInPlay[i]);
+            }
+        }
+
+        // Manage Movement Data
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
-            if (!CheckHazardHasHealth(hazardObject))
-            {
-                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
-                RemoveHazard(hazardsInPlay[i]);
-                continue;
-            }
-
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
             if (currentTick % move.moveRate == 0)
@@ -214,12 +221,12 @@ public class HazardManager : MonoBehaviour
                 allDestinationGridPositions[i] = destinationGridPosition;
 
                 bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
-                bool collisionImminent = gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
 
                 if (!moveInBounds)
                 {
                     StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
-                    RemoveHazard(hazardsInPlay[i]);
+                    RemoveHazardFromPlay(hazardsInPlay[i]);
+                    hazardDestroyedThisTick = true;
                 }
                 else
                 {
@@ -230,16 +237,14 @@ public class HazardManager : MonoBehaviour
                     Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-                    StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
-
+                    
                     allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridPosition));
-
-                    moveOccurredThisTick = true;
                 }
             }        
         }
 
-        // Fly-By detection goes here
+        // Fly-By detection
+        Debug.Log("Fly-By detection starting.");
         for (int i = 0; i < allOriginGridPositions.Length; i++)
         {
             for (int j = 0; j < allDestinationGridPositions.Length; j++)
@@ -252,14 +257,51 @@ public class HazardManager : MonoBehaviour
                 if (allOriginGridPositions[i] == allDestinationGridPositions[j] && allOriginGridPositions[j] == allDestinationGridPositions[i])
                 {
                     // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
-                    // Do stuff here
                     Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
+                    
+                    Hazard flyByHazard1 = hazardsInPlay[i];
+                    Hazard flyByHazard2 = hazardsInPlay[j];
+
+                    Health flyByHazard1HP = flyByHazard1.gameObject.GetComponent<Health>();
+                    flyByHazard1HP.SubtractHealth(flyByHazard2.GetComponent<ContactDamage>().DamageAmount);
+                    if (!CheckHazardHasHealth(flyByHazard1.gameObject))
+                    {
+                        // If flyByHazard1 did not survive ...
+                        StartCoroutine(FlyByMoveCoroutine(flyByHazard1, 0.5f));
+                    }
+
+                    Health flyByHazard2HP = flyByHazard2.gameObject.GetComponent<Health>();
+                    flyByHazard2HP.SubtractHealth(flyByHazard1.GetComponent<ContactDamage>().DamageAmount);
+                    if (!CheckHazardHasHealth(flyByHazard2.gameObject))
+                    {
+                        // If flyByHazard2 did not survive...
+                        StartCoroutine(FlyByMoveCoroutine(flyByHazard2, 0.5f));
+                    }
                 }
             }   
         }
+        
+        // Hazard Health check
+        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        {
+            GameObject hazardObject = hazardsInPlay[i].gameObject;
 
+            if (!CheckHazardHasHealth(hazardObject))
+            {
+                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                RemoveHazardFromPlay(hazardsInPlay[i]);
+                hazardDestroyedThisTick = true;
+            }
+        }
+
+        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        {
+            StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+            moveOccurredThisTick = true;
+        }
+
+        // GridBlock Collisions
         List<GridBlock> uniquePossibleBlockCollisions = allPossibleBlockCollisions.Distinct().ToList();
-
         foreach (GridBlock gridBlock in uniquePossibleBlockCollisions)
         {
             Debug.Log("Processing collision on " + gridBlock.location.ToString());
@@ -291,6 +333,7 @@ public class HazardManager : MonoBehaviour
             }
         }
 
+        // Hazard Health Check
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
@@ -298,7 +341,7 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
-                RemoveHazard(hazardsInPlay[i]);
+                RemoveHazardFromPlay(hazardsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
         }
@@ -321,7 +364,6 @@ public class HazardManager : MonoBehaviour
         Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
         ticksUntilNewSpawn--;
 
-        //delayTime = 0.0f;
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;
         if (hazardDestroyedThisTick) delayTime += destroyDurationSeconds;
         return delayTime;
@@ -344,6 +386,46 @@ public class HazardManager : MonoBehaviour
         hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
     }
 
+    private IEnumerator FlyByMoveCoroutine(Hazard flyBy, float percentOfGridSpaceToTravel)  //Maybe float travelLimit
+    {
+        float startTime = Time.time;
+        float percentTraveled = 0.0f;
+
+        while (percentTraveled <= percentOfGridSpaceToTravel)
+        {
+            float traveled = (Time.time - startTime) * 1.0f;
+            percentTraveled = traveled / flyBy.Distance;
+            flyBy.transform.position = Vector3.Lerp(flyBy.currentWorldLocation, flyBy.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));           
+
+            yield return null;
+        }
+
+        //StartCoroutine(DestroyHazardCoroutine(flyBy));
+    }
+    /*
+    {
+        float startTime = Time.time;
+        float flyByPercentTraveled1 = 0.0f;
+        float flyByPercentTraveled2 = 0.0f;
+
+        while (flyByPercentTraveled1 <= 0.5f)
+        {
+            float traveled = (Time.time - startTime) * 1.0f;
+            
+            flyByPercentTraveled1 = traveled / flyBy1.Distance;
+            flyByPercentTraveled2 = traveled / flyBy2.Distance;
+
+            flyBy1.transform.position = Vector3.Lerp(flyBy1.currentWorldLocation, flyBy1.targetWorldLocation, Mathf.SmoothStep(0, 1, flyByPercentTraveled1));
+            flyBy2.transform.position = Vector3.Lerp(flyBy2.currentWorldLocation, flyBy2.targetWorldLocation, Mathf.SmoothStep(0, 1, flyByPercentTraveled2));
+
+            yield return null;
+        }
+
+        StartCoroutine(DestroyHazardCoroutine(flyBy1));
+        StartCoroutine(DestroyHazardCoroutine(flyBy2));
+    }
+    */
+    
     private IEnumerator DestroyHazardCoroutine(Hazard hazardToDestroy, float delay = 0.0f)
     {
         Debug.Log("DestroyHazardCoroutine() called.");
