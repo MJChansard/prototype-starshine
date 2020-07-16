@@ -267,7 +267,7 @@ public class HazardManager : MonoBehaviour
                     if (!CheckHazardHasHealth(flyByHazard1.gameObject))
                     {
                         // If flyByHazard1 did not survive ...
-                        StartCoroutine(FlyByMoveCoroutine(flyByHazard1, 0.5f));
+                        StartCoroutine(MoveHazardCoroutine(flyByHazard1, 0.5f));
                     }
 
                     Health flyByHazard2HP = flyByHazard2.gameObject.GetComponent<Health>();
@@ -275,7 +275,7 @@ public class HazardManager : MonoBehaviour
                     if (!CheckHazardHasHealth(flyByHazard2.gameObject))
                     {
                         // If flyByHazard2 did not survive...
-                        StartCoroutine(FlyByMoveCoroutine(flyByHazard2, 0.5f));
+                        StartCoroutine(MoveHazardCoroutine(flyByHazard2, 0.5f));
                     }
                 }
             }   
@@ -294,6 +294,7 @@ public class HazardManager : MonoBehaviour
             }
         }
 
+        // Move hazards
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
@@ -369,12 +370,12 @@ public class HazardManager : MonoBehaviour
         return delayTime;
     }
 
-    private IEnumerator MoveHazardCoroutine(Hazard hazardToMove)
+    private IEnumerator MoveHazardCoroutine(Hazard hazardToMove, float hazardTravelLength = 1.0f)
     {
         float startTime = Time.time;
         float percentTraveled = 0.0f;
 
-        while (percentTraveled <= 1.0f)
+        while (percentTraveled <= hazardTravelLength)
         {
             float traveled = (Time.time - startTime) * 1.0f;
             percentTraveled = traveled / hazardToMove.Distance;
@@ -386,45 +387,6 @@ public class HazardManager : MonoBehaviour
         hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
     }
 
-    private IEnumerator FlyByMoveCoroutine(Hazard flyBy, float percentOfGridSpaceToTravel)  //Maybe float travelLimit
-    {
-        float startTime = Time.time;
-        float percentTraveled = 0.0f;
-
-        while (percentTraveled <= percentOfGridSpaceToTravel)
-        {
-            float traveled = (Time.time - startTime) * 1.0f;
-            percentTraveled = traveled / flyBy.Distance;
-            flyBy.transform.position = Vector3.Lerp(flyBy.currentWorldLocation, flyBy.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));           
-
-            yield return null;
-        }
-
-        //StartCoroutine(DestroyHazardCoroutine(flyBy));
-    }
-    /*
-    {
-        float startTime = Time.time;
-        float flyByPercentTraveled1 = 0.0f;
-        float flyByPercentTraveled2 = 0.0f;
-
-        while (flyByPercentTraveled1 <= 0.5f)
-        {
-            float traveled = (Time.time - startTime) * 1.0f;
-            
-            flyByPercentTraveled1 = traveled / flyBy1.Distance;
-            flyByPercentTraveled2 = traveled / flyBy2.Distance;
-
-            flyBy1.transform.position = Vector3.Lerp(flyBy1.currentWorldLocation, flyBy1.targetWorldLocation, Mathf.SmoothStep(0, 1, flyByPercentTraveled1));
-            flyBy2.transform.position = Vector3.Lerp(flyBy2.currentWorldLocation, flyBy2.targetWorldLocation, Mathf.SmoothStep(0, 1, flyByPercentTraveled2));
-
-            yield return null;
-        }
-
-        StartCoroutine(DestroyHazardCoroutine(flyBy1));
-        StartCoroutine(DestroyHazardCoroutine(flyBy2));
-    }
-    */
     
     private IEnumerator DestroyHazardCoroutine(Hazard hazardToDestroy, float delay = 0.0f)
     {
