@@ -255,6 +255,7 @@ public class PlayerManager : MonoBehaviour
             return;
         }
 
+
         // Identify possible targets based on PlayerManager.currentlyFacing
         List<GridBlock> possibleTargetBlocks = new List<GridBlock>();
         if (currentlyFacing == Vector2Int.up)
@@ -298,16 +299,17 @@ public class PlayerManager : MonoBehaviour
             }
         }
 
+
         if (currentWeapon.GetComponent<Weapon>().Name == "AutoCannon")
         {
-            foreach (GridBlock block in possibleTargetBlocks)
+            for (int i = 0; i < possibleTargetBlocks.Count; i++)
             {
-                foreach (GameObject target in block.objectsOnBlock)
+                for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
                 {
-                    Health hp = target.GetComponent<Health>();
+                    Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
                     if (hp != null)
                     {
-                        currentWeapon.StartAnimationCoroutine(block);
+                        currentWeapon.StartAnimationCoroutine(possibleTargetBlocks[i]);
                         hp.SubtractHealth(currentWeapon.Damage);
                         Debug.Log("Target's current health: " + hp.CurrentHP);
 
