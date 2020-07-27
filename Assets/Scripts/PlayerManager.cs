@@ -9,6 +9,11 @@ public class PlayerManager : MonoBehaviour
 {
     public bool InputActive = true;
 
+    public Vector3 ReportDirection
+    {
+        get { return new Vector3(currentlyFacing.x, currentlyFacing.y, 0.0f);  }
+    }
+
     #region Inspector Attributes   
     [SerializeField] private float speed = 2.0f;
 
@@ -27,11 +32,7 @@ public class PlayerManager : MonoBehaviour
 
     private Vector2Int currentlyFacing = Vector2Int.up;
     private Vector2Int delta = Vector2Int.zero;
-    private bool isRequestingAttack = false;
-
-    private bool PlayerTurnActive = false;
-    //private bool isRequestingMove = false;
-    
+    private bool isRequestingAttack = false;   
 
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 1.0f;
@@ -136,13 +137,13 @@ public class PlayerManager : MonoBehaviour
         if (choice == -1 && weaponIndex > 0)
         {
             currentWeapon = weaponInventory[weaponIndex - 1];
-            Debug.LogFormat("Weapon swap completed.  Current Weapon: {0}", currentWeapon.GetComponent<Weapon>().Name);
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.Name);
         }
 
         if (choice == 1 && weaponIndex < weaponInventory.Length - 1)
         {            
             currentWeapon = weaponInventory[weaponIndex + 1];
-            Debug.LogFormat("Weapon swap completed.  Current Weapon: {0}", currentWeapon.GetComponent<Weapon>().Name);
+            Debug.LogFormat("Current Weapon: {0}", currentWeapon.Name);
         }
     }
 
@@ -224,18 +225,9 @@ public class PlayerManager : MonoBehaviour
 
     private void Attack()
     {
-        /*  STEPS
-         *   - Need to find current location on the grid (GridBlock)
-         *   - Determine which direction player is facing
-         *   - Gather all GridBlocks on the cannon trajectory
-         *   - Test each block for a destructible GameObject
-         *   - Apply damage to the first detected GameObject
-         *   - Update Tick
-         */
 
         GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
         Vector2Int currentGridLocation = currentGridBlock.location;
-
 
         if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
         {
@@ -257,6 +249,7 @@ public class PlayerManager : MonoBehaviour
 
 
         // Identify possible targets based on PlayerManager.currentlyFacing
+        // Targets eligible for both AutoCannon and Railgun
         List<GridBlock> possibleTargetBlocks = new List<GridBlock>();
         if (currentlyFacing == Vector2Int.up)
         {
@@ -318,5 +311,61 @@ public class PlayerManager : MonoBehaviour
                 }
             }
         }
+
+        if (currentWeapon.Name == "Railgun")
+        {
+            /*  STEPS
+             *   - Instantiate the Rail at Player's current location
+             *   - Start the animation coroutine, which propels the rail from the Player's location, in the
+             *      direction the player is facing, to the end of the grid
+             *   - Apply damage to all objects in between the Player and the end of the grid
+             *   - Move the player back two GridBlocks
+             */
+
+            RailGun railGun = currentWeapon.GetComponent<RailGun>();
+            railGun.FireRailgun(currentWorldLocation);
+
+            // Determine destination/final GridBlock
+            GridBlock endAnimationGridLocation;
+            if (currentlyFacing == Vector2Int.up)
+            {
+                Vector2Int index = new Vector2Int(currentGridLocation.x, gm.GridHeight - 1);
+                Debug.LogFormat("Index when facing up: {0}", index);
+                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+            }
+            else if(currentlyFacing == Vector2Int.down)
+            {
+                Vector2Int index = new Vector2Int(currentGridLocation.x, 0);
+                Debug.LogFormat("Index when facing down: {0}", index);
+                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+            }
+            else if(currentlyFacing == Vector2Int.left)
+            {
+                Vector2Int index = new Vector2Int(0, currentGridLocation.y);
+                Debug.LogFormat("Index when facing left: {0}", index);
+                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+            }
+            else
+            {
+                Vector2Int index = new Vector2Int(gm.GridWidth - 1, currentGridLocation.y);
+                Debug.LogFormat("Index when facing right: {0}", index);
+                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+            }
+            
+            railGun.StartAnimationCoroutine(endAnimationGridLocation);
+
+            // Apply damage
+            for (int i = 0; i < possibleTargetBlocks.Count; i++)
+            {
+                for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
+                {
+                    Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
+                    if (hp != null)
+                    {
+                        hp.SubtractHealth(currentWeapon.Damage);
+                    }
+                }
+            }
+        }   
     }
 }

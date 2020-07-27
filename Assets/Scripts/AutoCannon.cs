@@ -24,8 +24,6 @@ public class AutoCannon : Weapon
 
     override protected IEnumerator AnimationCoroutine(GridBlock targetBlock)
     {
-        //cannonCoroutineIsRunning = true;
-
         ParticleSystem ps = GetComponent<ParticleSystem>();
 
         foreach (GameObject target in targetBlock.objectsOnBlock)
@@ -47,7 +45,5 @@ public class AutoCannon : Weapon
             }
 
         }
-
-        //cannonCoroutineIsRunning = false;
     }
 }

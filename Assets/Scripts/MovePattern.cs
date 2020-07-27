@@ -6,7 +6,6 @@ public class MovePattern : MonoBehaviour
 {
     public Vector2Int delta;
     public int moveRate;
-    // ticksPerMove;
 
     public Vector2Int SetMovePatternUp()
     {
