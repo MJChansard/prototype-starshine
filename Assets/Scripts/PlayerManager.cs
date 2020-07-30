@@ -25,11 +25,15 @@ public class PlayerManager : MonoBehaviour
     [Header("Weapon Inventory")]
     [SerializeField] private Weapon[] weaponInventory;
     Weapon currentWeapon;
+    [SerializeField] private Sprite[] weaponIconsUI;
+    #endregion
+
+    #region References
+    private GridManager gm;
+    private UiPlayerDisplay ui;
     #endregion
 
     #region Private Fields
-    private GridManager gm;
-
     private Vector2Int currentlyFacing = Vector2Int.up;
     private Vector2Int delta = Vector2Int.zero;
     private bool isRequestingAttack = false;   
@@ -59,6 +63,7 @@ public class PlayerManager : MonoBehaviour
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
         currentWeapon = weaponInventory[0];
+        ui = FindObjectOfType<UiPlayerDisplay>();
     }
 
     void Update()
@@ -90,10 +95,8 @@ public class PlayerManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.W))
             {
-
                 transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
                 currentlyFacing = delta = Vector2Int.up;
-
             }
 
             if (Input.GetKeyDown(KeyCode.S))
@@ -133,17 +136,13 @@ public class PlayerManager : MonoBehaviour
 
     private void SelectWeapon(int choice)
     {
-        int weaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
-        if (choice == -1 && weaponIndex > 0)
-        {
-            currentWeapon = weaponInventory[weaponIndex - 1];
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.Name);
-        }
+        int currentWeaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
+        int newWeaponIndex = currentWeaponIndex += choice;
 
-        if (choice == 1 && weaponIndex < weaponInventory.Length - 1)
-        {            
-            currentWeapon = weaponInventory[weaponIndex + 1];
-            Debug.LogFormat("Current Weapon: {0}", currentWeapon.Name);
+        if (newWeaponIndex >= 0 && newWeaponIndex < weaponInventory.Length)
+        {
+            currentWeapon = weaponInventory[newWeaponIndex];
+            ui.SetDisplayWeapon(weaponIconsUI[newWeaponIndex]);
         }
     }
 
