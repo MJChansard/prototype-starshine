@@ -64,6 +64,7 @@ public class PlayerManager : MonoBehaviour
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
         currentWeapon = weaponInventory[0];
         ui = FindObjectOfType<UiPlayerDisplay>();
+        ui.SetDisplayWeapon(weaponIconsUI[0]);
     }
 
     void Update()
