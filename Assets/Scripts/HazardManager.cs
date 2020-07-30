@@ -89,7 +89,8 @@ public class HazardManager : MonoBehaviour
     {
         Debug.Log("HazardManager.PrepareHazard() called.");
 
-        int hazardType = Random.Range(0, hazardPrefabs.Length - 1);
+        int hazardType = Random.Range(0, hazardPrefabs.Length);
+        Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
         int spawnAxis = Random.Range(1, 4);
         int spawnIndex;
         Vector2Int spawnPosition = new Vector2Int();
