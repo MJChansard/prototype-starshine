@@ -6,6 +6,7 @@ public class GridBlock
 {
     public Vector2Int location;
     public List<GameObject> objectsOnBlock;
+    public List<LootData> lootOnBlock;
     public bool canSpawn;
 
     public bool IsOccupied
@@ -22,6 +23,7 @@ public class GridBlock
     {
         this.location = new Vector2Int(x, y);
         this.objectsOnBlock = new List<GameObject>();
+        this.lootOnBlock = new List<LootData>();
         this.canSpawn = false;
     }
 

@@ -41,6 +41,8 @@ public class PlayerManager : MonoBehaviour
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.5f;
+
+    private int amountOfJumpFuelStored = 0;
     #endregion
 
     #region Movement Animation Properties
@@ -143,7 +145,9 @@ public class PlayerManager : MonoBehaviour
         if (newWeaponIndex >= 0 && newWeaponIndex < weaponInventory.Length)
         {
             currentWeapon = weaponInventory[newWeaponIndex];
-            ui.SetDisplayWeapon(weaponIconsUI[newWeaponIndex]);
+            //ui.SetDisplayWeapon(weaponIconsUI[newWeaponIndex]);
+            ui.SetDisplayWeapon(currentWeapon);
+
         }
     }
 
@@ -158,15 +162,17 @@ public class PlayerManager : MonoBehaviour
         }
         else if (delta != Vector2Int.zero)
         {
-            Move();
+            Vector2Int destinationGrid = Move();
+            GatherLoot(destinationGrid);
             return moveWaitTime;
+            
         }
         
         return waitWaitTime;
     }
 
 
-    private void Move()
+    private Vector2Int Move()
     {
         Vector2Int originGridPosition = gm.FindGridBlockContainingObject(this.gameObject).location;
         if (originGridPosition == null) Debug.LogError("Unable to find Player object on the Grid.");
@@ -175,18 +181,49 @@ public class PlayerManager : MonoBehaviour
 
         bool moveIsValid = gm.CheckIfGridBlockInBounds(originGridPosition) && !gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
         Debug.Log("Player move is validated: " + moveIsValid);
-        
+
         if (moveIsValid)
         {
             targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-            
+
             if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
             if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());
 
             gm.AddObjectToGrid(this.gameObject, destinationGridPosition);
             gm.RemoveObjectFromGrid(this.gameObject, originGridPosition);
+
+            return destinationGridPosition;
         }
+        else return originGridPosition;
     }
+
+    private void GatherLoot(Vector2Int gridBlockWithLoot)
+    {
+        // Gather loot if any exists
+        Debug.Log("PlayerManager.GatherLoot() called.");
+        List<GameObject> collectedLoot = new List<GameObject>();
+
+        //Vector2Int currentGrid = gm.WorldToGrid(currentWorldLocation);
+        GridBlock lootBlock = gm.FindGridBlockByLocation(gridBlockWithLoot);
+        
+        for (int i = lootBlock.lootOnBlock.Count - 1; i >= 0; i--)
+        {
+            LootData currentLoot = lootBlock.lootOnBlock[i];
+            if (currentLoot.LootItemName == "Jump Fuel")
+            {
+                Debug.Log("Jump Fuel found.");
+                amountOfJumpFuelStored += currentLoot.JumpFuelIncrement;
+                collectedLoot.Add(currentLoot.gameObject);
+                gm.RemoveLootFromGrid(currentLoot, lootBlock.location);
+            }
+        }
+
+        for (int i = collectedLoot.Count - 1; i >= 0; i--)
+        {
+            Debug.Log("Destroying collected loot.");
+            Destroy(collectedLoot[i], moveWaitTime);
+        }
+    }    
 
     private IEnumerator AnimateThrusterCoroutine()
     {

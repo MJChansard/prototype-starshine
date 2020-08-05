@@ -178,6 +178,22 @@ public class HazardManager : MonoBehaviour
         return false;
     }
 
+    private void HazardDropLoot(Hazard hazard)
+    {
+        LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
+        if (lh != null)
+        {
+            GameObject lootObject = lh.RequestLootDrop(hazard.currentWorldLocation, forced: true);
+
+            if (lootObject != null)
+            {
+                Vector2Int dropGridLocation = gm.WorldToGrid(hazard.currentWorldLocation);
+                LootData lootData = lootObject.GetComponent<LootData>();
+                gm.AddLootToGrid(lootData, dropGridLocation);
+            }
+        }
+    }
+
     public float OnTickUpdate()
     {
         #region Hazard Tick Duration
@@ -201,6 +217,7 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardsInPlay[i].gameObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
+                HazardDropLoot(hazardsInPlay[i]);
                 RemoveHazardFromPlay(hazardsInPlay[i]);
             }
         }
@@ -238,10 +255,11 @@ public class HazardManager : MonoBehaviour
                     Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-                    
+
                     allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridPosition));
                 }
-            }        
+            }
+            else hazardsInPlay[i].targetWorldLocation = hazardsInPlay[i].currentWorldLocation;
         }
 
         // Fly-By detection
@@ -290,6 +308,7 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                HazardDropLoot(hazardsInPlay[i]);
                 RemoveHazardFromPlay(hazardsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
@@ -298,8 +317,11 @@ public class HazardManager : MonoBehaviour
         // Move hazards
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
-            StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
-            moveOccurredThisTick = true;
+            if (hazardsInPlay[i].currentWorldLocation != hazardsInPlay[i].targetWorldLocation)
+            {
+                StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+                moveOccurredThisTick = true;
+            }
         }
 
         // GridBlock Collisions

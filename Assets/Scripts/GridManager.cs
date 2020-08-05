@@ -190,7 +190,6 @@ public class GridManager : MonoBehaviour
     }   
 
   
-
     public void AddObjectToGrid(GameObject gameObject, Vector2Int gridPosition)
     {
         GridBlock destination = levelGrid[gridPosition.x, gridPosition.y];
@@ -226,6 +225,26 @@ public class GridManager : MonoBehaviour
         }
         else { return; }
     }
+
+
+    public void AddLootToGrid(LootData loot, Vector2Int gridPosition)
+    {
+        GridBlock destination = FindGridBlockByLocation(gridPosition);
+        destination.lootOnBlock.Add(loot);
+    }
+
+    public void RemoveLootFromGrid(LootData loot, Vector2Int gridPosition)
+    {
+        GridBlock origin = FindGridBlockByLocation(gridPosition);
+        for (int i = 0; i < origin.lootOnBlock.Count; i++)
+        {
+            if (origin.lootOnBlock[i] == loot)
+            {
+                origin.lootOnBlock.Remove(loot);
+            }
+        }
+    }
+
 
    
     private void OnDrawGizmos()
