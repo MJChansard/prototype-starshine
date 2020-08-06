@@ -68,7 +68,6 @@ public class HazardManager : MonoBehaviour
             if (gm.levelGrid[0, y].canSpawn)
             {
                 spawnMoveRight.Add(gm.levelGrid[0, y]);
-                
             }
 
             if(gm.levelGrid[colRange, y].canSpawn)
@@ -189,7 +188,7 @@ public class HazardManager : MonoBehaviour
             {
                 Vector2Int dropGridLocation = gm.WorldToGrid(hazard.currentWorldLocation);
                 LootData lootData = lootObject.GetComponent<LootData>();
-                gm.AddLootToGrid(lootData, dropGridLocation);
+                gm.AddObjectToGrid(lootData.gameObject, dropGridLocation);
             }
         }
     }

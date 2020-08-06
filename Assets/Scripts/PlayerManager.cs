@@ -201,27 +201,22 @@ public class PlayerManager : MonoBehaviour
     {
         // Gather loot if any exists
         Debug.Log("PlayerManager.GatherLoot() called.");
-        List<GameObject> collectedLoot = new List<GameObject>();
-
-        //Vector2Int currentGrid = gm.WorldToGrid(currentWorldLocation);
-        GridBlock lootBlock = gm.FindGridBlockByLocation(gridBlockWithLoot);
         
-        for (int i = lootBlock.lootOnBlock.Count - 1; i >= 0; i--)
-        {
-            LootData currentLoot = lootBlock.lootOnBlock[i];
-            if (currentLoot.LootItemName == "Jump Fuel")
-            {
-                Debug.Log("Jump Fuel found.");
-                amountOfJumpFuelStored += currentLoot.JumpFuelIncrement;
-                collectedLoot.Add(currentLoot.gameObject);
-                gm.RemoveLootFromGrid(currentLoot, lootBlock.location);
-            }
-        }
+        GridBlock lootBlock = gm.FindGridBlockByLocation(gridBlockWithLoot);
 
-        for (int i = collectedLoot.Count - 1; i >= 0; i--)
+        for (int i = lootBlock.objectsOnBlock.Count - 1; i >= 0; i--)
         {
-            Debug.Log("Destroying collected loot.");
-            Destroy(collectedLoot[i], moveWaitTime);
+            LootData currentLoot = lootBlock.objectsOnBlock[i].GetComponent<LootData>();
+            if (currentLoot != null)
+            {
+                if (currentLoot.Type == LootData.LootType.JumpFuel)
+                {
+                    Debug.Log("Jump Fuel found.");
+                    amountOfJumpFuelStored += currentLoot.JumpFuelIncrement;
+                    gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
+                    Destroy(currentLoot.gameObject, moveWaitTime);
+                }
+            }
         }
     }    
 

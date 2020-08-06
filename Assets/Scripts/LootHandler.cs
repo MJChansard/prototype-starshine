@@ -8,26 +8,17 @@ public class LootHandler : MonoBehaviour
 
     public GameObject RequestLootDrop(Vector3 spawnLocation, bool forced = false)
     {
-        if (EligibleToDropLoot(forced))
+        if (forced || EligibleToDropLoot())
         {
-            //return DropLoot();
             GameObject loot = DropLoot(spawnLocation);
-            //Instantiate(loot, spawnLocation, Quaternion.Euler(-32.0f, -18.0f, -26.0f));
             return loot;
         }
         else return null;
     }
 
-    private bool EligibleToDropLoot(bool forced = false)
+    private bool EligibleToDropLoot()
     {
-        if (forced == true) return true;
-        else
-        {
-            int seed = Random.Range(0, 10);
-
-            if (seed > 4) return true;
-            else return false;
-        }
+        return Random.Range(0, 10) > 4;
     }
 
     private GameObject DropLoot(Vector3 spawnLocation)

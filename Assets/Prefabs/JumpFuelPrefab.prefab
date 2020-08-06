@@ -124,6 +124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lootItemName: Jump Fuel
+  lootType: 1
   jumpFuelValue: 1
   missileAmmoValue: 0
   railgunAmmoValue: 0

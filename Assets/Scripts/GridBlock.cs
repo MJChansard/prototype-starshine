@@ -6,7 +6,6 @@ public class GridBlock
 {
     public Vector2Int location;
     public List<GameObject> objectsOnBlock;
-    public List<LootData> lootOnBlock;
     public bool canSpawn;
 
     public bool IsOccupied
@@ -14,8 +13,34 @@ public class GridBlock
         get
         {
             if (objectsOnBlock == null) return false;
-            else return objectsOnBlock.Count > 0;
+            else
+            {
+                if (!DoesContainObjectPreventingPlayerMovement()) return false;
+                else return true;
+            }
         }
+    }
+
+    private bool DoesContainLoot()
+    {
+        int countOfLootItems = 0;
+        for (int i = 0; i < objectsOnBlock.Count; i++)
+        {
+            LootData loot = objectsOnBlock[i].GetComponent<LootData>();
+            if (loot != null) countOfLootItems += 1;
+        }
+        return countOfLootItems > 0;
+    }
+
+    private bool DoesContainObjectPreventingPlayerMovement()
+    {
+        int countOfObjects = 0;
+        for (int i = 0; i < objectsOnBlock.Count; i++)
+        {
+            Hazard hazard = objectsOnBlock[i].GetComponent<Hazard>();
+            if (hazard != null) countOfObjects += 1;
+        }
+        return countOfObjects > 0;
     }
 
     // Constructor
@@ -23,7 +48,6 @@ public class GridBlock
     {
         this.location = new Vector2Int(x, y);
         this.objectsOnBlock = new List<GameObject>();
-        this.lootOnBlock = new List<LootData>();
         this.canSpawn = false;
     }
 
