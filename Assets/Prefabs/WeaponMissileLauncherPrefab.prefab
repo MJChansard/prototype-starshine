@@ -43,5 +43,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405219faf7726354a85874d8e9eac9f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WeaponEntryUI: {fileID: 1952501245389988539, guid: dd530f13890f8b14886ace310360dd78,
+    type: 3}
   projectilePrefab: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
     type: 3}

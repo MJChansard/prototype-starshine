@@ -24,13 +24,12 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Weapon Inventory")]
     [SerializeField] private Weapon[] weaponInventory;
-    Weapon currentWeapon;
-    [SerializeField] private Sprite[] weaponIconsUI;
+    int selectedWeaponIndex;
     #endregion
 
     #region References
     private GridManager gm;
-    private UiPlayerDisplay ui;
+    private PlayerHUD ui;
     #endregion
 
     #region Private Fields
@@ -61,12 +60,22 @@ public class PlayerManager : MonoBehaviour
     public System.Action OnPlayerAdvance;
     public System.Action<Hazard, Vector2Int, bool> OnPlayerAddHazard;
 
+    private void Awake()
+    {
+        selectedWeaponIndex = 0;
+    }
+
     private void Start()
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
-        currentWeapon = weaponInventory[0];
-        ui = FindObjectOfType<UiPlayerDisplay>();
-        ui.SetDisplayWeapon(weaponIconsUI[0]);
+        
+        ui = FindObjectOfType<PlayerHUD>();
+        GameObject[] weaponEntriesUI = new GameObject[weaponInventory.Length];
+        for (int i = 0; i < weaponInventory.Length; i++)
+        {
+            weaponEntriesUI[i] = weaponInventory[i].WeaponEntryUI;
+        }
+        ui.Init(weaponEntriesUI);
     }
 
     void Update()
@@ -91,6 +100,7 @@ public class PlayerManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             SelectWeapon(1);
+
         }
 
         // Player Movement & turn advancement
@@ -139,15 +149,12 @@ public class PlayerManager : MonoBehaviour
 
     private void SelectWeapon(int choice)
     {
-        int currentWeaponIndex = Array.IndexOf(weaponInventory, currentWeapon);
-        int newWeaponIndex = currentWeaponIndex += choice;
-
+        int newWeaponIndex = selectedWeaponIndex + choice;
+        Debug.LogFormat("Index of current weapon: {0}, Index of new weapon: {1}", selectedWeaponIndex, newWeaponIndex);
         if (newWeaponIndex >= 0 && newWeaponIndex < weaponInventory.Length)
         {
-            currentWeapon = weaponInventory[newWeaponIndex];
-            //ui.SetDisplayWeapon(weaponIconsUI[newWeaponIndex]);
-            ui.SetDisplayWeapon(currentWeapon);
-
+            ui.UpdateWeaponSelection(selectedWeaponIndex, newWeaponIndex);
+            selectedWeaponIndex = newWeaponIndex;
         }
     }
 
@@ -257,11 +264,11 @@ public class PlayerManager : MonoBehaviour
 
     private void Attack()
     {
-
         GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
         Vector2Int currentGridLocation = currentGridBlock.location;
+        Weapon currentWeapon = weaponInventory[selectedWeaponIndex];
 
-        if (currentWeapon.GetComponent<Weapon>().Name == "Missile Launcher")
+        if (currentWeapon.Name == "Missile Launcher")
         {
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
             Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
@@ -325,7 +332,7 @@ public class PlayerManager : MonoBehaviour
         }
 
 
-        if (currentWeapon.GetComponent<Weapon>().Name == "AutoCannon")
+        if (currentWeapon.Name == "AutoCannon")
         {
             for (int i = 0; i < possibleTargetBlocks.Count; i++)
             {
