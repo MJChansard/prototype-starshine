@@ -22,11 +22,10 @@ public abstract class Weapon : MonoBehaviour
         }
     }
 
-    protected int weaponAmmunition = 0;
+    public int weaponAmmunition = 0;
 
-    public GameObject WeaponEntryUI;
-
-        
+    public Sprite weaponIcon;
+            
     abstract protected IEnumerator AnimationCoroutine(GridBlock target);
 
     public void StartAnimationCoroutine(GridBlock target)

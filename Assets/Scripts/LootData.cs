@@ -6,9 +6,7 @@ public class LootData : MonoBehaviour
 {
     [Header("Loot Item Properties")]
     [SerializeField] private LootType lootType;
-    [SerializeField] private int jumpFuelValue;
-    [SerializeField] private int missileAmmoValue;
-    [SerializeField] private int railgunAmmoValue;
+    [SerializeField] private int lootAmount;
 
     public enum LootType
     {
@@ -22,19 +20,9 @@ public class LootData : MonoBehaviour
         get { return lootType; }
     }
 
-    public int JumpFuelIncrement
+    public int LootAmount
     {
-        get { return jumpFuelValue; }
+        get { return lootAmount; }
     }
-
-    public int MissileAmmoIncrement
-    {
-        get { return missileAmmoValue; }
-    }
-
-    public int RailgunAmmoIncrement
-    {
-        get { return railgunAmmoValue; }
-    }
-
+    
 }

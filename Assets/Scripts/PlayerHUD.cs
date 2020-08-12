@@ -5,7 +5,8 @@ using UnityEngine;
 public class PlayerHUD : MonoBehaviour
 {
     [SerializeField] private GameObject weaponGroupObject;   
-    private GameObject[] weaponInventoryUI;
+    private PlayerHUDEntry[] PlayerHUDEntries;
+    public PlayerHUDEntry playerEntryPrefab;
 
     
     private void Start()
@@ -22,19 +23,22 @@ public class PlayerHUD : MonoBehaviour
     
     public void UpdateWeaponSelection(int disableWeapon, int enableWeapon)
     {
-        weaponInventoryUI[disableWeapon].transform.GetChild(0).gameObject.SetActive(false);
-        weaponInventoryUI[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
+        PlayerHUDEntries[disableWeapon].transform.GetChild(0).gameObject.SetActive(false);
+        PlayerHUDEntries[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
     }
 
-    public void Init(GameObject[] weaponsForUI)
+    
+    public void Init(Weapon[] weaponsForUI)
     {
-        weaponInventoryUI = new GameObject[weaponsForUI.Length];
-        for (int i = 0; i < weaponInventoryUI.Length; i++)
+        PlayerHUDEntries = new PlayerHUDEntry[weaponsForUI.Length];
+        for (int i = 0; i < PlayerHUDEntries.Length; i++)
         {
-            weaponInventoryUI[i] = Instantiate(weaponsForUI[i], weaponGroupObject.transform);
+            PlayerHUDEntries[i] = Instantiate(playerEntryPrefab, weaponGroupObject.transform);
+            PlayerHUDEntries[i].Init(weaponsForUI[i].weaponIcon, weaponsForUI[i].weaponAmmunition);
+
             if (i > 0)
             {
-                weaponInventoryUI[i].transform.GetChild(0).gameObject.SetActive(false);
+                PlayerHUDEntries[i].SetSelector(false);
             }
         }
 

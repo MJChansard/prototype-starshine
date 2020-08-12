@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbef1dd55f58685458bd3fdc92b315d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WeaponEntryUI: {fileID: 3196013952642742019, guid: 5c8d4de5d525eb74ba34bfa00b76d212,
-    type: 3}
+  weaponAmmunition: 2
+  weaponIcon: {fileID: 21300000, guid: 25f0e4b29a32a2948aeaece7af1dce61, type: 3}
   railPrefab: {fileID: 5989933133772402662, guid: 1e390fef251c24c4b82a193026c3aef5,
     type: 3}
 --- !u!198 &-6436203699009888884

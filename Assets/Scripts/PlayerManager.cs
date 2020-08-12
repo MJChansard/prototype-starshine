@@ -70,12 +70,7 @@ public class PlayerManager : MonoBehaviour
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
         
         ui = FindObjectOfType<PlayerHUD>();
-        GameObject[] weaponEntriesUI = new GameObject[weaponInventory.Length];
-        for (int i = 0; i < weaponInventory.Length; i++)
-        {
-            weaponEntriesUI[i] = weaponInventory[i].WeaponEntryUI;
-        }
-        ui.Init(weaponEntriesUI);
+        ui.Init(weaponInventory);
     }
 
     void Update()
@@ -219,7 +214,7 @@ public class PlayerManager : MonoBehaviour
                 if (currentLoot.Type == LootData.LootType.JumpFuel)
                 {
                     Debug.Log("Jump Fuel found.");
-                    amountOfJumpFuelStored += currentLoot.JumpFuelIncrement;
+                    amountOfJumpFuelStored += currentLoot.LootAmount;
                     gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
                     Destroy(currentLoot.gameObject, moveWaitTime);
                 }

@@ -4767,5 +4767,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bec205d63eb7c248a159e4c97cbeb2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WeaponEntryUI: {fileID: 4203145880031442158, guid: e5b23b8c19098694daa8b6964f399799,
-    type: 3}
+  weaponAmmunition: 10
+  weaponIcon: {fileID: 21300000, guid: f20e6168f8627b5498fee7ee23409a26, type: 3}
