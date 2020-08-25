@@ -14,7 +14,7 @@ public class PlayerManager : MonoBehaviour
         get { return new Vector3(currentlyFacing.x, currentlyFacing.y, 0.0f);  }
     }
 
-    #region Inspector Attributes   
+    #region Player Attributes   
     [SerializeField] private float speed = 2.0f;
 
     [Header("Player Components")]
@@ -181,7 +181,7 @@ public class PlayerManager : MonoBehaviour
 
         Vector2Int destinationGridPosition = originGridPosition + delta;
 
-        bool moveIsValid = gm.CheckIfGridBlockInBounds(originGridPosition) && !gm.CheckIfGridBlockIsOccupied(destinationGridPosition);
+        bool moveIsValid = gm.CheckIfGridBlockInBounds(originGridPosition) && gm.CheckIfGridBlockIsAvailable(destinationGridPosition);
         Debug.Log("Player move is validated: " + moveIsValid);
 
         if (moveIsValid)
@@ -215,6 +215,7 @@ public class PlayerManager : MonoBehaviour
                 {
                     Debug.Log("Jump Fuel found.");
                     amountOfJumpFuelStored += currentLoot.LootAmount;
+                    ui.UpdateHUDFuel(amountOfJumpFuelStored);
                     gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
                     Destroy(currentLoot.gameObject, moveWaitTime);
                 }
@@ -267,8 +268,8 @@ public class PlayerManager : MonoBehaviour
         {
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
             Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
-
-            if (OnPlayerAddHazard != null)
+            /*
+            if (launchedMissile != null && OnPlayerAddHazard != null)
             {
                 Debug.Log("PlayerManager.OnPlayerAddHazard() called.");
                 OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
@@ -277,8 +278,23 @@ public class PlayerManager : MonoBehaviour
             {
                 Debug.LogError("No subscribers to OnPlayerHazard().");
             }
-
-            return;
+            */
+            if (launchedMissile == null)
+            {
+                Debug.Log("Out of Missile Launcher ammo.");
+                return;
+            }
+            else if (OnPlayerAddHazard == null)
+            {
+                Debug.Log("No subscribers to OnPlayerAddHazard().");
+                return;
+            }
+            else
+            {
+                OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
+                ui.UpdateHUDWeapons(selectedWeaponIndex, launcher.weaponAmmunition);
+                return;
+            }
         }
 
 
@@ -289,7 +305,7 @@ public class PlayerManager : MonoBehaviour
         {
             for (int y = currentGridLocation.y + 1; y < gm.GridHeight; y++)
             {
-                if (gm.levelGrid[currentGridLocation.x, y].IsOccupied)
+                if (gm.levelGrid[currentGridLocation.x, y].objectsOnBlock.Count > 0)
                 {
                     possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
                 }
@@ -299,7 +315,7 @@ public class PlayerManager : MonoBehaviour
         {
             for (int y = currentGridLocation.y - 1; y >= 0; y--)
             {
-                if (gm.levelGrid[currentGridLocation.x, y].IsOccupied)
+                if (gm.levelGrid[currentGridLocation.x, y].objectsOnBlock.Count > 0)
                 {
                     possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
                 }
@@ -309,7 +325,7 @@ public class PlayerManager : MonoBehaviour
         {
             for (int x = currentGridLocation.x - 1; x >= 0; x--)
             {
-                if (gm.levelGrid[x, currentGridLocation.y].IsOccupied)
+                if (gm.levelGrid[x, currentGridLocation.y].objectsOnBlock.Count > 0)
                 {
                     possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
                 }
@@ -319,7 +335,7 @@ public class PlayerManager : MonoBehaviour
         {
             for (int x = currentGridLocation.x + 1; x < gm.GridWidth; x++)
             {
-                if (gm.levelGrid[x, currentGridLocation.y].IsOccupied)
+                if (gm.levelGrid[x, currentGridLocation.y].objectsOnBlock.Count > 0)
                 {
                     possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
                 }
@@ -358,7 +374,8 @@ public class PlayerManager : MonoBehaviour
 
             RailGun railGun = currentWeapon.GetComponent<RailGun>();
             railGun.FireRailgun(currentWorldLocation);
-
+            ui.UpdateHUDWeapons(selectedWeaponIndex, railGun.weaponAmmunition);
+                
             // Determine destination/final GridBlock
             GridBlock endAnimationGridLocation;
             if (currentlyFacing == Vector2Int.up)

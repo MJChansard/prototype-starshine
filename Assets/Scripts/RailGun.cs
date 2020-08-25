@@ -35,7 +35,11 @@ public class RailGun : Weapon
     }
     public void FireRailgun(Vector3 currentWorldLocation)
     {
-        railgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
+        if (weaponAmmunition > 0)
+        {
+            railgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
+            weaponAmmunition -= 1;
+        }
     }
 
 

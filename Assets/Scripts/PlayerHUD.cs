@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class PlayerHUD : MonoBehaviour
 {
-    [SerializeField] private GameObject weaponGroupObject;   
+    [SerializeField] private GameObject weaponGroupObject;
+    [SerializeField] private GameObject fuelGroupObject;
     private PlayerHUDEntry[] PlayerHUDEntries;
     public PlayerHUDEntry playerEntryPrefab;
 
@@ -43,5 +44,15 @@ public class PlayerHUD : MonoBehaviour
         }
 
         
+    }
+
+    public void UpdateHUDWeapons(int indexOfWeaponRequiringUpdate, int newAmount)
+    {
+        PlayerHUDEntries[indexOfWeaponRequiringUpdate].UpdateText(newAmount);
+    }
+
+    public void UpdateHUDFuel(int fuelAmount)
+    {
+        fuelGroupObject.transform.GetChild(0).GetComponent<PlayerHUDEntry>().UpdateText(fuelAmount);
     }
 }

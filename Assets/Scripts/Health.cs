@@ -4,27 +4,44 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
-    [SerializeField] private int _currentHP;
+    [SerializeField] private int maxHP;
     
+    
+    [SerializeField] private int currentHP;
+
     public int CurrentHP
     {
-        get { return _currentHP; }
-    }            
+        get { return currentHP; }
+    }
+        
 
-    [SerializeField] private int maxHP;
+    private bool isInvincible;
+
+    public bool IsInvincible
+    {
+        get {return isInvincible; }
+    }
+
+
 
     private void Awake()
     {
-        _currentHP = maxHP;
+        currentHP = maxHP;
+        isInvincible = false;
     }
+
 
 
     public void SubtractHealth(int damageAmount)
     {
-        if (damageAmount > 0)
+        if (isInvincible == false && damageAmount > 0)
         {
-            _currentHP = _currentHP - damageAmount;
+            currentHP = currentHP - damageAmount;
         }
     }
 
+    public void ToggleInvincibility(bool toggle)
+    {
+        isInvincible = toggle;
+    }
 }

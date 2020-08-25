@@ -96,6 +96,8 @@ public class HazardManager : MonoBehaviour
 
         // Spawn hazard & store component references
         Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
+        hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn);
+        hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
 
         switch (spawnAxis)
@@ -136,14 +138,16 @@ public class HazardManager : MonoBehaviour
         GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridPosition);
         Vector3 worldLocation = gm.GridToWorld(gridPosition);
 
-        if(destinationGridPosition.IsOccupied && placeOnGrid == false)
+        //if(destinationGridPosition.IsAvailableForPlayer && placeOnGrid == false)
+        if(placeOnGrid == false)
         {
             hazard.currentWorldLocation = worldLocation;
             hazard.targetWorldLocation = worldLocation;            
 
             hazardsInPlay.Add(hazard);
         }
-        else if(!destinationGridPosition.IsOccupied)
+        //else if(!destinationGridPosition.IsAvailableForPlayer)
+        else
         {
             hazard.transform.position = worldLocation;
             gm.AddObjectToGrid(hazard.gameObject, gridPosition);
@@ -167,7 +171,7 @@ public class HazardManager : MonoBehaviour
 
     private bool CheckHazardHasHealth(GameObject hazardObject)
     {
-        // This might better be suited as a Property in Helath.cs
+        // This might better be suited as a Property in Health.cs
 
         Health hazardHealth = hazardObject.GetComponent<Health>();
         if (hazardHealth != null && hazardHealth.CurrentHP > 0)
@@ -227,7 +231,7 @@ public class HazardManager : MonoBehaviour
             GameObject hazardObject = hazardsInPlay[i].gameObject;
             MovePattern move = hazardObject.GetComponent<MovePattern>();
 
-            if (currentTick % move.moveRate == 0)
+            if (currentTick % move.moveRate == 0 || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
             {
                 Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
 
@@ -252,6 +256,10 @@ public class HazardManager : MonoBehaviour
 
                     gm.AddObjectToGrid(hazardObject, destinationGridPosition);
                     Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
+
+                    // Handle spawning cases
+                    hazardObject.GetComponent<Health>().ToggleInvincibility(false);
+                    hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
 

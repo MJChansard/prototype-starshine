@@ -8,16 +8,12 @@ public class GridBlock
     public List<GameObject> objectsOnBlock;
     public bool canSpawn;
 
-    public bool IsOccupied
+    public bool IsAvailableForPlayer
     {
         get
         {
-            if (objectsOnBlock == null) return false;
-            else
-            {
-                if (!DoesContainObjectPreventingPlayerMovement()) return false;
-                else return true;
-            }
+            if (!canSpawn && !DoesContainObjectPreventingPlayerMovement()) return true;
+            else return false;
         }
     }
 

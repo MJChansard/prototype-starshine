@@ -28,4 +28,9 @@ public class PlayerHUDEntry : MonoBehaviour
     {
         selector.SetActive(isSelected);
     }
+
+    public void UpdateText(int value)
+    {
+        entryText.text = value.ToString();
+    }
 }

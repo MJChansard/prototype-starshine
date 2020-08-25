@@ -34,17 +34,23 @@ public class MissileLauncher : Weapon
 
     public Hazard LaunchMissile(GridBlock currentGrid, Vector2Int facingDirection)
     {
-        Vector3 currentWorldLocation = new Vector3(currentGrid.location.x, currentGrid.location.y, 0);
-        GameObject missile = Instantiate(projectilePrefab, currentWorldLocation, transform.rotation);
-        MovePattern movement = missile.GetComponent<MovePattern>();       
+        if (weaponAmmunition > 0)
+        {
+            Vector3 currentWorldLocation = new Vector3(currentGrid.location.x, currentGrid.location.y, 0);
+            GameObject missile = Instantiate(projectilePrefab, currentWorldLocation, transform.rotation);
+            MovePattern movement = missile.GetComponent<MovePattern>();
 
-        if (facingDirection == Vector2Int.up) movement.SetMovePatternUp();
-        else if (facingDirection == Vector2Int.down) movement.SetMovePatternDown();
-        else if (facingDirection == Vector2Int.left) movement.SetMovePatternLeft();
-        else if (facingDirection == Vector2Int.right) movement.SetMovePatternRight();
-        
-        launchedMissile = missile.GetComponent<Hazard>();
-        return launchedMissile;
+            if (facingDirection == Vector2Int.up) movement.SetMovePatternUp();
+            else if (facingDirection == Vector2Int.down) movement.SetMovePatternDown();
+            else if (facingDirection == Vector2Int.left) movement.SetMovePatternLeft();
+            else if (facingDirection == Vector2Int.right) movement.SetMovePatternRight();
+
+            weaponAmmunition -= 1;
+            
+            launchedMissile = missile.GetComponent<Hazard>();
+            return launchedMissile;
+        }
+        else return null;
     }
 
     override protected IEnumerator AnimationCoroutine(GridBlock targetGrid)

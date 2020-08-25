@@ -90,19 +90,8 @@ public class GridManager : MonoBehaviour
                 // Add Vector2Int objects
                 levelGrid[x, y].location = new Vector2Int(x, y);
 
-                // Update canSpawn property
-                if(levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
-                {
-                    levelGrid[x, y].canSpawn = true;
-                }
-
-                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
-                {
-                    levelGrid[x, y].canSpawn = true;
-                }
-
-                // Create Debug grid.  Note y and x are inversed in the Vector3 intentionally
-                Instantiate
+                // Display grid.
+                GameObject point = Instantiate
                 (
                     gridPoint,
                     new Vector3(x + offset, y + offset, 0f),
@@ -110,6 +99,18 @@ public class GridManager : MonoBehaviour
                     gridContainer
                 );
 
+                // Update canSpawn property
+                if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                    point.GetComponent<Renderer>().material.color = Color.red;
+                }
+
+                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
+                {
+                    levelGrid[x, y].canSpawn = true;
+                    point.GetComponent<Renderer>().material.color = Color.red;
+                }
             }
         }
 
@@ -182,11 +183,11 @@ public class GridManager : MonoBehaviour
         else return false;
     }
 
-    public bool CheckIfGridBlockIsOccupied(Vector2Int gridLocation)
+    public bool CheckIfGridBlockIsAvailable(Vector2Int gridLocation)
     {
         GridBlock block = FindGridBlockByLocation(gridLocation);
         if (block == null) return false;
-        return block.IsOccupied;        
+        return block.IsAvailableForPlayer;        
     }   
 
   
@@ -236,7 +237,7 @@ public class GridManager : MonoBehaviour
             {
                 foreach (GridBlock block in levelGrid)
                 {
-                    if (block.IsOccupied)
+                    if (!block.IsAvailableForPlayer)
                     {
                         foreach (GameObject occupant in block.objectsOnBlock)
                         {
