@@ -55,24 +55,27 @@ public class MissileLauncher : Weapon
 
     override protected IEnumerator AnimationCoroutine(GridBlock targetGrid)
     {
-        // D = s * t
-        float distance = Vector3.Distance(launchedMissile.currentWorldLocation, launchedMissile.targetWorldLocation);
-        float startTime = Time.time;
-        float percentTraveled = 0.0f;
-
-        while (percentTraveled <= 1.0f)
+        if (launchedMissile != null)
         {
-            float traveled = (Time.time - startTime) * launchedMissile.moveSpeed;
-            percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
-            launchedMissile.gameObject.transform.position =
-                Vector3.Lerp
-                (
-                    launchedMissile.currentWorldLocation,
-                    launchedMissile.targetWorldLocation,
-                    Mathf.SmoothStep(0f, 1f, percentTraveled)
-                );
+            // D = s * t
+            float distance = Vector3.Distance(launchedMissile.currentWorldLocation, launchedMissile.targetWorldLocation);
+            float startTime = Time.time;
+            float percentTraveled = 0.0f;
 
-            yield return null;
-        }            
+            while (percentTraveled <= 1.0f)
+            {
+                float traveled = (Time.time - startTime) * launchedMissile.moveSpeed;
+                percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
+                launchedMissile.gameObject.transform.position =
+                    Vector3.Lerp
+                    (
+                        launchedMissile.currentWorldLocation,
+                        launchedMissile.targetWorldLocation,
+                        Mathf.SmoothStep(0f, 1f, percentTraveled)
+                    );
+
+                yield return null;
+            }
+        }
     }
 }

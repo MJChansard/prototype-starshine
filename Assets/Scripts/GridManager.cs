@@ -179,7 +179,7 @@ public class GridManager : MonoBehaviour
 
     public bool CheckIfGridBlockInBounds(Vector2Int gridLocation)
     {
-        if (gridLocation.x >= 0 && gridLocation.x < GridWidth && gridLocation.y >= 0 && gridLocation.y < GridHeight) return true;
+        if (gridLocation.x > 0 && gridLocation.x < GridWidth - 1 && gridLocation.y > 0 && gridLocation.y < GridHeight - 1) return true;
         else return false;
     }
 

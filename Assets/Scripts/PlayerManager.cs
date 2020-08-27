@@ -42,6 +42,10 @@ public class PlayerManager : MonoBehaviour
     private float waitWaitTime = 0.5f;
 
     private int amountOfJumpFuelStored = 0;
+    private int maxFuelAmount = 10;
+
+    private int maxPlayerHP = 10;
+    private int currentPlayerHP = 10;
     #endregion
 
     #region Movement Animation Properties
@@ -70,7 +74,7 @@ public class PlayerManager : MonoBehaviour
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
         
         ui = FindObjectOfType<PlayerHUD>();
-        ui.Init(weaponInventory);
+        ui.Init(weaponInventory, maxFuelAmount, maxPlayerHP);
     }
 
     void Update()
@@ -215,7 +219,6 @@ public class PlayerManager : MonoBehaviour
                 {
                     Debug.Log("Jump Fuel found.");
                     amountOfJumpFuelStored += currentLoot.LootAmount;
-                    ui.UpdateHUDFuel(amountOfJumpFuelStored);
                     gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
                     Destroy(currentLoot.gameObject, moveWaitTime);
                 }
@@ -255,6 +258,9 @@ public class PlayerManager : MonoBehaviour
         
         currentWorldLocation = targetWorldLocation;
         moveCoroutineIsRunning = false;
+
+        // Update UI
+        ui.UpdateHUDFuel(amountOfJumpFuelStored, maxFuelAmount);
     }
 
 
@@ -268,17 +274,7 @@ public class PlayerManager : MonoBehaviour
         {
             MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
             Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
-            /*
-            if (launchedMissile != null && OnPlayerAddHazard != null)
-            {
-                Debug.Log("PlayerManager.OnPlayerAddHazard() called.");
-                OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
-            }
-            else
-            {
-                Debug.LogError("No subscribers to OnPlayerHazard().");
-            }
-            */
+
             if (launchedMissile == null)
             {
                 Debug.Log("Out of Missile Launcher ammo.");
@@ -373,47 +369,49 @@ public class PlayerManager : MonoBehaviour
              */
 
             RailGun railGun = currentWeapon.GetComponent<RailGun>();
-            railGun.FireRailgun(currentWorldLocation);
-            ui.UpdateHUDWeapons(selectedWeaponIndex, railGun.weaponAmmunition);
-                
-            // Determine destination/final GridBlock
-            GridBlock endAnimationGridLocation;
-            if (currentlyFacing == Vector2Int.up)
+            if (railGun.FireRailgun(currentWorldLocation))
             {
-                Vector2Int index = new Vector2Int(currentGridLocation.x, gm.GridHeight - 1);
-                Debug.LogFormat("Index when facing up: {0}", index);
-                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-            }
-            else if(currentlyFacing == Vector2Int.down)
-            {
-                Vector2Int index = new Vector2Int(currentGridLocation.x, 0);
-                Debug.LogFormat("Index when facing down: {0}", index);
-                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-            }
-            else if(currentlyFacing == Vector2Int.left)
-            {
-                Vector2Int index = new Vector2Int(0, currentGridLocation.y);
-                Debug.LogFormat("Index when facing left: {0}", index);
-                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-            }
-            else
-            {
-                Vector2Int index = new Vector2Int(gm.GridWidth - 1, currentGridLocation.y);
-                Debug.LogFormat("Index when facing right: {0}", index);
-                endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-            }
-            
-            railGun.StartAnimationCoroutine(endAnimationGridLocation);
+                ui.UpdateHUDWeapons(selectedWeaponIndex, railGun.weaponAmmunition);
 
-            // Apply damage
-            for (int i = 0; i < possibleTargetBlocks.Count; i++)
-            {
-                for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
+                // Determine destination/final GridBlock
+                GridBlock endAnimationGridLocation;
+                if (currentlyFacing == Vector2Int.up)
                 {
-                    Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
-                    if (hp != null)
+                    Vector2Int index = new Vector2Int(currentGridLocation.x, gm.GridHeight - 1);
+                    //Debug.LogFormat("Index when facing up: {0}", index);
+                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+                }
+                else if (currentlyFacing == Vector2Int.down)
+                {
+                    Vector2Int index = new Vector2Int(currentGridLocation.x, 0);
+                    //Debug.LogFormat("Index when facing down: {0}", index);
+                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+                }
+                else if (currentlyFacing == Vector2Int.left)
+                {
+                    Vector2Int index = new Vector2Int(0, currentGridLocation.y);
+                    //Debug.LogFormat("Index when facing left: {0}", index);
+                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+                }
+                else
+                {
+                    Vector2Int index = new Vector2Int(gm.GridWidth - 1, currentGridLocation.y);
+                    //Debug.LogFormat("Index when facing right: {0}", index);
+                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
+                }
+
+                railGun.StartAnimationCoroutine(endAnimationGridLocation);
+
+                // Apply damage
+                for (int i = 0; i < possibleTargetBlocks.Count; i++)
+                {
+                    for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
                     {
-                        hp.SubtractHealth(currentWeapon.Damage);
+                        Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
+                        if (hp != null)
+                        {
+                            hp.SubtractHealth(currentWeapon.Damage);
+                        }
                     }
                 }
             }

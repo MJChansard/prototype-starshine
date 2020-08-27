@@ -283,7 +283,7 @@ public class HazardManager : MonoBehaviour
                 if (allOriginGridPositions[i] == allDestinationGridPositions[j] && allOriginGridPositions[j] == allDestinationGridPositions[i])
                 {
                     // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
-                    Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
+                    //Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
                     
                     Hazard flyByHazard1 = hazardsInPlay[i];
                     Hazard flyByHazard2 = hazardsInPlay[j];

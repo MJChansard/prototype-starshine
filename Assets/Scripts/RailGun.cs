@@ -33,49 +33,55 @@ public class RailGun : Weapon
         player = GetComponentInParent<Transform>();
      
     }
-    public void FireRailgun(Vector3 currentWorldLocation)
+    public bool FireRailgun(Vector3 currentWorldLocation)
     {
         if (weaponAmmunition > 0)
         {
             railgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
             weaponAmmunition -= 1;
+            return true;
         }
+
+        return false;
     }
 
 
     protected override IEnumerator AnimationCoroutine(GridBlock target)
     {
-        ParticleSystem ps = gameObject.GetComponent<ParticleSystem>();
-        Vector3 rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
+        if (railgunProjectile != null)
+        {      
+            ParticleSystem ps = gameObject.GetComponent<ParticleSystem>();
+            Vector3 rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
 
-        var shape = ps.shape;
-        shape.rotation = rotation;
-        ps.Play();
+            var shape = ps.shape;
+            shape.rotation = rotation;
+            ps.Play();
 
-        // D = s * t
-        Vector3 currentWorldLocation = railgunProjectile.transform.position;
-        Vector3 targetWorldLocation = new Vector3(target.location.x, target.location.y, 0.0f);
+            // D = s * t
+            Vector3 currentWorldLocation = railgunProjectile.transform.position;
+            Vector3 targetWorldLocation = new Vector3(target.location.x, target.location.y, 0.0f);
         
-        float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
-        float startTime = Time.time;
-        float percentTraveled = 0.0f;
+            float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
+            float startTime = Time.time;
+            float percentTraveled = 0.0f;
 
-        while (percentTraveled <= 1.0f)
-        {
-            float traveled = (Time.time - startTime) * railTravelSpeed;
-            percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
-            railgunProjectile.gameObject.transform.position =
-                Vector3.Lerp
-                (
-                    currentWorldLocation,
-                    targetWorldLocation,
-                    percentTraveled
-                );
+            while (percentTraveled <= 1.0f)
+            {
+                float traveled = (Time.time - startTime) * railTravelSpeed;
+                percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
+                railgunProjectile.gameObject.transform.position =
+                    Vector3.Lerp
+                    (
+                        currentWorldLocation,
+                        targetWorldLocation,
+                        percentTraveled
+                    );
 
-            yield return null;
+                yield return null;
+            }
+
+            Destroy(railgunProjectile);
         }
-
-        Destroy(railgunProjectile);
     }
 
 }
