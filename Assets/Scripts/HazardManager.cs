@@ -34,6 +34,11 @@ public class HazardManager : MonoBehaviour
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
 
+    public enum HazardType
+    {
+        SmallAsteroid = 1,
+        LargeAsteroid = 2
+    }
 
     public void Init()
     {
@@ -89,7 +94,7 @@ public class HazardManager : MonoBehaviour
         Debug.Log("HazardManager.PrepareHazard() called.");
 
         int hazardType = Random.Range(0, hazardPrefabs.Length);
-        Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
+        // Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
         int spawnAxis = Random.Range(1, 4);
         int spawnIndex;
         Vector2Int spawnPosition = new Vector2Int();
@@ -230,8 +235,10 @@ public class HazardManager : MonoBehaviour
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
             MovePattern move = hazardObject.GetComponent<MovePattern>();
+            move.OnTickUpdate();
 
-            if (currentTick % move.moveRate == 0 || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
+            //if (currentTick % move.moveRate == 0 || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
+            if (move.CanMoveThisTurn()) // || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
             {
                 Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
 
@@ -392,7 +399,6 @@ public class HazardManager : MonoBehaviour
         }
 
         currentTick++;
-        Debug.LogFormat("Current tick till spawn: {0}", ticksUntilNewSpawn);
         ticksUntilNewSpawn--;
 
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;

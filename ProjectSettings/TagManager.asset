@@ -7,6 +7,7 @@ TagManager:
   - Enemy
   - Hazard
   - Jump Fuel
+  - Debug HUD
   layers:
   - Default
   - TransparentFX

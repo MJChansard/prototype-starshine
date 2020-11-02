@@ -257,7 +257,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
-  moveRate: 2
+  AlwaysMoveOnSpawn: 1
+  waitTicksPerMove: 2
 --- !u!114 &22195418758050131
 MonoBehaviour:
   m_ObjectHideFlags: 0

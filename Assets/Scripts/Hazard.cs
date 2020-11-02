@@ -4,8 +4,19 @@ using UnityEngine;
 
 public class Hazard : MonoBehaviour
 {
+    [Header("Hazard Properties")]
     [SerializeField] string hazardName;
-    public float moveSpeed = 1.0f;
+    //[SerializeField] float moveSpeed = 1.0f;
+
+    public float MoveSpeed
+    {
+        get {return moveSpeed; }
+    }
+
+    // Could put movement data object here
+    // Been wanting to replace string hazardName with a HazardType enum
+    
+    public float moveSpeed = 1.0f;      // Animation move speed
     public Vector3 currentWorldLocation;
     public Vector3 targetWorldLocation;
     [SerializeField] private GameObject spawnWarningObject;

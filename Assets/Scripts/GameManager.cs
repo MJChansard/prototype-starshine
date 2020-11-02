@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
     #region Public Properties
     public int CurrentTick = 1;
     public int CurrentLevel = 1;
+    
+    public bool EnableDebug = true;
     #endregion
 
     #region References
@@ -14,6 +16,7 @@ public class GameManager : MonoBehaviour
     PlayerManager pm;
     EnemyManager em;
     GridManager gm;
+    DebugHUD debugHUD;
     #endregion
 
     [SerializeField] GameObject playerPrefab;
@@ -28,6 +31,8 @@ public class GameManager : MonoBehaviour
         hm.Init();
         
         em = GetComponent<EnemyManager>();
+
+        if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
 
         // Prepare Player
         Vector2Int startLocation = new Vector2Int(5, 4);
@@ -64,6 +69,12 @@ public class GameManager : MonoBehaviour
         CurrentTick += 1;
         pm.InputActive = true;
         pm.OnPlayerAdvance += OnTick;
+
+        // Debug Options
+        if (EnableDebug)
+        {
+            debugHUD.IncrementTickValue(CurrentTick);
+        }
         yield return null;
     }
 

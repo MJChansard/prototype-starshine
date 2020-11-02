@@ -4,8 +4,17 @@ using UnityEngine;
 
 public class MovePattern : MonoBehaviour
 {
-    public Vector2Int delta;
-    public int moveRate;
+    public Vector2Int delta;    
+    [SerializeField] private bool AlwaysMoveOnSpawn = true;
+
+    [SerializeField] private int waitTicksPerMove = 1;
+    private int ticksUntilNextMove;
+
+    private void Awake()
+    {
+        ticksUntilNextMove = (AlwaysMoveOnSpawn) ? 1 : waitTicksPerMove;        
+    }
+
 
     public Vector2Int SetMovePatternUp()
     {
@@ -29,5 +38,21 @@ public class MovePattern : MonoBehaviour
     {
         delta = Vector2Int.right;
         return delta;
+    }
+
+
+
+    public void OnTickUpdate()
+    {
+        if(ticksUntilNextMove == 0)
+        {
+            ticksUntilNextMove = waitTicksPerMove;
+        }
+        ticksUntilNextMove -= 1;
+    }
+
+    public bool CanMoveThisTurn()
+    {
+        return ticksUntilNextMove == 0;
     }
 }
