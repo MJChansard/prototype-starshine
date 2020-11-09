@@ -67,6 +67,7 @@ public class GameManager : MonoBehaviour
         // pm.CheckHP();
         
         CurrentTick += 1;
+        gm.ResetSpawns();
         pm.InputActive = true;
         pm.OnPlayerAdvance += OnTick;
 

@@ -50,8 +50,62 @@ public class HazardManager : MonoBehaviour
 
     private void UpdateSpawnLocations()
     {
+        // Generate a List of GridBlocks that hold GridBlocks eligible for spawning GridBlocksCanSpawn
+        // Generate a List of GridBlocks that hold GridBlocks ineligible for spawning
+        // Remove GridBlocks from the eligible List that exist in the ineligible List
         int colRange = gm.GridWidth - 1;    // 10 - 1 = 9
         int rowRange = gm.GridHeight - 1;   // 8 - 1 = 7
+
+        if (hazardsInPlay.Count > 0)
+        {
+            for(int i = 0; i < hazardsInPlay.Count; i++)
+            {
+                Hazard localHazard = hazardsInPlay[i];
+                MovePattern hazardMove = localHazard.GetComponent<MovePattern>();
+                
+                Vector2Int hazardGridPosition = gm.WorldToGrid(localHazard.currentWorldLocation);
+                Vector2Int disableSpawnTarget = new Vector2Int();
+
+                if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
+                {
+                    // Store boundary value for y
+                    int boundaryY;
+                    if (hazardMove.delta == Vector2Int.up) boundaryY = rowRange;
+                    else boundaryY = 0;
+
+                    gm.levelGrid[hazardGridPosition.x, boundaryY].canSpawn = false;
+                    if (hazardGridPosition.x == 1)
+                    {
+                        disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.left;
+                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
+                    }
+                    else if (hazardGridPosition.x == colRange)
+                    {
+                        disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.right;
+                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
+                    }
+                }
+                else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
+                {
+                    // Store boundary value for x
+                    int boundaryX;
+                    if (hazardMove.delta == Vector2Int.right) boundaryX = colRange;
+                    else boundaryX = 0;
+
+                    gm.levelGrid[boundaryX, hazardGridPosition.y].canSpawn = false;
+                    if (hazardGridPosition.y == 1)
+                    {
+                        disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.down;
+                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
+                    }
+                    else if(hazardGridPosition.y == colRange)
+                    {
+                        disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.up;
+                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
+                    }
+                }
+            }
+        }
 
         // Populate spawnMoveUp List and populate spawnMoveDown List
         for (int x = 1; x < colRange; x++)
@@ -84,13 +138,14 @@ public class HazardManager : MonoBehaviour
         Debug.Log("Spawn Locations successfully updated.");
     }
 
- /*  SUMMARY
- *   - Randomly select a spawn location
- *   - Randomly select a hazard to spawn
- *   - Activate hazard spawn movement pattern based on spawn location
- */
+
     private void PrepareHazard()
     {
+        /*  SUMMARY
+        *   - Randomly select a spawn location
+        *   - Randomly select a hazard to spawn
+        *   - Activate hazard spawn movement pattern based on spawn location
+        */
         Debug.Log("HazardManager.PrepareHazard() called.");
 
         int hazardType = Random.Range(0, hazardPrefabs.Length);
@@ -204,6 +259,12 @@ public class HazardManager : MonoBehaviour
 
     public float OnTickUpdate()
     {
+        /*  STEPS
+         * 
+         *  1) Hazard Health Check
+         *  2)
+         */
+
         #region Hazard Tick Duration
         bool moveOccurredThisTick = false;
         float moveDurationSeconds = 1.0f;
@@ -214,12 +275,7 @@ public class HazardManager : MonoBehaviour
         float delayTime = 0.0f;
         #endregion
 
-        List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
-        Vector2Int[] allOriginGridPositions = new Vector2Int[hazardsInPlay.Count];
-        Vector2Int[] allDestinationGridPositions = new Vector2Int[hazardsInPlay.Count];
-
-        // Hazard Health Check
-        // Needed in case Hazards were damaged during Player Turn
+        // Hazard Health Check - Check for hazards destroyed during Player turn
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             if (!CheckHazardHasHealth(hazardsInPlay[i].gameObject))
@@ -229,6 +285,11 @@ public class HazardManager : MonoBehaviour
                 RemoveHazardFromPlay(hazardsInPlay[i]);
             }
         }
+
+        // Movement and Collision collections
+        List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
+        Vector2Int[] allOriginGridPositions = new Vector2Int[hazardsInPlay.Count];
+        Vector2Int[] allDestinationGridPositions = new Vector2Int[hazardsInPlay.Count];
 
         // Manage Movement Data
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
@@ -342,30 +403,33 @@ public class HazardManager : MonoBehaviour
         List<GridBlock> uniquePossibleBlockCollisions = allPossibleBlockCollisions.Distinct().ToList();
         foreach (GridBlock gridBlock in uniquePossibleBlockCollisions)
         {
-            Debug.Log("Processing collision on " + gridBlock.location.ToString());
-            
-            for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
+            if (gridBlock.objectsOnBlock.Count > 1)
             {
-                GameObject gameObject = gridBlock.objectsOnBlock[i];
-                Health gameObjectHealth = gameObject.GetComponent<Health>();
-                ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
+                Debug.Log("Processing collision on " + gridBlock.location.ToString());
 
-                for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
-                {                    
-                    GameObject otherGameObject = gridBlock.objectsOnBlock[j];
-                    Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
-                    ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
+                for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
+                {
+                    GameObject gameObject = gridBlock.objectsOnBlock[i];
+                    Health gameObjectHealth = gameObject.GetComponent<Health>();
+                    ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
 
-                    if (gameObjectDamage != null && otherGameObjectHealth != null)
+                    for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
                     {
-                        Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
-                        otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
-                    }
+                        GameObject otherGameObject = gridBlock.objectsOnBlock[j];
+                        Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
+                        ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
 
-                    if (gameObjectHealth != null && otherGameObjectDamage != null)
-                    {
-                        Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
-                        gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
+                        if (gameObjectDamage != null && otherGameObjectHealth != null)
+                        {
+                            Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
+                            otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
+                        }
+
+                        if (gameObjectHealth != null && otherGameObjectDamage != null)
+                        {
+                            Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
+                            gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
+                        }
                     }
                 }
             }

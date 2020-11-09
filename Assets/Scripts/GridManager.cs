@@ -103,13 +103,13 @@ public class GridManager : MonoBehaviour
                 if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
                 {
                     levelGrid[x, y].canSpawn = true;
-                    point.GetComponent<Renderer>().material.color = Color.red;
+                    point.GetComponent<Renderer>().material.color = Color.green;
                 }
 
                 if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
                 {
                     levelGrid[x, y].canSpawn = true;
-                    point.GetComponent<Renderer>().material.color = Color.red;
+                    point.GetComponent<Renderer>().material.color = Color.green;
                 }
             }
         }
@@ -117,6 +117,28 @@ public class GridManager : MonoBehaviour
         Debug.Log("Object: [levelGrid] successfully created.");
     }
 
+    public void ResetSpawns()
+    {
+        // Columns
+        for (int x = 0; x < gridWidth; x++)
+        {
+            // Rows
+            for (int y = 0; y < gridHeight; y++)
+            {
+                // Update canSpawn property
+                if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
+                    levelGrid[x, y].canSpawn = true;
+
+                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
+                    levelGrid[x, y].canSpawn = true;
+            }
+        }
+    }
+
+    public void UpdateSpawnPointColor(Vector2Int gridBlocklocation, Color color)
+    {
+
+    }
 
     public Vector3 GridToWorld(Vector2Int gridLocation)
     {
