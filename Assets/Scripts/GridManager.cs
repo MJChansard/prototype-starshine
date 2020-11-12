@@ -18,11 +18,62 @@ public class GridManager : MonoBehaviour
         get { return gridHeight; }
     }
     public Transform gridContainer;
+    public int BoundaryLeftActual
+    {
+        get { return -(gridWidth / 2);
+        }
+    }
+    public int BoundaryRightActual
+    {
+        get
+        {
+            if (gridWidth % 2 == 0)
+                return (gridWidth / 2) - 1; 
+            else 
+                return (gridWidth / 2);
+        }
+    }
+    public int BoundaryTopActual
+    {
+        get
+        {
+            if (gridHeight % 2 == 0)
+                return (gridHeight / 2) - 1;
+            else
+                return gridHeight / 2; 
+        }
+    }
+    public int BoundaryBottomActual
+    {
+        get { return -(gridHeight / 2); }
+    }
+
+    public int BoundaryLeftPlay
+    {
+        get { return BoundaryLeftActual + 1; }
+    }
+
+    public int BoundaryRightPlay
+    {
+        get { return BoundaryRightActual - 1; }
+    }
+
+    public int BoundaryTopPlay
+    {
+        get { return BoundaryTopActual - 1; }
+    }
+
+    public int BoundaryBottomPlay
+    {
+        get { return BoundaryBottomActual + 1; }
+    }
+
+
+
     #endregion
 
     #region Inspector Attributes    
-    [SerializeField]
-    private int gridSpacing = 1;
+    [SerializeField] private int gridSpacing = 1;
 
     [SerializeField] private int gridWidth = 10;
     [SerializeField] private int gridHeight = 8;
@@ -70,24 +121,18 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
-
-        Debug.Log("Object: [levelGrid] successfully created.");
     }
 
+/*
     private void InitializeGrid(GameObject gridPoint, float offset)
     {
         levelGrid = new GridBlock[gridWidth, gridHeight];
         
-        // Iterate through grid columns
         for (int x = 0; x < gridWidth; x++)
         {
-            // Iterate through grid rows
             for (int y = 0; y < gridHeight; y++)
             {
-                // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
-
-                // Add Vector2Int objects
                 levelGrid[x, y].location = new Vector2Int(x, y);
 
                 // Display grid.
@@ -116,20 +161,59 @@ public class GridManager : MonoBehaviour
 
         Debug.Log("Object: [levelGrid] successfully created.");
     }
+*/
+    private void InitializeGrid(GameObject gridPoint, float offset)
+    {
+        /*  SUMMARY
+         *  - Instantiate levelGrid
+         *  - Populate levelGrid elements with GridBlock cells
+         *  - Update levelGrid[x, y].location with Vector2Int
+         *  - Update levelGrid[x, y].canSpawn
+         */
+
+        levelGrid = new GridBlock[gridWidth, gridHeight];
+
+        int locationX = BoundaryLeftActual;
+        int locationY = BoundaryBottomActual;
+
+        for (int i = 0; i < gridWidth; i++)
+        {
+            for (int j = 0; j < gridHeight; j++)
+            {
+                if (j == 0) locationY = BoundaryBottomActual;
+
+                levelGrid[i, j] = new GridBlock(locationX, locationY);
+                levelGrid[i, j].location = new Vector2Int(locationX, locationY);
+
+                GameObject point = Instantiate
+                (
+                    gridPoint,
+                    new Vector3(locationX + offset, locationY + offset, 0f),
+                    Quaternion.identity,
+                    gridContainer
+                );
+
+                levelGrid[i, j].DebugRenderPoint = point;
+
+                locationY += 1;
+            }
+
+            locationX += 1;
+        }
+        Debug.Log("Object: [levelGrid] successfully created.");
+        Debug.LogFormat("levelGrid d1 length: {0} \n levelgrid d2 length: {1}", levelGrid.GetLength(0), levelGrid.GetLength(1));
+    }
 
     public void ResetSpawns()
     {
-        // Columns
-        for (int x = 0; x < gridWidth; x++)
+        for (int x = BoundaryLeftActual; x <= BoundaryRightActual; x++)
         {
-            // Rows
-            for (int y = 0; y < gridHeight; y++)
+            for (int y = BoundaryBottomActual; y <= BoundaryBottomActual; y++)
             {
-                // Update canSpawn property
-                if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
+                if (levelGrid[x, y].location.x == BoundaryLeftActual || levelGrid[x, y].location.x == BoundaryRightActual)
                     levelGrid[x, y].canSpawn = true;
 
-                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
+                if (levelGrid[x, y].location.y == BoundaryBottomActual || levelGrid[x, y].location.y == BoundaryTopActual)
                     levelGrid[x, y].canSpawn = true;
             }
         }

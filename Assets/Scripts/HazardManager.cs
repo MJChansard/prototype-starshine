@@ -7,6 +7,7 @@ public class HazardManager : MonoBehaviour
 {
     #region Inspector Attributes
     [SerializeField] Hazard[] hazardPrefabs;
+    [SerializeField] bool VerboseConsole = true;
     #endregion
 
     #region Private Fields    
@@ -53,85 +54,99 @@ public class HazardManager : MonoBehaviour
         // Generate a List of GridBlocks that hold GridBlocks eligible for spawning GridBlocksCanSpawn
         // Generate a List of GridBlocks that hold GridBlocks ineligible for spawning
         // Remove GridBlocks from the eligible List that exist in the ineligible List
-        int colRange = gm.GridWidth - 1;    // 10 - 1 = 9
-        int rowRange = gm.GridHeight - 1;   // 8 - 1 = 7
+
+        /*  SUMMARY
+         *  - Set GridBlock.canSpawn on the opposite boundary of a hazard = false
+         *  - Set GridBlock.canSpawn on a cell forward and to the left = false if the hazard is on a play boundary
+         * 
+         */
+
+        //int colRange = gm.GridWidth - 1;    // 10 - 1 = 9
+        //int rowRange = gm.GridHeight - 1;   // 8 - 1 = 7
+
+        if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations called.");
 
         if (hazardsInPlay.Count > 0)
         {
             for(int i = 0; i < hazardsInPlay.Count; i++)
             {
-                Hazard localHazard = hazardsInPlay[i];
-                MovePattern hazardMove = localHazard.GetComponent<MovePattern>();
+                MovePattern hazardMove = hazardsInPlay[i].GetComponent<MovePattern>();
                 
-                Vector2Int hazardGridPosition = gm.WorldToGrid(localHazard.currentWorldLocation);
+                Vector2Int hazardGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
                 Vector2Int disableSpawnTarget = new Vector2Int();
 
                 if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
                 {
-                    // Store boundary value for y
+                    // Disable spawning on opposing GridBlock at boundary
                     int boundaryY;
-                    if (hazardMove.delta == Vector2Int.up) boundaryY = rowRange;
-                    else boundaryY = 0;
+                    if (hazardMove.delta == Vector2Int.up)
+                        boundaryY = gm.BoundaryTopPlay; //rowRange;
+                    else
+                        boundaryY = gm.BoundaryBottomPlay;
 
-                    gm.levelGrid[hazardGridPosition.x, boundaryY].canSpawn = false;
-                    if (hazardGridPosition.x == 1)
+                    disableSpawnTarget.Set(hazardGridPosition.x, boundaryY);
+
+                    // Disable neighboring GridBlocks along immediate hazard trajectory
+                    if (hazardGridPosition.x == gm.BoundaryLeftPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.left;
-                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
                     }
-                    else if (hazardGridPosition.x == colRange)
+                    else if (hazardGridPosition.x == gm.BoundaryRightPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.right;
-                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
                     }
                 }
                 else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
                 {
-                    // Store boundary value for x
+                    // Disable spawning on opposing GridBlock at boundary
                     int boundaryX;
-                    if (hazardMove.delta == Vector2Int.right) boundaryX = colRange;
-                    else boundaryX = 0;
+                    if (hazardMove.delta == Vector2Int.right)
+                        boundaryX = gm.BoundaryRightPlay;   //colRange;
+                    else
+                        boundaryX = gm.BoundaryLeftPlay;
 
-                    gm.levelGrid[boundaryX, hazardGridPosition.y].canSpawn = false;
-                    if (hazardGridPosition.y == 1)
+                    disableSpawnTarget.Set(boundaryX, hazardGridPosition.y);
+
+
+                    // Disable neighboring GridBlocks along immediate hazard trajectory
+                    if (hazardGridPosition.y == gm.BoundaryBottomPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.down;
-                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
                     }
-                    else if(hazardGridPosition.y == colRange)
+                    else if (hazardGridPosition.y == gm.BoundaryTopPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.up;
-                        gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
                     }
                 }
+
+                gm.FindGridBlockByLocation(disableSpawnTarget).canSpawn = false;
+                //gm.FindGridBlockByLocation(disableSpawnTarget).canSpawn = false;
+                //gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
             }
+            if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
         }
+
+        // Populate spawn lists
 
         // Populate spawnMoveUp List and populate spawnMoveDown List
-        for (int x = 1; x < colRange; x++)
+        // for (int x = 1; x < colRange; x++)
+        for (int i = 0; i < gm.levelGrid.GetLength(0); i++)
         {
-            if (gm.levelGrid[x, 0].canSpawn)
+            for (int j = 0; j < gm.levelGrid.GetLength(1); j++)
             {
-                spawnMoveUp.Add(gm.levelGrid[x, 0]);
-            }
+                if (gm.levelGrid[i, j].canSpawn)
+                {
+                    Vector2Int testGridLocation = gm.levelGrid[i, j].location;
 
-            if (gm.levelGrid[x, rowRange].canSpawn)
-            {
-                spawnMoveDown.Add(gm.levelGrid[x, rowRange]);
-            }
-        }
-
-        // Populate spawnMoveRight List and populate spawnMoveLeft List
-        for (int y = 1; y < rowRange; y++)
-        {
-            if (gm.levelGrid[0, y].canSpawn)
-            {
-                spawnMoveRight.Add(gm.levelGrid[0, y]);
-            }
-
-            if(gm.levelGrid[colRange, y].canSpawn)
-            {
-                spawnMoveLeft.Add(gm.levelGrid[colRange, y]);
+                    if (testGridLocation.x == gm.BoundaryLeftActual)
+                        spawnMoveRight.Add(gm.levelGrid[i, j]);
+                    else if (testGridLocation.x == gm.BoundaryRightActual)
+                        spawnMoveLeft.Add(gm.levelGrid[i, j]);
+                    else if (testGridLocation.y == gm.BoundaryTopActual)
+                        spawnMoveDown.Add(gm.levelGrid[i, j]);
+                    else
+                        spawnMoveUp.Add(gm.levelGrid[i, j]);
+                }
             }
         }
 

@@ -8,6 +8,15 @@ public class GridBlock
     public List<GameObject> objectsOnBlock;
     public bool canSpawn;
 
+    private GameObject debugRenderPoint;
+    public GameObject DebugRenderPoint
+    {
+        set
+        {
+            debugRenderPoint = value;
+        }
+    }
+
     public bool IsAvailableForPlayer
     {
         get
