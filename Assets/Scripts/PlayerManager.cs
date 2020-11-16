@@ -267,8 +267,14 @@ public class PlayerManager : MonoBehaviour
     private void Attack()
     {
         GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
-        Vector2Int currentGridLocation = currentGridBlock.location;
+        Vector2Int currentPlayerGridLocation = currentGridBlock.location;
         Weapon currentWeapon = weaponInventory[selectedWeaponIndex];
+
+        int lengthX = gm.levelGrid.GetLength(0);
+        int lengthY = gm.levelGrid.GetLength(1);
+
+        int limitX = gm.GridWidth;
+        int limitY = gm.GridHeight;
 
         if (currentWeapon.Name == "Missile Launcher")
         {
@@ -297,47 +303,77 @@ public class PlayerManager : MonoBehaviour
         // Identify possible targets based on PlayerManager.currentlyFacing
         // Targets eligible for both AutoCannon and Railgun
         List<GridBlock> possibleTargetBlocks = new List<GridBlock>();
+
         if (currentlyFacing == Vector2Int.up)
         {
-            for (int y = currentGridLocation.y + 1; y < gm.GridHeight; y++)
+            for (int i = 0; i < gm.GridWidth; i++)
             {
-                if (gm.levelGrid[currentGridLocation.x, y].objectsOnBlock.Count > 0)
+                for (int j = 0; j < gm.GridHeight; j++)
                 {
-                    possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
+                    if (gm.levelGrid[i, j].location.x == currentPlayerGridLocation.x &&
+                        gm.levelGrid[i, j].location.y > currentPlayerGridLocation.y &&
+                        gm.levelGrid[i, j].location.y <= gm.BoundaryTopPlay)
+                    {
+                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
+                    }
                 }
             }
+            /*
+                        for (int y = currentGridLocation.y + 1; y <= gm.BoundaryTopPlay; y++)
+                        {
+                            if (gm.levelGrid[currentGridLocation.x, y].objectsOnBlock.Count > 0)
+                            {
+                                possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
+                            }
+                        }
+
+            */
         }
         else if (currentlyFacing == Vector2Int.down)
         {
-            for (int y = currentGridLocation.y - 1; y >= 0; y--)
+            for (int i = 0; i < gm.GridWidth; i++)
             {
-                if (gm.levelGrid[currentGridLocation.x, y].objectsOnBlock.Count > 0)
+                for (int j = 0; j < gm.GridHeight; j++)
                 {
-                    possibleTargetBlocks.Add(gm.levelGrid[currentGridLocation.x, y]);
+                    if (gm.levelGrid[i, j].location.x == currentPlayerGridLocation.x &&
+                        gm.levelGrid[i, j].location.y < currentPlayerGridLocation.y &&
+                        gm.levelGrid[i, j].location.y >= gm.BoundaryBottomPlay)
+                    {
+                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
+                    }
                 }
             }
         }
         else if (currentlyFacing == Vector2Int.left)
         {
-            for (int x = currentGridLocation.x - 1; x >= 0; x--)
+            for (int i = 0; i < gm.GridWidth; i++)
             {
-                if (gm.levelGrid[x, currentGridLocation.y].objectsOnBlock.Count > 0)
+                for (int j = 0; j < gm.GridHeight; j++)
                 {
-                    possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
+                    if (gm.levelGrid[i, j].location.y == currentPlayerGridLocation.y &&
+                        gm.levelGrid[i, j].location.x < currentPlayerGridLocation.x &&
+                        gm.levelGrid[i, j].location.x >= gm.BoundaryLeftPlay)
+                    {
+                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
+                    }
                 }
             }
         }
         else if (currentlyFacing == Vector2Int.right)
         {
-            for (int x = currentGridLocation.x + 1; x < gm.GridWidth; x++)
+            for (int i = 0; i < gm.GridWidth; i++)
             {
-                if (gm.levelGrid[x, currentGridLocation.y].objectsOnBlock.Count > 0)
+                for (int j = 0; j < gm.GridHeight; j++)
                 {
-                    possibleTargetBlocks.Add(gm.levelGrid[x, currentGridLocation.y]);
+                    if (gm.levelGrid[i, j].location.y == currentPlayerGridLocation.y &&
+                        gm.levelGrid[i, j].location.x > currentPlayerGridLocation.x &&
+                        gm.levelGrid[i, j].location.x <= gm.BoundaryRightPlay)
+                    {
+                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
+                    }
                 }
             }
         }
-
 
         if (currentWeapon.Name == "AutoCannon")
         {
@@ -377,25 +413,25 @@ public class PlayerManager : MonoBehaviour
                 GridBlock endAnimationGridLocation;
                 if (currentlyFacing == Vector2Int.up)
                 {
-                    Vector2Int index = new Vector2Int(currentGridLocation.x, gm.GridHeight - 1);
+                    Vector2Int index = new Vector2Int(currentPlayerGridLocation.x, gm.BoundaryTopPlay);
                     //Debug.LogFormat("Index when facing up: {0}", index);
                     endAnimationGridLocation = gm.FindGridBlockByLocation(index);
                 }
                 else if (currentlyFacing == Vector2Int.down)
                 {
-                    Vector2Int index = new Vector2Int(currentGridLocation.x, 0);
+                    Vector2Int index = new Vector2Int(currentPlayerGridLocation.x, gm.BoundaryBottomPlay);
                     //Debug.LogFormat("Index when facing down: {0}", index);
                     endAnimationGridLocation = gm.FindGridBlockByLocation(index);
                 }
                 else if (currentlyFacing == Vector2Int.left)
                 {
-                    Vector2Int index = new Vector2Int(0, currentGridLocation.y);
+                    Vector2Int index = new Vector2Int(gm.BoundaryLeftPlay, currentPlayerGridLocation.y);
                     //Debug.LogFormat("Index when facing left: {0}", index);
                     endAnimationGridLocation = gm.FindGridBlockByLocation(index);
                 }
                 else
                 {
-                    Vector2Int index = new Vector2Int(gm.GridWidth - 1, currentGridLocation.y);
+                    Vector2Int index = new Vector2Int(gm.BoundaryRightPlay, currentPlayerGridLocation.y);
                     //Debug.LogFormat("Index when facing right: {0}", index);
                     endAnimationGridLocation = gm.FindGridBlockByLocation(index);
                 }

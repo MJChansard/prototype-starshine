@@ -17,7 +17,8 @@ public class GridManager : MonoBehaviour
     {
         get { return gridHeight; }
     }
-    public Transform gridContainer;
+    
+
     public int BoundaryLeftActual
     {
         get { return -(gridWidth / 2);
@@ -48,27 +49,25 @@ public class GridManager : MonoBehaviour
         get { return -(gridHeight / 2); }
     }
 
+
     public int BoundaryLeftPlay
     {
         get { return BoundaryLeftActual + 1; }
     }
-
     public int BoundaryRightPlay
     {
         get { return BoundaryRightActual - 1; }
     }
-
     public int BoundaryTopPlay
     {
         get { return BoundaryTopActual - 1; }
     }
-
     public int BoundaryBottomPlay
     {
         get { return BoundaryBottomActual + 1; }
     }
 
-
+    public Transform gridContainer;
 
     #endregion
 
@@ -88,6 +87,7 @@ public class GridManager : MonoBehaviour
     public void Init()
     {
         InitializeGrid(debugGridPrefab, 0f);
+        ResetSpawns();
     }
 
     
@@ -206,17 +206,24 @@ public class GridManager : MonoBehaviour
 
     public void ResetSpawns()
     {
-        for (int x = BoundaryLeftActual; x <= BoundaryRightActual; x++)
+        for (int i = 0; i < levelGrid.GetLength(0); i++)
         {
-            for (int y = BoundaryBottomActual; y <= BoundaryBottomActual; y++)
+            for (int j = 0; j < levelGrid.GetLength(1); j++)
             {
-                if (levelGrid[x, y].location.x == BoundaryLeftActual || levelGrid[x, y].location.x == BoundaryRightActual)
-                    levelGrid[x, y].canSpawn = true;
+                if (levelGrid[i, j].location.x == BoundaryLeftActual || levelGrid[i, j].location.x == BoundaryRightActual)
+                    levelGrid[i, j].canSpawn = true;
 
-                if (levelGrid[x, y].location.y == BoundaryBottomActual || levelGrid[x, y].location.y == BoundaryTopActual)
-                    levelGrid[x, y].canSpawn = true;
+                if (levelGrid[i, j].location.y == BoundaryBottomActual || levelGrid[i, j].location.y == BoundaryTopActual)
+                    levelGrid[i, j].canSpawn = true;
             }
         }
+
+        // Disable corners
+        levelGrid[0, 0].canSpawn = false;
+        levelGrid[0, GridHeight - 1].canSpawn = false;
+        levelGrid[GridWidth - 1, 0].canSpawn = false;
+        levelGrid[GridWidth - 1, GridHeight - 1].canSpawn = false;
+
     }
 
     public void UpdateSpawnPointColor(Vector2Int gridBlocklocation, Color color)
@@ -268,13 +275,13 @@ public class GridManager : MonoBehaviour
 
     public GridBlock FindGridBlockByLocation(Vector2Int location)
     {
-        for (int x = 0; x < levelGrid.GetLength(0); x++)
+        for (int i = 0; i < levelGrid.GetLength(0); i++)
         {
-            for (int y = 0; y < levelGrid.GetLength(1); y++)
+            for (int j = 0; j < levelGrid.GetLength(1); j++)
             {
-                if (levelGrid[x, y].location == location)
+                if (levelGrid[i, j].location == location)
                 {
-                    return levelGrid[x, y];
+                    return levelGrid[i, j];
                 }
             }
         }
@@ -285,7 +292,14 @@ public class GridManager : MonoBehaviour
 
     public bool CheckIfGridBlockInBounds(Vector2Int gridLocation)
     {
-        if (gridLocation.x > 0 && gridLocation.x < GridWidth - 1 && gridLocation.y > 0 && gridLocation.y < GridHeight - 1) return true;
+        if
+        (
+            gridLocation.x >= BoundaryLeftPlay &&
+            gridLocation.x <= BoundaryRightPlay &&
+            gridLocation.y <= BoundaryTopPlay &&
+            gridLocation.y >= BoundaryBottomPlay
+        ) return true;
+
         else return false;
     }
 
@@ -297,15 +311,25 @@ public class GridManager : MonoBehaviour
     }   
 
   
-    public void AddObjectToGrid(GameObject gameObject, Vector2Int gridPosition)
+    public void AddObjectToGrid(GameObject gameObject, Vector2Int gridLocation)
     {
-        GridBlock destination = levelGrid[gridPosition.x, gridPosition.y];
-        destination.objectsOnBlock.Add(gameObject);
+        for (int i = 0; i < levelGrid.GetLength(0); i++)
+        {
+            for (int j = 0; j < levelGrid.GetLength(1); j++)
+            {
+                if (levelGrid[i, j].location == gridLocation)
+                {
+                    //GridBlock destination = levelGrid[gridLocation.x, gridLocation.y];
+                    //destination.objectsOnBlock.Add(gameObject);
+                    levelGrid[i, j].objectsOnBlock.Add(gameObject);
+                }
+            }
+        }
     }
 
-    public void RemoveObjectFromGrid(GameObject gameObject, Vector2Int gridPosition)
+    public void RemoveObjectFromGrid(GameObject gameObject, Vector2Int gridLocation)
     {
-        GridBlock origin = FindGridBlockByLocation(gridPosition);
+        GridBlock origin = FindGridBlockByLocation(gridLocation);
 
         if (origin.objectsOnBlock.Count > 0)
         {
@@ -318,19 +342,7 @@ public class GridManager : MonoBehaviour
                     return;
                 }
             }
-            /*
-            for (int i = 0; i < origin.objectsOnBlock.Count; i++)
-            {
-                if (gameObject == origin.objectsOnBlock[i])
-                {
-                    origin.objectsOnBlock.RemoveAt(i);
-                    return;
-                }
-                
-            }
-            */
         }
-        else { return; }
     }
 
    

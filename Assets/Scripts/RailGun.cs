@@ -69,7 +69,8 @@ public class RailGun : Weapon
             {
                 float traveled = (Time.time - startTime) * railTravelSpeed;
                 percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
-                railgunProjectile.gameObject.transform.position =
+                //railgunProjectile.gameObject.transform.position =
+                railgunProjectile.transform.position = 
                     Vector3.Lerp
                     (
                         currentWorldLocation,

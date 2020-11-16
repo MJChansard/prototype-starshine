@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
         if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
 
         // Prepare Player
-        Vector2Int startLocation = new Vector2Int(5, 4);
+        Vector2Int startLocation = new Vector2Int(0, 0);
         GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
         Debug.Log(player.name + " has been instantiated.");
 

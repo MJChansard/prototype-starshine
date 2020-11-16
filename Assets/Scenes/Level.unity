@@ -804,6 +804,7 @@ MonoBehaviour:
   hazardPrefabs:
   - {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
   - {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
+  VerboseConsole: 1
 --- !u!114 &477210642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -899,7 +900,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: -2, z: -10}
+  m_LocalPosition: {x: -0.4, y: -1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

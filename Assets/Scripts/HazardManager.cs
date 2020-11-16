@@ -51,6 +51,7 @@ public class HazardManager : MonoBehaviour
 
     private void UpdateSpawnLocations()
     {
+        // IDEA
         // Generate a List of GridBlocks that hold GridBlocks eligible for spawning GridBlocksCanSpawn
         // Generate a List of GridBlocks that hold GridBlocks ineligible for spawning
         // Remove GridBlocks from the eligible List that exist in the ineligible List
@@ -58,11 +59,8 @@ public class HazardManager : MonoBehaviour
         /*  SUMMARY
          *  - Set GridBlock.canSpawn on the opposite boundary of a hazard = false
          *  - Set GridBlock.canSpawn on a cell forward and to the left = false if the hazard is on a play boundary
-         * 
+         *  - Populate appropriate spawn List<GridBlock> based on grid location
          */
-
-        //int colRange = gm.GridWidth - 1;    // 10 - 1 = 9
-        //int rowRange = gm.GridHeight - 1;   // 8 - 1 = 7
 
         if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations called.");
 
@@ -120,16 +118,11 @@ public class HazardManager : MonoBehaviour
                 }
 
                 gm.FindGridBlockByLocation(disableSpawnTarget).canSpawn = false;
-                //gm.FindGridBlockByLocation(disableSpawnTarget).canSpawn = false;
-                //gm.levelGrid[disableSpawnTarget.x, disableSpawnTarget.y].canSpawn = false;
             }
             if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
         }
 
         // Populate spawn lists
-
-        // Populate spawnMoveUp List and populate spawnMoveDown List
-        // for (int x = 1; x < colRange; x++)
         for (int i = 0; i < gm.levelGrid.GetLength(0); i++)
         {
             for (int j = 0; j < gm.levelGrid.GetLength(1); j++)
@@ -161,11 +154,14 @@ public class HazardManager : MonoBehaviour
         *   - Randomly select a hazard to spawn
         *   - Activate hazard spawn movement pattern based on spawn location
         */
-        Debug.Log("HazardManager.PrepareHazard() called.");
+        if (VerboseConsole) Debug.Log("HazardManager.PrepareHazard() called.");
 
         int hazardType = Random.Range(0, hazardPrefabs.Length);
-        // Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
+        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
+
         int spawnAxis = Random.Range(1, 4);
+        if (VerboseConsole) Debug.LogFormat("\n Randomly selected Spawn Axis = {0}.\n 1=Up \n 2=Down \n 3=Left \n 4=Right \n ", spawnAxis);
+        
         int spawnIndex;
         Vector2Int spawnPosition = new Vector2Int();
 
@@ -191,7 +187,7 @@ public class HazardManager : MonoBehaviour
 
             case 3:
                 spawnIndex = Random.Range(0, spawnMoveLeft.Count);
-                spawnPosition = spawnMoveLeft[spawnIndex].location;
+                spawnPosition = spawnMoveLeft[currentTick].location;
                 spawnMovement.SetMovePatternLeft();
                 break;
 
@@ -203,15 +199,17 @@ public class HazardManager : MonoBehaviour
         }
 
         AddHazard(hazardToSpawn, spawnPosition);
+
+        if (VerboseConsole) Debug.Log("HazardManager.PrepareHazard() completed.");
     }
 
 
-    public void AddHazard(Hazard hazard, Vector2Int gridPosition, bool placeOnGrid = true)
+    public void AddHazard(Hazard hazard, Vector2Int gridLocation, bool placeOnGrid = true)
     {
         Debug.Log("HazardManager.AddHazard() called.");
 
-        GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridPosition);
-        Vector3 worldLocation = gm.GridToWorld(gridPosition);
+        GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridLocation);
+        Vector3 worldLocation = gm.GridToWorld(gridLocation);
 
         //if(destinationGridPosition.IsAvailableForPlayer && placeOnGrid == false)
         if(placeOnGrid == false)
@@ -225,7 +223,7 @@ public class HazardManager : MonoBehaviour
         else
         {
             hazard.transform.position = worldLocation;
-            gm.AddObjectToGrid(hazard.gameObject, gridPosition);
+            gm.AddObjectToGrid(hazard.gameObject, gridLocation);
 
             hazard.currentWorldLocation = worldLocation;
             hazard.targetWorldLocation = worldLocation;
@@ -277,7 +275,9 @@ public class HazardManager : MonoBehaviour
         /*  STEPS
          * 
          *  1) Hazard Health Check
-         *  2)
+         *  2) Move hazards
+         *  3) Detect Fly-Bys
+         *  4) 
          */
 
         #region Hazard Tick Duration
@@ -303,8 +303,8 @@ public class HazardManager : MonoBehaviour
 
         // Movement and Collision collections
         List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
-        Vector2Int[] allOriginGridPositions = new Vector2Int[hazardsInPlay.Count];
-        Vector2Int[] allDestinationGridPositions = new Vector2Int[hazardsInPlay.Count];
+        Vector2Int[] allOriginGridLocations = new Vector2Int[hazardsInPlay.Count];
+        Vector2Int[] allDestinationGridLocations = new Vector2Int[hazardsInPlay.Count];
 
         // Manage Movement Data
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
@@ -318,13 +318,13 @@ public class HazardManager : MonoBehaviour
             {
                 Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
 
-                Vector2Int originGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
-                Vector2Int destinationGridPosition = originGridPosition + move.delta;
+                Vector2Int originGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+                Vector2Int destinationGridLocation = originGridLocation + move.delta;
 
-                allOriginGridPositions[i] = originGridPosition;
-                allDestinationGridPositions[i] = destinationGridPosition;
+                allOriginGridLocations[i] = originGridLocation;
+                allDestinationGridLocations[i] = destinationGridLocation;
 
-                bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridPosition);
+                bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridLocation);
 
                 if (!moveInBounds)
                 {
@@ -334,19 +334,19 @@ public class HazardManager : MonoBehaviour
                 }
                 else
                 {
-                    gm.RemoveObjectFromGrid(hazardObject, originGridPosition);
-                    Debug.Log("Removing " + hazardsInPlay[i].HazardName + " from " + originGridPosition.ToString());
+                    gm.RemoveObjectFromGrid(hazardObject, originGridLocation);
+                    Debug.Log("Removing " + hazardsInPlay[i].HazardName + " from " + originGridLocation.ToString());
 
-                    gm.AddObjectToGrid(hazardObject, destinationGridPosition);
-                    Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridPosition.ToString());
+                    gm.AddObjectToGrid(hazardObject, destinationGridLocation);
+                    Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridLocation.ToString());
 
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
                     hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
 
-                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridPosition);
+                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
 
-                    allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridPosition));
+                    allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridLocation));
                 }
             }
             else hazardsInPlay[i].targetWorldLocation = hazardsInPlay[i].currentWorldLocation;
@@ -354,16 +354,16 @@ public class HazardManager : MonoBehaviour
 
         // Fly-By detection
         Debug.Log("Fly-By detection starting.");
-        for (int i = 0; i < allOriginGridPositions.Length; i++)
+        for (int i = 0; i < allOriginGridLocations.Length; i++)
         {
-            for (int j = 0; j < allDestinationGridPositions.Length; j++)
+            for (int j = 0; j < allDestinationGridLocations.Length; j++)
             {
                 if (i == j)
                 {
                     continue;
                 }
                 
-                if (allOriginGridPositions[i] == allDestinationGridPositions[j] && allOriginGridPositions[j] == allDestinationGridPositions[i])
+                if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
                 {
                     // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
                     //Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
