@@ -15,8 +15,8 @@ public class HazardManager : MonoBehaviour
 
     private int currentTick = 0;
     private int ticksUntilNewSpawn;
-    private int minTicksUntilSpawn = 4;
-    private int maxTicksUntilSpawn = 8;
+    private int minTicksUntilSpawn = 2;
+    private int maxTicksUntilSpawn = 4;
     
     private List<GridBlock> spawnMoveUp = new List<GridBlock>();
     private List<GridBlock> spawnMoveDown = new List<GridBlock>();
@@ -187,7 +187,7 @@ public class HazardManager : MonoBehaviour
 
             case 3:
                 spawnIndex = Random.Range(0, spawnMoveLeft.Count);
-                spawnPosition = spawnMoveLeft[currentTick].location;
+                spawnPosition = spawnMoveLeft[spawnIndex].location;
                 spawnMovement.SetMovePatternLeft();
                 break;
 
@@ -208,7 +208,7 @@ public class HazardManager : MonoBehaviour
     {
         Debug.Log("HazardManager.AddHazard() called.");
 
-        GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridLocation);
+        //GridBlock destinationGridPosition = gm.FindGridBlockByLocation(gridLocation);
         Vector3 worldLocation = gm.GridToWorld(gridLocation);
 
         //if(destinationGridPosition.IsAvailableForPlayer && placeOnGrid == false)
@@ -313,15 +313,14 @@ public class HazardManager : MonoBehaviour
             MovePattern move = hazardObject.GetComponent<MovePattern>();
             move.OnTickUpdate();
 
-            //if (currentTick % move.moveRate == 0 || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
-            if (move.CanMoveThisTurn()) // || hazardsInPlay[i].CurrentMode == Hazard.HazardMode.Spawn)
+            Vector2Int originGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+            allOriginGridLocations[i] = originGridLocation;
+            
+            if (move.CanMoveThisTurn())
             {
                 Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
 
-                Vector2Int originGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
                 Vector2Int destinationGridLocation = originGridLocation + move.delta;
-
-                allOriginGridLocations[i] = originGridLocation;
                 allDestinationGridLocations[i] = destinationGridLocation;
 
                 bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridLocation);
@@ -349,7 +348,12 @@ public class HazardManager : MonoBehaviour
                     allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridLocation));
                 }
             }
-            else hazardsInPlay[i].targetWorldLocation = hazardsInPlay[i].currentWorldLocation;
+            else
+            {
+                hazardsInPlay[i].targetWorldLocation = hazardsInPlay[i].currentWorldLocation;
+                allOriginGridLocations[i] = originGridLocation;
+                allDestinationGridLocations[i] = originGridLocation;
+            }
         }
 
         // Fly-By detection
@@ -469,6 +473,7 @@ public class HazardManager : MonoBehaviour
             Debug.Log("Preparing Hazard: tick condition.");
             PrepareHazard();
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
+
         }
 
         if (hazardsInPlay.Count == 0)
