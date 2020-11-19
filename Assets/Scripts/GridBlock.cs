@@ -11,6 +11,10 @@ public class GridBlock
     private GameObject debugRenderPoint;
     public GameObject DebugRenderPoint
     {
+        get
+        {
+            return debugRenderPoint;
+        }
         set
         {
             debugRenderPoint = value;

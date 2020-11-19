@@ -75,49 +75,48 @@ public class HazardManager : MonoBehaviour
 
                 if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
                 {
-                    // Disable spawning on opposing GridBlock at boundary
                     int boundaryY;
-                    if (hazardMove.delta == Vector2Int.up)
-                        boundaryY = gm.BoundaryTopPlay; //rowRange;
-                    else
-                        boundaryY = gm.BoundaryBottomPlay;
-
+                    if (hazardMove.delta == Vector2Int.up) boundaryY = gm.BoundaryTopActual;
+                    else boundaryY = gm.BoundaryBottomActual;
+                    
+                    // Disable spawning on opposing GridBlock at boundary
                     disableSpawnTarget.Set(hazardGridPosition.x, boundaryY);
+                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
 
                     // Disable neighboring GridBlocks along immediate hazard trajectory
                     if (hazardGridPosition.x == gm.BoundaryLeftPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.left;
+                        gm.DeactivateGridBlockSpawn(disableSpawnTarget);
                     }
                     else if (hazardGridPosition.x == gm.BoundaryRightPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.right;
+                        gm.DeactivateGridBlockSpawn(disableSpawnTarget);
                     }
                 }
                 else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
                 {
                     // Disable spawning on opposing GridBlock at boundary
                     int boundaryX;
-                    if (hazardMove.delta == Vector2Int.right)
-                        boundaryX = gm.BoundaryRightPlay;   //colRange;
-                    else
-                        boundaryX = gm.BoundaryLeftPlay;
+                    if (hazardMove.delta == Vector2Int.right) boundaryX = gm.BoundaryRightActual;   //colRange;
+                    else boundaryX = gm.BoundaryLeftActual;
 
                     disableSpawnTarget.Set(boundaryX, hazardGridPosition.y);
-
+                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
 
                     // Disable neighboring GridBlocks along immediate hazard trajectory
                     if (hazardGridPosition.y == gm.BoundaryBottomPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.down;
+                        gm.DeactivateGridBlockSpawn(disableSpawnTarget);
                     }
                     else if (hazardGridPosition.y == gm.BoundaryTopPlay)
                     {
                         disableSpawnTarget = hazardGridPosition + hazardMove.delta + Vector2Int.up;
+                        gm.DeactivateGridBlockSpawn(disableSpawnTarget);
                     }
                 }
-
-                gm.FindGridBlockByLocation(disableSpawnTarget).canSpawn = false;
             }
             if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
         }
@@ -468,18 +467,12 @@ public class HazardManager : MonoBehaviour
         }
 
         // Spawn stuff
-        if (ticksUntilNewSpawn == 0)
+        if (ticksUntilNewSpawn == 0 || hazardsInPlay.Count == 0)
         {
-            Debug.Log("Preparing Hazard: tick condition.");
+            gm.ResetSpawns();
+            UpdateSpawnLocations();
             PrepareHazard();
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
-
-        }
-
-        if (hazardsInPlay.Count == 0)
-        {
-            Debug.Log("Preparing Hazard: Hazard count condition.");
-            PrepareHazard();
         }
 
         currentTick++;

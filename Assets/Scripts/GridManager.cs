@@ -195,6 +195,11 @@ public class GridManager : MonoBehaviour
 
                 levelGrid[i, j].DebugRenderPoint = point;
 
+                if (locationX == BoundaryLeftActual || locationX == BoundaryRightActual)
+                    point.GetComponent<Renderer>().material.color = Color.green;
+                else if (locationY == BoundaryBottomActual || locationY == BoundaryTopActual)
+                    point.GetComponent<Renderer>().material.color = Color.green;
+
                 locationY += 1;
             }
 
@@ -211,10 +216,17 @@ public class GridManager : MonoBehaviour
             for (int j = 0; j < levelGrid.GetLength(1); j++)
             {
                 if (levelGrid[i, j].location.x == BoundaryLeftActual || levelGrid[i, j].location.x == BoundaryRightActual)
+                {
                     levelGrid[i, j].canSpawn = true;
+                    levelGrid[i, j].DebugRenderPoint.GetComponent<Renderer>().material.color = Color.green;
+                }
+                    
 
                 if (levelGrid[i, j].location.y == BoundaryBottomActual || levelGrid[i, j].location.y == BoundaryTopActual)
+                {
                     levelGrid[i, j].canSpawn = true;
+                    levelGrid[i, j].DebugRenderPoint.GetComponent<Renderer>().material.color = Color.green;
+                }
             }
         }
 
@@ -226,9 +238,11 @@ public class GridManager : MonoBehaviour
 
     }
 
-    public void UpdateSpawnPointColor(Vector2Int gridBlocklocation, Color color)
+    public void DeactivateGridBlockSpawn(Vector2Int gridBlockLocation)
     {
-
+        GridBlock gridBlock = FindGridBlockByLocation(gridBlockLocation);
+        gridBlock.canSpawn = false;
+        gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
     }
 
     public Vector3 GridToWorld(Vector2Int gridLocation)
@@ -322,6 +336,7 @@ public class GridManager : MonoBehaviour
                     //GridBlock destination = levelGrid[gridLocation.x, gridLocation.y];
                     //destination.objectsOnBlock.Add(gameObject);
                     levelGrid[i, j].objectsOnBlock.Add(gameObject);
+                    return;
                 }
             }
         }
