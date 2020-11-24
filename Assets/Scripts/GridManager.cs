@@ -240,9 +240,15 @@ public class GridManager : MonoBehaviour
 
     public void DeactivateGridBlockSpawn(Vector2Int gridBlockLocation)
     {
+        Debug.LogFormat("Disabling GridBlock: {0}", gridBlockLocation);
+        
         GridBlock gridBlock = FindGridBlockByLocation(gridBlockLocation);
-        gridBlock.canSpawn = false;
-        gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
+                
+        if (gridBlock.canSpawn == true)
+        {
+            gridBlock.canSpawn = false;
+            gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
+        }
     }
 
     public Vector3 GridToWorld(Vector2Int gridLocation)

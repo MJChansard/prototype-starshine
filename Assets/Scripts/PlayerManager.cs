@@ -388,7 +388,7 @@ public class PlayerManager : MonoBehaviour
                         hp.SubtractHealth(currentWeapon.Damage);
                         Debug.Log("Target's current health: " + hp.CurrentHP);
 
-                        return;
+                        break;
                     }
                 }
             }
