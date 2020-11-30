@@ -213,6 +213,10 @@ MonoBehaviour:
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   spawnWarningObject: {fileID: 4861070605109162996}
+  spawnRules:
+    spawnRegion: 0
+    avoidHazardPaths: 0
+    avoidAdjacentToPlayer: 0
 --- !u!114 &6597331953631135834
 MonoBehaviour:
   m_ObjectHideFlags: 0

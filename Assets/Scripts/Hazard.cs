@@ -20,7 +20,9 @@ public class Hazard : MonoBehaviour
     public Vector3 currentWorldLocation;
     public Vector3 targetWorldLocation;
     [SerializeField] private GameObject spawnWarningObject;
-    
+
+    public GridManager.SpawnRule spawnRules;
+
     private HazardMode currentMode;
 
     public float Distance
@@ -59,7 +61,8 @@ public class Hazard : MonoBehaviour
     {
         if (RequiresSpawnAnimation)
         {
-            MeshRenderer mesh = GetComponent<MeshRenderer>();
+            //MeshRenderer mesh = GetComponent<MeshRenderer>();
+            MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
             SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
             Animator anim = spawnWarningObject.GetComponent<Animator>();
 

@@ -31,6 +31,7 @@ public class HazardManager : MonoBehaviour
     private List<Hazard> hazardsInPlay = new List<Hazard>();
     
 
+
     private void Start()
     {
         gm = GetComponent<GridManager>(); 
@@ -76,7 +77,6 @@ public class HazardManager : MonoBehaviour
                 MovePattern hazardMove = hazardsInPlay[i].GetComponent<MovePattern>();
                 
                 Vector2Int hazardGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
-                Vector2Int disableSpawnTarget = new Vector2Int();
 
                 if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
                 {
@@ -85,24 +85,20 @@ public class HazardManager : MonoBehaviour
                     else boundaryY = gm.BoundaryBottomActual;
                     
                     // Disable spawning on opposing GridBlock at boundary
-                    disableSpawnTarget.Set(hazardGridPosition.x, boundaryY);
-                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
-
-
+                    gm.DeactivateGridBlockSpawn(new Vector2Int(hazardGridPosition.x, boundaryY));
+                    
                     // Disable neighboring GridBlocks along immediate hazard trajectory
-                    if (hazardGridPosition.x == gm.BoundaryLeftPlay)
+                    if (hazardGridPosition.x == gm.BoundaryLeftPlay) 
                     {
-                        disableSpawnTarget = hazardGridPosition + (hazardMove.delta * 2) + Vector2Int.left;
-                        // Need to multiply hazardMove.delta by two in order to disable appropriate block
-                    }
-                    else if (hazardGridPosition.x == gm.BoundaryRightPlay)
-                    {
-                        disableSpawnTarget = hazardGridPosition + (hazardMove.delta * 2) + Vector2Int.right;
-                        // Need to multiply hazardMove.delta by two in order to disable appropriate block
-                    }
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.left);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.left);
 
-                    disableSpawnTarget.Clamp(minVector2, maxVector2);
-                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
+                    }
+                    else if (hazardGridPosition.x == gm.BoundaryRightPlay) 
+                        {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.right);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.right);
+                    }
 
                 }
                 else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
@@ -111,26 +107,19 @@ public class HazardManager : MonoBehaviour
                     int boundaryX;
                     if (hazardMove.delta == Vector2Int.right) boundaryX = gm.BoundaryRightActual;   //colRange;
                     else boundaryX = gm.BoundaryLeftActual;
-
-                    disableSpawnTarget.Set(boundaryX, hazardGridPosition.y);
-                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
-
+                    
+                    gm.DeactivateGridBlockSpawn(new Vector2Int(boundaryX, hazardGridPosition.y));
 
                     // Disable neighboring GridBlocks along immediate hazard trajectory
-                    if (hazardGridPosition.y == gm.BoundaryBottomPlay)
-                    {
-                        disableSpawnTarget = hazardGridPosition + (hazardMove.delta * 2) + Vector2Int.down;
-                        // Need to multiply hazardMove.delta by two in order to disable appropriate block
-                        
-                    }
-                    else if (hazardGridPosition.y == gm.BoundaryTopPlay)
-                    {
-                        disableSpawnTarget = hazardGridPosition + (hazardMove.delta * 2) + Vector2Int.up;
-                        // Need to multiply hazardMove.delta by two in order to disable appropriate block
-                    }
+                    if (hazardGridPosition.y == gm.BoundaryBottomPlay) {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.down);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.down);
 
-                    disableSpawnTarget.Clamp(minVector2, maxVector2);
-                    gm.DeactivateGridBlockSpawn(disableSpawnTarget);
+                    }
+                    else if (hazardGridPosition.y == gm.BoundaryTopPlay) {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.up);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.up);
+                    }
                 }
             }
             if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
@@ -181,6 +170,10 @@ public class HazardManager : MonoBehaviour
 
         // Spawn hazard & store component references
         Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
+
+        //Debug line
+        //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
+       
         hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn);
         hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
@@ -356,6 +349,7 @@ public class HazardManager : MonoBehaviour
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
                     hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
+                    hazardsInPlay[i].GetComponent<Rotator>().EnableRotator(true);
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
 
@@ -498,6 +492,8 @@ public class HazardManager : MonoBehaviour
         return delayTime;
     }
 
+
+
     private IEnumerator MoveHazardCoroutine(Hazard hazardToMove, float hazardTravelLength = 1.0f)
     {
         float startTime = Time.time;
@@ -514,8 +510,7 @@ public class HazardManager : MonoBehaviour
 
         hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
     }
-
-    
+        
     private IEnumerator DestroyHazardCoroutine(Hazard hazardToDestroy, float delay = 0.0f)
     {
         Debug.Log("DestroyHazardCoroutine() called.");
