@@ -271,8 +271,8 @@ public class HazardManager : MonoBehaviour
             if (lootObject != null)
             {
                 Vector2Int dropGridLocation = gm.WorldToGrid(hazard.currentWorldLocation);
-                LootData lootData = lootObject.GetComponent<LootData>();
-                gm.AddObjectToGrid(lootData.gameObject, dropGridLocation);
+                gm.AddObjectToGrid(lootObject, dropGridLocation);
+                lootObject.GetComponent<Rotator>().enabled = true;
             }
         }
     }
@@ -284,7 +284,7 @@ public class HazardManager : MonoBehaviour
          *  1) Hazard Health Check
          *  2) Move hazards
          *  3) Detect Fly-Bys
-         *  4) 
+         *  4) Hazard Health Check
          */
 
         #region Hazard Tick Duration
@@ -349,7 +349,7 @@ public class HazardManager : MonoBehaviour
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
                     hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
-                    hazardsInPlay[i].GetComponent<Rotator>().EnableRotator(true);
+                    hazardsInPlay[i].GetComponent<Rotator>().enabled = true;
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
 
