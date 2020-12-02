@@ -176,7 +176,9 @@ public class HazardManager : MonoBehaviour
        
         hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn);
         hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
+
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
+        Rotator spawnRotator = hazardToSpawn.GetComponent<Rotator>();
 
         switch (spawnAxis)
         {
@@ -184,24 +186,28 @@ public class HazardManager : MonoBehaviour
                 spawnIndex = Random.Range(0, spawnMoveUp.Count);
                 spawnPosition = spawnMoveUp[spawnIndex].location;
                 spawnMovement.SetMovePatternUp();
+                spawnRotator.RotateUp();
                 break;
 
             case 2:
                 spawnIndex = Random.Range(0, spawnMoveDown.Count);
                 spawnPosition = spawnMoveDown[spawnIndex].location;
                 spawnMovement.SetMovePatternDown();
+                spawnRotator.RotateDown();
                 break;
 
             case 3:
                 spawnIndex = Random.Range(0, spawnMoveLeft.Count);
                 spawnPosition = spawnMoveLeft[spawnIndex].location;
                 spawnMovement.SetMovePatternLeft();
+                spawnRotator.RotateLeft();
                 break;
 
             case 4:
                 spawnIndex = Random.Range(0, spawnMoveRight.Count);
                 spawnPosition = spawnMoveRight[spawnIndex].location;
                 spawnMovement.SetMovePatternRight();
+                spawnRotator.RotateRight();
                 break;
         }
 
@@ -349,6 +355,7 @@ public class HazardManager : MonoBehaviour
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
                     hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
+
                     hazardsInPlay[i].GetComponent<Rotator>().enabled = true;
 
                     hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
