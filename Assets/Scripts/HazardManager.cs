@@ -50,11 +50,11 @@ public class HazardManager : MonoBehaviour
     public void Init()
     {
         UpdateSpawnLocations();
-        PrepareHazard();
+        CreateHazard();
         currentTick = 1;
     }
 
-
+    /*
     private void UpdateSpawnLocations()
     {
         // IDEA
@@ -66,7 +66,7 @@ public class HazardManager : MonoBehaviour
          *  - Set GridBlock.canSpawn on the opposite boundary of a hazard = false
          *  - Set GridBlock.canSpawn on a cell forward and to the left = false if the hazard is on a play boundary
          *  - Populate appropriate spawn List<GridBlock> based on grid location
-         */
+         *
 
         if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations called.");
 
@@ -148,9 +148,106 @@ public class HazardManager : MonoBehaviour
 
         Debug.Log("Spawn Locations successfully updated.");
     }
+*/
+
+    private void UpdateSpawnLocations()
+    {
+        if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations called.");
+
+        if (hazardsInPlay.Count > 0)
+        {
+            for (int i = 0; i < hazardsInPlay.Count; i++)
+            {
+                MovePattern hazardMove = hazardsInPlay[i].GetComponent<MovePattern>();
+                Vector2Int hazardGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+
+                if(hazardsInPlay[i].spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Perimeter)
+                {
+                    //#RESUME
+                }
 
 
-    private void PrepareHazard()
+
+
+
+
+
+
+
+                if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
+                {
+                    int boundaryY;
+                    if (hazardMove.delta == Vector2Int.up) boundaryY = gm.BoundaryTopActual;
+                    else boundaryY = gm.BoundaryBottomActual;
+
+                    // Disable spawning on opposing GridBlock at boundary
+                    gm.DeactivateGridBlockSpawn(new Vector2Int(hazardGridPosition.x, boundaryY));
+
+                    // Disable neighboring GridBlocks along immediate hazard trajectory
+                    if (hazardGridPosition.x == gm.BoundaryLeftPlay)
+                    {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.left);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.left);
+
+                    }
+                    else if (hazardGridPosition.x == gm.BoundaryRightPlay)
+                    {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.right);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.right);
+                    }
+
+                }
+                else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
+                {
+                    // Disable spawning on opposing GridBlock at boundary
+                    int boundaryX;
+                    if (hazardMove.delta == Vector2Int.right) boundaryX = gm.BoundaryRightActual;   //colRange;
+                    else boundaryX = gm.BoundaryLeftActual;
+
+                    gm.DeactivateGridBlockSpawn(new Vector2Int(boundaryX, hazardGridPosition.y));
+
+                    // Disable neighboring GridBlocks along immediate hazard trajectory
+                    if (hazardGridPosition.y == gm.BoundaryBottomPlay)
+                    {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.down);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.down);
+
+                    }
+                    else if (hazardGridPosition.y == gm.BoundaryTopPlay)
+                    {
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.up);
+                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.up);
+                    }
+                }
+            }
+            if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
+        }
+
+        // Populate spawn lists
+        for (int i = 0; i < gm.levelGrid.GetLength(0); i++)
+        {
+            for (int j = 0; j < gm.levelGrid.GetLength(1); j++)
+            {
+                if (gm.levelGrid[i, j].canSpawn)
+                {
+                    Vector2Int testGridLocation = gm.levelGrid[i, j].location;
+
+                    if (testGridLocation.x == gm.BoundaryLeftActual)
+                        spawnMoveRight.Add(gm.levelGrid[i, j]);
+                    else if (testGridLocation.x == gm.BoundaryRightActual)
+                        spawnMoveLeft.Add(gm.levelGrid[i, j]);
+                    else if (testGridLocation.y == gm.BoundaryTopActual)
+                        spawnMoveDown.Add(gm.levelGrid[i, j]);
+                    else
+                        spawnMoveUp.Add(gm.levelGrid[i, j]);
+                }
+            }
+        }
+
+        Debug.Log("Spawn Locations successfully updated.");
+    }
+
+    private void CreateHazard()
     {
         /*  SUMMARY
         *   - Randomly select a spawn location
@@ -487,7 +584,7 @@ public class HazardManager : MonoBehaviour
         {
             gm.ResetSpawns();
             UpdateSpawnLocations();
-            PrepareHazard();
+            CreateHazard();
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
 
