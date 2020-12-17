@@ -54,6 +54,39 @@ public class GridManager : MonoBehaviour {
         get { return BoundaryBottomActual + 1; }
     }
 
+    public List<Vector2Int> EligiblePerimeterSpawns
+    {
+        get
+        {
+            return eligiblePerimeterSpawns;
+        }
+    }
+    public List<Vector2Int> EligibleInteriorSpawns
+    {
+        get
+        {
+            return eligibleInteriorSpawns;
+        }
+    }
+    public List<Vector2Int> EligibleAllSpawns
+    {
+        get
+        {
+            eligibleAllSpawns.Clear();
+
+            for(int i = 0; i < EligiblePerimeterSpawns.Count; i++)
+            {
+                eligibleAllSpawns.Add(eligiblePerimeterSpawns[i]);
+            }
+            for(int i = 0; i < EligibleInteriorSpawns.Count; i++)
+            {
+                eligibleAllSpawns.Add(EligibleInteriorSpawns[i]);
+            }
+
+            return eligibleAllSpawns;
+        }
+    }
+
     public Transform gridContainer;
 
     #endregion
@@ -70,6 +103,10 @@ public class GridManager : MonoBehaviour {
 
     public System.Action OnUpdateBoard;
     public GridBlock[,] levelGrid;
+
+    private List<Vector2Int> eligiblePerimeterSpawns = new List<Vector2Int>();
+    private List<Vector2Int> eligibleInteriorSpawns = new List<Vector2Int>();
+    private List<Vector2Int> eligibleAllSpawns = new List<Vector2Int>();
 
     public void Init() {
         InitializeGrid(debugGridPrefab, 0f);
@@ -104,45 +141,6 @@ public class GridManager : MonoBehaviour {
         }
     }
 
-    /*
-        private void InitializeGrid(GameObject gridPoint, float offset)
-        {
-            levelGrid = new GridBlock[gridWidth, gridHeight];
-
-            for (int x = 0; x < gridWidth; x++)
-            {
-                for (int y = 0; y < gridHeight; y++)
-                {
-                    levelGrid[x, y] = new GridBlock(x, y);
-                    levelGrid[x, y].location = new Vector2Int(x, y);
-
-                    // Display grid.
-                    GameObject point = Instantiate
-                    (
-                        gridPoint,
-                        new Vector3(x + offset, y + offset, 0f),
-                        Quaternion.identity,
-                        gridContainer
-                    );
-
-                    // Update canSpawn property
-                    if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == gridWidth - 1)
-                    {
-                        levelGrid[x, y].canSpawn = true;
-                        point.GetComponent<Renderer>().material.color = Color.green;
-                    }
-
-                    if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == gridHeight - 1)
-                    {
-                        levelGrid[x, y].canSpawn = true;
-                        point.GetComponent<Renderer>().material.color = Color.green;
-                    }
-                }
-            }
-
-            Debug.Log("Object: [levelGrid] successfully created.");
-        }
-    */
     private void InitializeGrid(GameObject gridPoint, float offset) {
         /*  SUMMARY
          *  - Instantiate levelGrid
@@ -156,12 +154,27 @@ public class GridManager : MonoBehaviour {
         int locationX = BoundaryLeftActual;
         int locationY = BoundaryBottomActual;
 
-        for (int i = 0; i < gridWidth; i++) {
-            for (int j = 0; j < gridHeight; j++) {
+        for (int i = 0; i < gridWidth; i++)
+        {
+            for (int j = 0; j < gridHeight; j++)
+            {
                 if (j == 0) locationY = BoundaryBottomActual;
 
                 levelGrid[i, j] = new GridBlock(locationX, locationY);
-                levelGrid[i, j].location = new Vector2Int(locationX, locationY);
+                //levelGrid[i, j].location = new Vector2Int(locationX, locationY);
+
+                if ((locationX == BoundaryLeftActual || locationX == BoundaryRightActual) && locationY != BoundaryTopActual && locationY != BoundaryBottomActual)
+                {
+                    eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
+                }
+                else if ((locationX != BoundaryLeftActual && locationX != BoundaryRightActual) && (locationY == BoundaryTopActual || locationY == BoundaryBottomActual))
+                {
+                    eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
+                }
+                else
+                {
+                    eligibleInteriorSpawns.Add(levelGrid[i, j].location);
+                }
 
                 GameObject point = Instantiate
                 (
@@ -173,11 +186,15 @@ public class GridManager : MonoBehaviour {
 
                 levelGrid[i, j].DebugRenderPoint = point;
 
+/*              OLD CODE TO ALTER LEVELGRID POINT COLORS
                 if (locationX == BoundaryLeftActual || locationX == BoundaryRightActual)
-                    point.GetComponent<Renderer>().material.color = Color.green;
+                {
+                    //point.GetComponent<Renderer>().material.color = Color.green;
+                }
+                    
                 else if (locationY == BoundaryBottomActual || locationY == BoundaryTopActual)
-                    point.GetComponent<Renderer>().material.color = Color.green;
-
+                    //point.GetComponent<Renderer>().material.color = Color.green;
+*/
                 locationY += 1;
             }
 
@@ -187,17 +204,18 @@ public class GridManager : MonoBehaviour {
         Debug.LogFormat("levelGrid d1 length: {0} \n levelgrid d2 length: {1}", levelGrid.GetLength(0), levelGrid.GetLength(1));
     }
 
+
     public void ResetSpawns() {
         for (int i = 0; i < levelGrid.GetLength(0); i++) {
             for (int j = 0; j < levelGrid.GetLength(1); j++) {
                 if (levelGrid[i, j].location.x == BoundaryLeftActual || levelGrid[i, j].location.x == BoundaryRightActual) {
-                    levelGrid[i, j].canSpawn = true;
+                    //levelGrid[i, j].canSpawn = true;
                     levelGrid[i, j].DebugRenderPoint.GetComponent<Renderer>().material.color = Color.green;
                 }
 
 
                 if (levelGrid[i, j].location.y == BoundaryBottomActual || levelGrid[i, j].location.y == BoundaryTopActual) {
-                    levelGrid[i, j].canSpawn = true;
+                    //levelGrid[i, j].canSpawn = true;
                     levelGrid[i, j].DebugRenderPoint.GetComponent<Renderer>().material.color = Color.green;
                 }
             }
@@ -221,6 +239,7 @@ public class GridManager : MonoBehaviour {
             gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
         }
     }
+
 
     public Vector3 GridToWorld(Vector2Int gridLocation) {
         return new Vector3
@@ -315,6 +334,210 @@ public class GridManager : MonoBehaviour {
             }
         }
     }
+
+
+    public List<Vector2Int> GetGridBlockPath(Vector2Int origin, Vector2Int direction)
+    {
+        List<Vector2Int> gridBlockPath = new List<Vector2Int>();
+
+        if (direction == Vector2Int.up)     // x stays the same, y increments positively
+        {
+            Vector2Int targetLocation = origin + Vector2Int.up;
+            for (int i = origin.y; i < BoundaryTopActual; i++)
+            {
+                gridBlockPath.Add(targetLocation);
+                targetLocation += Vector2Int.up;
+            }
+        }
+        else if (direction == Vector2Int.down)   // x stays the same, y increments negatively
+        {
+            Vector2Int targetLocation = origin + Vector2Int.down;
+            for (int i = origin.y; i > BoundaryBottomActual; i--)
+            {
+                gridBlockPath.Add(targetLocation);
+                targetLocation += Vector2Int.down;
+            }
+        }
+        else if (direction == Vector2Int.left)   // y stays the same, x increments negatively
+        {
+            Vector2Int targetLocation = origin + Vector2Int.left;
+            for (int i = origin.x; i > BoundaryLeftActual; i--)
+            {
+                gridBlockPath.Add(targetLocation);
+                targetLocation += Vector2Int.left;
+            }
+        }
+        else if (direction == Vector2Int.right)   // y stays the same, x increments positively
+        {
+            Vector2Int targetLocation = origin + Vector2Int.right;
+            for (int i = origin.x; i < BoundaryRightActual; i++)
+            {
+                gridBlockPath.Add(targetLocation);
+                targetLocation += Vector2Int.right;
+            }
+        }
+
+        return gridBlockPath;
+    }
+
+    public List<Vector2Int> GetSpawnLocations(SpawnRule rules)
+    {
+        Debug.Log("GridManager.GetSpawnLocations() called.");
+
+        List<Vector2Int> availableSpawnLocations = new List<Vector2Int>();
+        List<Vector2Int> ineligibleSpawnLocations = new List<Vector2Int>();
+
+        Debug.LogFormat("Number of available spawn locations at start: {0}", availableSpawnLocations.Count);
+
+        for (int i = 0; i < GridWidth; i++)
+        {
+            for (int j = 0; j < GridHeight; j++)
+            {
+                if (rules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
+                {
+                    Debug.LogFormat("Location is perimeter eligible: {0} .", EligiblePerimeterSpawns.Contains(levelGrid[i, j].location));
+                    if (EligiblePerimeterSpawns.Contains(levelGrid[i, j].location))
+                    availableSpawnLocations.Add(levelGrid[i, j].location);
+                }
+                else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
+                {
+                    Debug.LogFormat("Location is interior eligible: {0} .", EligibleInteriorSpawns.Contains(levelGrid[i, j].location));
+                    if (EligibleInteriorSpawns.Contains(levelGrid[i, j].location))
+                        availableSpawnLocations.Add(levelGrid[i, j].location);
+                }
+
+                for (int k = 0; k < levelGrid[i, j].objectsOnBlock.Count; k++)
+                {
+                    Hazard currentHazard = levelGrid[i, j].objectsOnBlock[k].GetComponent<Hazard>();
+                    MovePattern currentHazardMove = levelGrid[i, j].objectsOnBlock[k].GetComponent<MovePattern>();
+
+                    if (currentHazard != null && currentHazardMove != null)
+                    {
+                        if (rules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
+                        {
+                            if (rules.avoidHazardPaths)
+                            {
+                                if (currentHazardMove.delta == Vector2Int.up)
+                                {
+                                    // Disable spawning on opposing GridBlock at boundary
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryTopActual);
+                                    Debug.LogFormat("Adding {0} to the ineligible spawn list.", boundaryLocationToRemove.ToString());
+                                    ineligibleSpawnLocations.Add(boundaryLocationToRemove);
+
+                                    // Disable spawning immediately in front of current hazard on left playable boundary
+                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryLeftPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.up + Vector2Int.left;
+                                        Debug.LogFormat("Adding {0} to the ineligible spawn list.", forwardLocationToRemove.ToString());
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryRightPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.up + Vector2Int.right;
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                }
+                                else if (currentHazardMove.delta == Vector2Int.down)
+                                {
+                                    // Disable spawning on opposing GridBlock at boundary
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryBottomActual);
+                                    ineligibleSpawnLocations.Add(boundaryLocationToRemove);
+
+                                    // Disable spawning immediately in front of current hazard on left playable boundary
+                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryLeftPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.down + Vector2Int.left;
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryRightPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.down + Vector2Int.right;
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                }
+                                else if (currentHazardMove.delta == Vector2Int.left)
+                                {
+                                    // Disable spawning on opposing GridBlock at boundary
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryLeftActual);
+                                    ineligibleSpawnLocations.Add(boundaryLocationToRemove);
+
+                                    // Disable spawning immediately in front of current hazard on top playable boundary
+                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryTopPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.up;
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryBottomPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.down;
+                                        ineligibleSpawnLocations.Add(forwardLocationToRemove);
+                                    }
+                                }
+                                else if (currentHazardMove.delta == Vector2Int.right)
+                                {
+                                    // Disable spawning on opposing GridBlock at boundary
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryRightActual);
+                                    availableSpawnLocations.Remove(boundaryLocationToRemove);
+
+                                    // Disable spawning immediately in front of current hazard on top playable boundary
+                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryTopPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.up;
+                                        availableSpawnLocations.Remove(forwardLocationToRemove);
+                                    }
+                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryBottomPlay)
+                                    {
+                                        Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.down;
+                                        availableSpawnLocations.Remove(forwardLocationToRemove);
+                                    }
+                                }
+                            }
+
+                            if (rules.avoidAdjacentToPlayer == true)
+                            {
+                                Vector3 playerLocation = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>().currentWorldLocation;
+                            }
+                        }
+                        else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
+                        {
+                            if (EligibleInteriorSpawns.Contains(levelGrid[i, j].location))
+                                availableSpawnLocations.Add(levelGrid[i, j].location);
+
+                            Vector2Int currentHazardGridLocation = WorldToGrid(currentHazard.currentWorldLocation);
+                            ineligibleSpawnLocations.Add(currentHazardGridLocation);
+
+                            if (rules.avoidHazardPaths)
+                            {
+                                Vector2Int direction = currentHazardMove.delta;
+                                List<Vector2Int> gridLocationsToRemove = GetGridBlockPath(currentHazardGridLocation, direction);
+                            }
+
+                            if (rules.avoidAdjacentToPlayer)
+                            {
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Debug.LogFormat("Number of available spawn locations at end: {0}", availableSpawnLocations.Count);
+
+        for (int i = 0; i < ineligibleSpawnLocations.Count; i++)
+        {
+            if (availableSpawnLocations.Contains(ineligibleSpawnLocations[i]))
+            {
+                availableSpawnLocations.Remove(ineligibleSpawnLocations[i]);
+            }
+        }
+        return availableSpawnLocations;
+    }
+
 
 
     private void OnDrawGizmos() {
