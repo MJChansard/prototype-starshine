@@ -151,139 +151,11 @@ public class HazardManager : MonoBehaviour
     }
 */
 
-    
-    private Vector2Int SelectSpawnLocation(GridManager.SpawnRule hazardRules)
-    {
-        Vector2Int spawnLocation = new Vector2Int();
-        List<Vector2Int> localSpawnGridLocations;
-
-        if (hazardRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Perimeter)
-        {
-            localSpawnGridLocations = gm.EligiblePerimeterSpawns;
-
-            if (hazardRules.avoidHazardPaths == true)
-            {
-                for (int i = 0; i < hazardsInPlay.Count; i++)
-                {
-
-                    MovePattern hazardMovement = hazardsInPlay[i].GetComponent<MovePattern>();
-                    if (hazardMovement.delta == Vector2Int.up)
-                    {
-                        // Disable spawning on opposing GridBlock at boundary
-                        Vector2Int boundaryLocationToRemove = new Vector2Int((int)hazardsInPlay[i].currentWorldLocation.x, gm.BoundaryTopActual);
-                        localSpawnGridLocations.Remove(boundaryLocationToRemove);
-
-                        // Disable spawning immediately in front of current hazard on left playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.x == gm.BoundaryLeftPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.up + Vector2Int.left;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-
-                        // Disable spawning immediately in front of current hazard on right playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.x == gm.BoundaryRightPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.up + Vector2Int.right;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-                    }
-
-                    if (hazardMovement.delta == Vector2Int.down)
-                    {
-                        Vector2Int boundaryLocationToRemove = new Vector2Int((int)hazardsInPlay[i].currentWorldLocation.x, gm.BoundaryBottomActual);
-                        localSpawnGridLocations.Remove(boundaryLocationToRemove);
-
-                        // Disable spawning immediately in front of current hazard on left playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.x == gm.BoundaryLeftPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.down + Vector2Int.left;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-
-                        // Disable spawning immediately in front of current hazard on right playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.x == gm.BoundaryRightPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.down + Vector2Int.right;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-                    }
-
-                    if (hazardMovement.delta == Vector2Int.left)
-                    {
-                        Vector2Int boundaryLocationToRemove = new Vector2Int(gm.BoundaryLeftActual, (int)hazardsInPlay[i].currentWorldLocation.y);
-                        localSpawnGridLocations.Remove(boundaryLocationToRemove);
-
-                        // Disable spawning immediately in front of current hazard on top playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.y == gm.BoundaryTopPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.left + Vector2Int.up;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-
-                        // Disable spawning immediately in front of current hazard on bottom playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.y == gm.BoundaryBottomPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.left + Vector2Int.down;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-                    }
-
-                    if (hazardMovement.delta == Vector2Int.right)
-                    {
-                        Vector2Int boundaryLocationToRemove = new Vector2Int(gm.BoundaryRightActual, (int)hazardsInPlay[i].currentWorldLocation.y);
-                        localSpawnGridLocations.Remove(boundaryLocationToRemove);
-
-                        // Disable spawning immediately in front of current hazard on top playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.y == gm.BoundaryTopPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.right + Vector2Int.up;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-
-                        // Disable spawning immediately in front of current hazard on bottom playable boundary
-                        if (hazardMovement.CanMoveThisTurn() && boundaryLocationToRemove.y == gm.BoundaryBottomPlay)
-                        {
-                            Vector2Int forwardLocationToRemove = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation) + Vector2Int.right + Vector2Int.down;
-                            localSpawnGridLocations.Remove(forwardLocationToRemove);
-                        }
-                    }
-                }
-
-            }
-
-            if (hazardRules.avoidAdjacentToPlayer == true)
-            {
-                Vector3 playerLocation = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>().currentWorldLocation;
-
-            }
-
-            spawnLocation = localSpawnGridLocations[Random.Range(0, localSpawnGridLocations.Count)];
-        }
-        else if (hazardRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Interior)
-        {
-            localSpawnGridLocations = gm.EligibleInteriorSpawns;
-            
-            for (int i = 0; i < hazardsInPlay.Count; i++)
-            {
-                Vector2Int currentHazardGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
-                localSpawnGridLocations.Remove(currentHazardGridLocation);
-
-                if (hazardRules.avoidHazardPaths == true)
-                {
-                    Vector2Int direction = hazardsInPlay[i].GetComponent<MovePattern>().delta;
-                    List<Vector2Int> gridLocationsToRemove = gm.GetGridBlockPath(currentHazardGridLocation, direction);
-                    for (int j = 0; j < gridLocationsToRemove.Count; j++)
-                    {
-                        localSpawnGridLocations.Remove(gridLocationsToRemove[j]);
-                    }
-                }
-            }
-
-            spawnLocation = localSpawnGridLocations[Random.Range(0, localSpawnGridLocations.Count)];
-        }
-
-        return spawnLocation;
-    }
+    // Move to Grid Manager
+    // Move generic spawn rule processing stuff into Grid Manager
+    // Hey GM, give me a list of all generic spawn locations
+    // Then HM further wittles down the list based on hazard specific criteria
+    // HM.GetLocationsInHazardPaths()
 
     private void CreateHazard()
     {
@@ -299,7 +171,8 @@ public class HazardManager : MonoBehaviour
 
         // Spawn hazard & store component references
         Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
-        Vector2Int hazardSpawnLocation = SelectSpawnLocation(hazardToSpawn.spawnRules);
+        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardToSpawn.spawnRules);
+        Vector2Int hazardSpawnLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
 
         int spawnAxis = 0;
         if (hazardSpawnLocation.y == gm.BoundaryBottomActual) spawnAxis = 1;
@@ -394,22 +267,48 @@ public class HazardManager : MonoBehaviour
         return false;
     }
 
-    private void HazardDropLoot(Hazard hazard)
+/*
+    private void HazardDropLoot(Hazard hazard, Vector3 dropLocation)
     {
         LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
         if (lh != null)
         {
-            GameObject lootObject = lh.RequestLootDrop(hazard.currentWorldLocation, forced: true);
+            GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
 
-            if (lootObject != null)
+            if (lootObjectToDrop != null)
             {
-                Vector2Int dropGridLocation = gm.WorldToGrid(hazard.currentWorldLocation);
-                gm.AddObjectToGrid(lootObject, dropGridLocation);
-                lootObject.GetComponent<Rotator>().enabled = true;
+                Vector2Int dropGridLocation = gm.WorldToGrid(dropLocation);
+                gm.AddObjectToGrid(lootObjectToDrop, dropGridLocation);
+                lootObjectToDrop.GetComponent<Rotator>().enabled = true;
             }
         }
     }
+*/
+    private IEnumerator HazardDropLoot(Hazard hazard, Vector3 dropLocation, float delayAppear = 1.0f)
+    {
+        LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
+        if (lh != null)
+        {
+            GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
+            
+            if (lootObjectToDrop != null)
+            {
+                Debug.Log("Loot object dropped.");
 
+                MeshRenderer renderer = lootObjectToDrop.GetComponent<MeshRenderer>();
+                renderer.enabled = false;
+
+                Vector2Int dropGridLocation = gm.WorldToGrid(dropLocation);
+                gm.AddObjectToGrid(lootObjectToDrop, dropGridLocation);
+                lootObjectToDrop.GetComponent<Rotator>().enabled = true;
+
+                yield return new WaitForSeconds(delayAppear);
+                renderer.enabled = true;
+                
+
+            }
+        }
+    }
 
     public float OnTickUpdate()
     {
@@ -437,7 +336,11 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardsInPlay[i].gameObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
-                HazardDropLoot(hazardsInPlay[i]);
+
+                // Current location for processing damage during Player phase
+                //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].currentWorldLocation); 
+                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].currentWorldLocation, 0.0f));
+                
                 RemoveHazardFromPlay(hazardsInPlay[i]);
             }
         }
@@ -521,24 +424,34 @@ public class HazardManager : MonoBehaviour
 
                     Health flyByHazard1HP = flyByHazard1.gameObject.GetComponent<Health>();
                     flyByHazard1HP.SubtractHealth(flyByHazard2.GetComponent<ContactDamage>().DamageAmount);
-                    if (!CheckHazardHasHealth(flyByHazard1.gameObject))
-                    {
-                        // If flyByHazard1 did not survive ...
-                        StartCoroutine(MoveHazardCoroutine(flyByHazard1, 0.5f));
-                    }
 
                     Health flyByHazard2HP = flyByHazard2.gameObject.GetComponent<Health>();
                     flyByHazard2HP.SubtractHealth(flyByHazard1.GetComponent<ContactDamage>().DamageAmount);
-                    if (!CheckHazardHasHealth(flyByHazard2.gameObject))
+
+                    if(flyByHazard1.HazardName == "Missile" || flyByHazard2.HazardName == "Missile")
+                    {
+                        if (flyByHazard1.HazardName == "Missile") StartCoroutine(MoveHazardCoroutine(flyByHazard2, 1.0f));
+                        if (flyByHazard2.HazardName == "Missile") StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
+                    }
+                    else if (!CheckHazardHasHealth(flyByHazard1.gameObject) && !CheckHazardHasHealth(flyByHazard2.gameObject))
+                    {
+                        StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
+                    }
+                    else if (!CheckHazardHasHealth(flyByHazard1.gameObject))
+                    {
+                        // If flyByHazard1 did not survive ...
+                        StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
+                    }
+                    else if (!CheckHazardHasHealth(flyByHazard2.gameObject))
                     {
                         // If flyByHazard2 did not survive...
-                        StartCoroutine(MoveHazardCoroutine(flyByHazard2, 0.5f));
+                        StartCoroutine(MoveHazardCoroutine(flyByHazard2, 1.0f));
                     }
                 }
             }   
         }
         
-        // Hazard Health check
+        // Hazard Health check following Fly-By processing
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
@@ -546,7 +459,8 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
-                HazardDropLoot(hazardsInPlay[i]);
+                //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Target location for Fly-By cases
+                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation));
                 RemoveHazardFromPlay(hazardsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
@@ -598,7 +512,7 @@ public class HazardManager : MonoBehaviour
             }
         }
 
-        // Hazard Health Check
+        // Hazard Health Check following Hazard movement
         for (int i = hazardsInPlay.Count - 1; i > -1; i--)
         {
             GameObject hazardObject = hazardsInPlay[i].gameObject;
@@ -606,6 +520,8 @@ public class HazardManager : MonoBehaviour
             if (!CheckHazardHasHealth(hazardObject))
             {
                 StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Drop loot where hazard will end up after MoveHazardCoroutine();
+                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation));
                 RemoveHazardFromPlay(hazardsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
