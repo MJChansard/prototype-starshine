@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
     public int CurrentLevel = 1;
     
     public bool EnableDebug = true;
+
+    [Header("Spawn Sequences")]
+    public SpawnSequence[] overrideSpawnSequence;
     #endregion
 
     #region References
@@ -28,14 +31,27 @@ public class GameManager : MonoBehaviour
         
         
         hm = GetComponent<HazardManager>();
+        // Spawn Overrides
+        if (overrideSpawnSequence != null)
+        {
+            for (int i = 0; i < overrideSpawnSequence.Length; i++)
+            {
+                hm.spawnSequences.Add(overrideSpawnSequence[i]);
+            }
+        }
         hm.Init();
-        
+      
         em = GetComponent<EnemyManager>();
 
         if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
 
+ 
+
+
         // Prepare Player
         Vector2Int startLocation = new Vector2Int(0, 0);
+        if (overrideSpawnSequence != null)
+            startLocation = overrideSpawnSequence[0].playerSpawnLocation;
         GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
         Debug.Log(player.name + " has been instantiated.");
 

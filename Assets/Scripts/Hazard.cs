@@ -6,6 +6,7 @@ public class Hazard : MonoBehaviour
 {
     [Header("Hazard Properties")]
     [SerializeField] string hazardName;
+    public HazardType hazardType;
     //[SerializeField] float moveSpeed = 1.0f;
 
     public float MoveSpeed
@@ -19,8 +20,9 @@ public class Hazard : MonoBehaviour
     public float moveSpeed = 1.0f;      // Animation move speed
     public Vector3 currentWorldLocation;
     public Vector3 targetWorldLocation;
-    [SerializeField] private GameObject spawnWarningObject;
 
+    [Header("Hazard Spawning Options")]
+    [SerializeField] private GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
 
     private HazardMode currentMode;
@@ -35,6 +37,14 @@ public class Hazard : MonoBehaviour
         get { return hazardName; }
     }
 
+    public enum HazardType
+    {
+        SmallAsteroid = 1,
+        LargeAsteroid = 2,
+        PlayerMissile = 11
+    }
+
+
     public enum HazardMode
     { 
         Spawn = 1,
@@ -48,6 +58,7 @@ public class Hazard : MonoBehaviour
             return currentMode;
         }
     }
+
 
     public bool RequiresSpawnAnimation
     {
@@ -88,3 +99,4 @@ public class Hazard : MonoBehaviour
         }
     }
 }
+

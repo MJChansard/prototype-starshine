@@ -30,7 +30,8 @@ public class HazardManager : MonoBehaviour
     #endregion
 
     private List<Hazard> hazardsInPlay = new List<Hazard>();
-
+    public List<SpawnSequence> spawnSequences = new List<SpawnSequence>();
+    private List<SpawnStep> spawnQueue = new List<SpawnStep>();
 
 
     private void Start()
@@ -51,7 +52,21 @@ public class HazardManager : MonoBehaviour
     public void Init()
     {
         //UpdateSpawnLocations();
-        CreateHazard();
+        if (spawnSequences.Count > 0)
+        {
+            for (int i = 0; i < spawnSequences.Count; i++)
+            {
+                for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
+                {
+                    CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
+                }
+            }
+            spawnSequences.Clear();
+        }
+        else
+        {
+            CreateHazard();
+        }
         currentTick = 1;
     }
 
@@ -157,7 +172,7 @@ public class HazardManager : MonoBehaviour
     // Then HM further wittles down the list based on hazard specific criteria
     // HM.GetLocationsInHazardPaths()
 
-    private void CreateHazard()
+    private void CreateHazard(SpawnStep spawnStep = null)
     {
         /*  SUMMARY
         *   - Randomly select a spawn location
@@ -166,13 +181,38 @@ public class HazardManager : MonoBehaviour
         */
         if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() called.");
 
-        int hazardType = Random.Range(0, hazardPrefabs.Length);
-        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardType);
+        // Identify hazard to spawn and spawn location
+        int hazardSelector = 0;
+        Vector2Int hazardSpawnLocation = new Vector2Int();
 
-        // Spawn hazard & store component references
-        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
-        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardToSpawn.spawnRules);
-        Vector2Int hazardSpawnLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
+        if (spawnStep != null)
+        {
+            Debug.Log("SpawnStep detected.");
+            for (int i = 0; i < hazardPrefabs.Length; i++)
+            {
+                if(hazardPrefabs[i].hazardType == spawnStep.HazardType)
+                {
+                    //Hazard hazardToSpawn = Instantiate(hazardPrefabs[i]);
+                    hazardSelector = i;
+                    hazardSpawnLocation.Set(spawnStep.SpawnLocation.x, spawnStep.SpawnLocation.y);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            //int hazardType = Random.Range(0, hazardPrefabs.Length);
+            hazardSelector = Random.Range(0, hazardPrefabs.Length);
+            if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardSelector);
+            
+            //Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
+            //List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardToSpawn.spawnRules);
+            List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardPrefabs[hazardSelector].spawnRules);
+            Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
+            hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
+        }
+
+        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardSelector]);
 
         int spawnAxis = 0;
         if (hazardSpawnLocation.y == gm.BoundaryBottomActual) spawnAxis = 1;
@@ -293,8 +333,6 @@ public class HazardManager : MonoBehaviour
             
             if (lootObjectToDrop != null)
             {
-                Debug.Log("Loot object dropped.");
-
                 MeshRenderer renderer = lootObjectToDrop.GetComponent<MeshRenderer>();
                 renderer.enabled = false;
 
@@ -304,11 +342,10 @@ public class HazardManager : MonoBehaviour
 
                 yield return new WaitForSeconds(delayAppear);
                 renderer.enabled = true;
-                
-
             }
         }
     }
+
 
     public float OnTickUpdate()
     {
@@ -532,7 +569,17 @@ public class HazardManager : MonoBehaviour
         {
             //gm.ResetSpawns();
             //UpdateSpawnLocations();
-            CreateHazard();
+            if (spawnSequences.Count > 0)
+            {               
+                for (int i = 0; i < spawnSequences[0].hazardSpawnSteps.Length; i++)
+                {
+                    CreateHazard(spawnSequences[0].hazardSpawnSteps[i]);
+                }
+            }
+            else
+            {
+                CreateHazard();
+            }
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
 
@@ -544,7 +591,7 @@ public class HazardManager : MonoBehaviour
         return delayTime;
     }
 
-
+    
 
     private IEnumerator MoveHazardCoroutine(Hazard hazardToMove, float hazardTravelLength = 1.0f)
     {
