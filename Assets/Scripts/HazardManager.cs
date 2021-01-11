@@ -30,8 +30,16 @@ public class HazardManager : MonoBehaviour
     #endregion
 
     private List<Hazard> hazardsInPlay = new List<Hazard>();
+
+    #region Spawn Sequencing
     public List<SpawnSequence> spawnSequences = new List<SpawnSequence>();
-    private List<SpawnStep> spawnQueue = new List<SpawnStep>();
+    private bool overrideSpawnThisTick = false;
+    private int spawnSequenceLimit = 0;
+    private int spawnSequenceIndex = 0;
+    private int spawnStepLimit = 0;
+    private int spawnStepIndex = 0;
+    //private List<SpawnStep> spawnQueue = new List<SpawnStep>();
+    #endregion
 
 
     private void Start()
@@ -51,9 +59,36 @@ public class HazardManager : MonoBehaviour
 
     public void Init()
     {
-        //UpdateSpawnLocations();
+        currentTick = 1;
+
         if (spawnSequences.Count > 0)
+            overrideSpawnThisTick = true;
+        
+        if (overrideSpawnThisTick)
         {
+            spawnSequenceLimit = spawnSequences.Count - 1;
+            spawnStepLimit = spawnSequences[spawnSequenceIndex].hazardSpawnSteps.Length - 1;
+
+            if(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex] != null)
+            {
+                if (spawnStepIndex < spawnStepLimit)
+                {
+                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    spawnStepIndex += 1;
+                }
+                else if (spawnStepIndex == spawnStepLimit && spawnSequenceIndex < spawnSequenceLimit)
+                { 
+                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    spawnStepIndex = 0;
+                    spawnSequenceIndex += 1;
+                }
+                else
+                {
+                    overrideSpawnThisTick = false;
+                }
+            }
+            
+            /*
             for (int i = 0; i < spawnSequences.Count; i++)
             {
                 for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
@@ -61,110 +96,16 @@ public class HazardManager : MonoBehaviour
                     CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
                 }
             }
+
             spawnSequences.Clear();
+            */
         }
         else
         {
             CreateHazard();
         }
-        currentTick = 1;
+        
     }
-
-    /*
-    private void UpdateSpawnLocations()
-    {
-        // IDEA
-        // Generate a List of GridBlocks that hold GridBlocks eligible for spawning GridBlocksCanSpawn
-        // Generate a List of GridBlocks that hold GridBlocks ineligible for spawning
-        // Remove GridBlocks from the eligible List that exist in the ineligible List
-
-        /*  SUMMARY
-         *  - Set GridBlock.canSpawn on the opposite boundary of a hazard = false
-         *  - Set GridBlock.canSpawn on a cell forward and to the left = false if the hazard is on a play boundary
-         *  - Populate appropriate spawn List<GridBlock> based on grid location
-         *
-
-        if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations called.");
-
-        if (hazardsInPlay.Count > 0)
-        {
-            for(int i = 0; i < hazardsInPlay.Count; i++)
-            {
-                MovePattern hazardMove = hazardsInPlay[i].GetComponent<MovePattern>();
-                
-                Vector2Int hazardGridPosition = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
-
-                if (hazardMove.delta == Vector2Int.up || hazardMove.delta == Vector2Int.down)
-                {
-                    int boundaryY;
-                    if (hazardMove.delta == Vector2Int.up) boundaryY = gm.BoundaryTopActual;
-                    else boundaryY = gm.BoundaryBottomActual;
-                    
-                    // Disable spawning on opposing GridBlock at boundary
-                    gm.DeactivateGridBlockSpawn(new Vector2Int(hazardGridPosition.x, boundaryY));
-                    
-                    // Disable neighboring GridBlocks along immediate hazard trajectory
-                    if (hazardGridPosition.x == gm.BoundaryLeftPlay) 
-                    {
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.left);
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.left);
-
-                    }
-                    else if (hazardGridPosition.x == gm.BoundaryRightPlay) 
-                        {
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.right);
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.right);
-                    }
-
-                }
-                else if (hazardMove.delta == Vector2Int.left || hazardMove.delta == Vector2Int.right)
-                {
-                    // Disable spawning on opposing GridBlock at boundary
-                    int boundaryX;
-                    if (hazardMove.delta == Vector2Int.right) boundaryX = gm.BoundaryRightActual;   //colRange;
-                    else boundaryX = gm.BoundaryLeftActual;
-                    
-                    gm.DeactivateGridBlockSpawn(new Vector2Int(boundaryX, hazardGridPosition.y));
-
-                    // Disable neighboring GridBlocks along immediate hazard trajectory
-                    if (hazardGridPosition.y == gm.BoundaryBottomPlay) {
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.down);
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.down);
-
-                    }
-                    else if (hazardGridPosition.y == gm.BoundaryTopPlay) {
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + Vector2Int.up);
-                        gm.DeactivateGridBlockSpawn(hazardGridPosition + hazardMove.delta + Vector2Int.up);
-                    }
-                }
-            }
-            if (VerboseConsole) Debug.Log("HazardManager.UpdateSpawnLocations complete.");
-        }
-
-        // Populate spawn lists
-        for (int i = 0; i < gm.levelGrid.GetLength(0); i++)
-        {
-            for (int j = 0; j < gm.levelGrid.GetLength(1); j++)
-            {
-                if (gm.levelGrid[i, j].canSpawn)
-                {
-                    Vector2Int testGridLocation = gm.levelGrid[i, j].location;
-
-                    if (testGridLocation.x == gm.BoundaryLeftActual)
-                        spawnMoveRight.Add(gm.levelGrid[i, j]);
-                    else if (testGridLocation.x == gm.BoundaryRightActual)
-                        spawnMoveLeft.Add(gm.levelGrid[i, j]);
-                    else if (testGridLocation.y == gm.BoundaryTopActual)
-                        spawnMoveDown.Add(gm.levelGrid[i, j]);
-                    else
-                        spawnMoveUp.Add(gm.levelGrid[i, j]);
-                }
-            }
-        }
-
-        Debug.Log("Spawn Locations successfully updated.");
-    }
-*/
 
     // Move to Grid Manager
     // Move generic spawn rule processing stuff into Grid Manager
@@ -307,23 +248,7 @@ public class HazardManager : MonoBehaviour
         return false;
     }
 
-/*
-    private void HazardDropLoot(Hazard hazard, Vector3 dropLocation)
-    {
-        LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
-        if (lh != null)
-        {
-            GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
 
-            if (lootObjectToDrop != null)
-            {
-                Vector2Int dropGridLocation = gm.WorldToGrid(dropLocation);
-                gm.AddObjectToGrid(lootObjectToDrop, dropGridLocation);
-                lootObjectToDrop.GetComponent<Rotator>().enabled = true;
-            }
-        }
-    }
-*/
     private IEnumerator HazardDropLoot(Hazard hazard, Vector3 dropLocation, float delayAppear = 1.0f)
     {
         LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
@@ -569,12 +494,47 @@ public class HazardManager : MonoBehaviour
         {
             //gm.ResetSpawns();
             //UpdateSpawnLocations();
-            if (spawnSequences.Count > 0)
-            {               
-                for (int i = 0; i < spawnSequences[0].hazardSpawnSteps.Length; i++)
+            if (overrideSpawnThisTick)
+            {
+                if (spawnStepIndex < spawnStepLimit && spawnSequenceIndex <= spawnSequenceLimit)
                 {
-                    CreateHazard(spawnSequences[0].hazardSpawnSteps[i]);
+                    SpawnStep insert = spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex];
+                    CreateHazard(insert);
+                    spawnStepIndex += 1;
                 }
+                else if (spawnStepIndex == spawnStepLimit && spawnSequenceIndex == spawnSequenceLimit)
+                {
+                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    spawnStepIndex = 0;
+                    spawnSequenceIndex += 1;
+                }
+                else
+                {
+                    overrideSpawnThisTick = false;
+                }
+
+                /*
+                for (int i = 0; i < spawnSequences[i].hazardSpawnSteps.Length; i++)
+                {
+                    bool breakOuterLoop = false;
+
+                    for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
+                    {
+                        if (spawnSequences[i].hazardSpawnSteps[j] == null)
+                            continue;
+                        else
+                        {
+                            CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
+                            spawnSequences[i].hazardSpawnSteps[j] = null;
+                            breakOuterLoop = true;
+
+                            break;
+                        }
+                    }
+
+                    if (breakOuterLoop) break;
+                }
+                */
             }
             else
             {
