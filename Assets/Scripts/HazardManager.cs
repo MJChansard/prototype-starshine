@@ -10,35 +10,35 @@ public class HazardManager : MonoBehaviour
     [SerializeField] bool VerboseConsole = true;
     #endregion
 
-    #region Private Fields    
+    #region Hazard Manager Data   
     private GridManager gm;
 
     private int currentTick = 0;
-    private int ticksUntilNewSpawn;
-    private int minTicksUntilSpawn = 2;
-    private int maxTicksUntilSpawn = 4;
 
-    //private List<GridBlock> spawnMoveUp = new List<GridBlock>();
-    //private List<GridBlock> spawnMoveDown = new List<GridBlock>();
-    //private List<GridBlock> spawnMoveLeft = new List<GridBlock>();
-    //private List<GridBlock> spawnMoveRight = new List<GridBlock>();
-    //private List<GridBlock> spawnMultiMove = new List<GridBlock>();
 
-    Vector2Int minVector2;
-    Vector2Int maxVector2;
+    private Vector2Int minVector2;
+    private Vector2Int maxVector2;
 
     #endregion
 
     private List<Hazard> hazardsInPlay = new List<Hazard>();
 
     #region Spawn Sequencing
-    public List<SpawnSequence> spawnSequences = new List<SpawnSequence>();
+    public List<SpawnSequence> insertSpawnSequences = new List<SpawnSequence>();
+    private Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
     private bool overrideSpawnThisTick = false;
+
+    private int ticksUntilNewSpawn;
+    private int minTicksUntilSpawn = 2;
+    private int maxTicksUntilSpawn = 4;
+
+    /*
     private int spawnSequenceLimit = 0;
     private int spawnSequenceIndex = 0;
     private int spawnStepLimit = 0;
     private int spawnStepIndex = 0;
-    //private List<SpawnStep> spawnQueue = new List<SpawnStep>();
+    */
+
     #endregion
 
 
@@ -51,34 +51,46 @@ public class HazardManager : MonoBehaviour
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
 
-    public enum HazardType
-    {
-        SmallAsteroid = 1,
-        LargeAsteroid = 2
-    }
-
     public void Init()
     {
         currentTick = 1;
 
-        if (spawnSequences.Count > 0)
+        if(insertSpawnSequences.Count > 0)
+        {
+            for (int i = 0; i < insertSpawnSequences.Count; i++)
+            {
+                for (int j = 0; j < insertSpawnSequences[i].hazardSpawnSteps.Length; j++)
+                {
+                    spawnQueue.Enqueue(insertSpawnSequences[i].hazardSpawnSteps[j]);
+                }
+            }
+
+            CreateHazard(spawnQueue.Dequeue());
+        }
+        else
+        {
+            CreateSpawnStep();
+            CreateHazard(spawnQueue.Dequeue());
+        }
+        /*  ##SpawnSequence/SpawnStep Implementation V1
+        if (insertSpawnSequences.Count > 0)
             overrideSpawnThisTick = true;
         
         if (overrideSpawnThisTick)
         {
-            spawnSequenceLimit = spawnSequences.Count - 1;
-            spawnStepLimit = spawnSequences[spawnSequenceIndex].hazardSpawnSteps.Length - 1;
+            spawnSequenceLimit = insertSpawnSequences.Count - 1;
+            spawnStepLimit = insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps.Length - 1;
 
-            if(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex] != null)
+            if(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex] != null)
             {
                 if (spawnStepIndex < spawnStepLimit)
                 {
-                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    CreateHazard(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
                     spawnStepIndex += 1;
                 }
                 else if (spawnStepIndex == spawnStepLimit && spawnSequenceIndex < spawnSequenceLimit)
                 { 
-                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    CreateHazard(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
                     spawnStepIndex = 0;
                     spawnSequenceIndex += 1;
                 }
@@ -87,24 +99,24 @@ public class HazardManager : MonoBehaviour
                     overrideSpawnThisTick = false;
                 }
             }
-            
-            /*
-            for (int i = 0; i < spawnSequences.Count; i++)
-            {
-                for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
-                {
-                    CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
-                }
-            }
-
-            spawnSequences.Clear();
             */
-        }
-        else
+        /*
+        for (int i = 0; i < spawnSequences.Count; i++)
         {
-            CreateHazard();
+            for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
+            {
+                CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
+            }
         }
-        
+
+        spawnSequences.Clear();
+
+    }
+    else
+    {
+        CreateHazard();
+    }
+    */
     }
 
     // Move to Grid Manager
@@ -113,54 +125,64 @@ public class HazardManager : MonoBehaviour
     // Then HM further wittles down the list based on hazard specific criteria
     // HM.GetLocationsInHazardPaths()
 
-    private void CreateHazard(SpawnStep spawnStep = null)
+    private void CreateSpawnStep()
     {
-        /*  SUMMARY
-        *   - Randomly select a spawn location
-        *   - Randomly select a hazard to spawn
-        *   - Activate hazard spawn movement pattern based on spawn location
-        */
-        if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() called.");
+        /*	SUMMARY
+         *	-   Randomly selects a Hazard
+         *  -   Randomly selects a spawn location
+         *  -   Enqueue (new SpawnStep instance)
+         */
 
-        // Identify hazard to spawn and spawn location
+        if (VerboseConsole) Debug.Log("HazardManager.CreateSpawnStep() called.");
+
         int hazardSelector = 0;
         Vector2Int hazardSpawnLocation = new Vector2Int();
 
-        if (spawnStep != null)
+        // Identify hazard to spawn
+        hazardSelector = Random.Range(0, hazardPrefabs.Length);
+        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardSelector);
+    
+        // Identify an appropriate spawn location
+        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardPrefabs[hazardSelector].spawnRules);
+        Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
+        hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
+
+        spawnQueue.Enqueue(new SpawnStep(hazardPrefabs[hazardSelector].hazardType, hazardSpawnLocation));
+    }
+
+    private void CreateHazard(SpawnStep spawnStep)
+    {
+        /*  SUMMARY
+        *   - Process SpawnStep data to identify hazard to spawn and spawn location
+        *   - Instantiate hazard
+        *   - Prepare hazard for gameplay
+        *       ~ Set Animation Mode
+        *       ~ Toggle Invincibility
+        *       ~ Activates Rotator
+        *       ~ Sets MovePattern
+        */
+
+        if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() called.");
+
+        // Question Pat about this part
+        int hazardIndex = 0;
+        for (int i = 0; i < hazardPrefabs.Length; i++)
         {
-            Debug.Log("SpawnStep detected.");
-            for (int i = 0; i < hazardPrefabs.Length; i++)
+            if(hazardPrefabs[i].hazardType == spawnStep.HazardType)
             {
-                if(hazardPrefabs[i].hazardType == spawnStep.HazardType)
-                {
-                    //Hazard hazardToSpawn = Instantiate(hazardPrefabs[i]);
-                    hazardSelector = i;
-                    hazardSpawnLocation.Set(spawnStep.SpawnLocation.x, spawnStep.SpawnLocation.y);
-                    break;
-                }
+                hazardIndex = i;
+                break;
             }
         }
-        else
-        {
-            //int hazardType = Random.Range(0, hazardPrefabs.Length);
-            hazardSelector = Random.Range(0, hazardPrefabs.Length);
-            if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardSelector);
-            
-            //Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardType]);
-            //List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardToSpawn.spawnRules);
-            List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardPrefabs[hazardSelector].spawnRules);
-            Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
-            hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
-        }
 
-        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardSelector]);
+        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardIndex]);
 
-        int spawnAxis = 0;
-        if (hazardSpawnLocation.y == gm.BoundaryBottomActual) spawnAxis = 1;
-        else if (hazardSpawnLocation.y == gm.BoundaryTopActual) spawnAxis = 2;
-        else if (hazardSpawnLocation.x == gm.BoundaryRightActual) spawnAxis = 3;
-        else if (hazardSpawnLocation.x == gm.BoundaryLeftActual) spawnAxis = 4;
-        
+        string borderName= "";
+        if (spawnStep.SpawnLocation.y == gm.BoundaryBottomActual) borderName = "Bottom";
+        else if (spawnStep.SpawnLocation.y == gm.BoundaryTopActual) borderName = "Top";
+        else if (spawnStep.SpawnLocation.x == gm.BoundaryRightActual) borderName = "Right";
+        else if (spawnStep.SpawnLocation.x == gm.BoundaryLeftActual) borderName = "Left";
+
         //Debug line
         //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
 
@@ -170,30 +192,30 @@ public class HazardManager : MonoBehaviour
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
         Rotator spawnRotator = hazardToSpawn.GetComponent<Rotator>();
 
-        switch (spawnAxis)
+        switch (borderName)
         {
-            case 1:
+            case "Bottom":
                 spawnMovement.SetMovePatternUp();
                 spawnRotator.RotateUp();
                 break;
 
-            case 2:
+            case "Top":
                 spawnMovement.SetMovePatternDown();
                 spawnRotator.RotateDown();
                 break;
 
-            case 3:
+            case "Right":
                 spawnMovement.SetMovePatternLeft();
                 spawnRotator.RotateLeft();
                 break;
 
-            case 4:
+            case "Left":
                 spawnMovement.SetMovePatternRight();
                 spawnRotator.RotateRight();
                 break;
         }
 
-        AddHazard(hazardToSpawn, hazardSpawnLocation);
+        AddHazard(hazardToSpawn, spawnStep.SpawnLocation);
 
         if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() completed.");
     }
@@ -492,19 +514,30 @@ public class HazardManager : MonoBehaviour
         // Spawn stuff
         if (ticksUntilNewSpawn == 0 || hazardsInPlay.Count == 0)
         {
+            if (spawnQueue.Count > 0)
+            {
+                CreateHazard(spawnQueue.Dequeue());
+            }
+            else
+            {
+                CreateSpawnStep();
+                CreateHazard(spawnQueue.Dequeue());
+            }
             //gm.ResetSpawns();
             //UpdateSpawnLocations();
+
+            /* #SpawnSequence/SpawnStep Implementation V1
             if (overrideSpawnThisTick)
             {
                 if (spawnStepIndex < spawnStepLimit && spawnSequenceIndex <= spawnSequenceLimit)
                 {
-                    SpawnStep insert = spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex];
+                    SpawnStep insert = insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex];
                     CreateHazard(insert);
                     spawnStepIndex += 1;
                 }
                 else if (spawnStepIndex == spawnStepLimit && spawnSequenceIndex == spawnSequenceLimit)
                 {
-                    CreateHazard(spawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
+                    CreateHazard(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
                     spawnStepIndex = 0;
                     spawnSequenceIndex += 1;
                 }
@@ -534,12 +567,15 @@ public class HazardManager : MonoBehaviour
 
                     if (breakOuterLoop) break;
                 }
-                */
+                
             }
             else
             {
                 CreateHazard();
             }
+            */
+
+
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
 
