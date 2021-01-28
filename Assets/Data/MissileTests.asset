@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c9daf11efde03b4e91c2326f7236a89, type: 3}
+  m_Name: MissileTests
+  m_EditorClassIdentifier: 
+  playerSpawnLocation: {x: -3, y: -1}
+  hazardSpawnSteps:
+  - {fileID: 11400000, guid: 3590123466484cb4796dd190679582c6, type: 2}
+  - {fileID: 11400000, guid: 0891f22cab25e654ea2baefe37592539, type: 2}
+  - {fileID: 11400000, guid: 63e7d70453b05634989d14434253f98f, type: 2}

@@ -22,7 +22,7 @@ public class Hazard : MonoBehaviour
     public Vector3 targetWorldLocation;
 
     [Header("Hazard Spawning Options")]
-    [SerializeField] private GameObject spawnWarningObject;
+    public GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
 
     private HazardMode currentMode;
@@ -41,6 +41,9 @@ public class Hazard : MonoBehaviour
     {
         SmallAsteroid = 1,
         LargeAsteroid = 2,
+        Comet =  3,
+        Shipwreck = 4,
+        AmmoCrate = 5,
         PlayerMissile = 11
     }
 
@@ -68,14 +71,16 @@ public class Hazard : MonoBehaviour
         }
     }
 
-    public void SetHazardAnimationMode(HazardMode mode)
+    public void SetHazardAnimationMode(HazardMode mode, HazardType type)
     {
         if (RequiresSpawnAnimation)
-        {
-            //MeshRenderer mesh = GetComponent<MeshRenderer>();
+        { 
             MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
             SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
             Animator anim = spawnWarningObject.GetComponent<Animator>();
+
+            ParticleSystem particleSystem1 = GetComponent<ParticleSystem>(); ;
+            ParticleSystem particleSystem2 = GetComponentInChildren<ParticleSystem>();
 
             if (mode == HazardMode.Spawn)
             {
@@ -83,6 +88,12 @@ public class Hazard : MonoBehaviour
                 mesh.enabled = false;
                 sprite.enabled = true;
                 anim.SetBool("InSpawnMode", true);
+
+                if(type == HazardType.Comet)
+                {
+                    particleSystem1.Stop();
+                    particleSystem2.Stop();
+                }
             }
 
             if (mode == HazardMode.Play)
@@ -91,6 +102,12 @@ public class Hazard : MonoBehaviour
                 sprite.enabled = false;
                 anim.SetBool("InSpawnMode", false);
                 mesh.enabled = true;
+
+                if(type == HazardType.Comet)
+                {
+                    particleSystem1.Play();
+                    particleSystem2.Play();
+                }
             }
         }
         else

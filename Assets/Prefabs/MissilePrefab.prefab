@@ -110,10 +110,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hazardName: Missile
+  hazardType: 11
+  moveSpeed: 1
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 1
-  hazardName: Missile
+  spawnWarningObject: {fileID: 0}
+  spawnRules:
+    spawnRegion: 0
+    avoidHazardPaths: 0
+    avoidAdjacentToPlayer: 0
 --- !u!114 &868535179729277578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,6 +146,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 1
+  currentHP: 0
 --- !u!114 &880584383098535066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -153,4 +160,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   delta: {x: 0, y: 0}
-  moveRate: 1
+  AlwaysMoveOnSpawn: 1
+  waitTicksPerMove: 1

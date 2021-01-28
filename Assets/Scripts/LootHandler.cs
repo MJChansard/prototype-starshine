@@ -6,7 +6,7 @@ public class LootHandler : MonoBehaviour
 {
     [SerializeField] private GameObject[] lootInventory;
 
-    public GameObject RequestLootDrop(Vector3 spawnLocation, bool forced = false)
+   public GameObject RequestLootDrop(Vector3 spawnLocation, bool forced = false)
     {
         if (forced || EligibleToDropLoot())
         {
@@ -22,14 +22,7 @@ public class LootHandler : MonoBehaviour
     }
 
     private GameObject DropLoot(Vector3 spawnLocation)
-    {
-        /*  IDEA
-         * 
-         *  Add a Constructor to LootItem.cs that initializes name and ammo value properties in this method.
-         *  Then remove the LootItem component from the Prefab.
-         *  Use AddComponent() to attach and initalize the LootItem in this method.
-         */
-        
+    {      
         int index = Random.Range(0, lootInventory.Length);
         GameObject droppedLoot = Instantiate(lootInventory[index], spawnLocation, Quaternion.Euler(-32.0f, -18.0f, -26.0f));
 

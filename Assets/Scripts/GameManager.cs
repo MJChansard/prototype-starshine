@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     public bool EnableDebug = true;
 
     [Header("Spawn Sequences")]
-    public SpawnSequence[] overrideSpawnSequence;
+    public SpawnSequence[] overrideSpawnSequence;   // Don't make this an array
     #endregion
 
     #region References
@@ -34,9 +34,15 @@ public class GameManager : MonoBehaviour
         // Spawn Overrides
         if (overrideSpawnSequence != null)
         {
+
+
             for (int i = 0; i < overrideSpawnSequence.Length; i++)
             {
-                hm.spawnSequences.Add(overrideSpawnSequence[i]);
+                //SpawnSequence insert = new SpawnSequence();
+                // GM should be responsible for passing clean, reliable data to HM
+                // HM should be free to do what it needs to 
+                
+                hm.insertSpawnSequences.Add(overrideSpawnSequence[i].Clone());
             }
         }
         hm.Init();
@@ -44,14 +50,15 @@ public class GameManager : MonoBehaviour
         em = GetComponent<EnemyManager>();
 
         if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
-
- 
-
+        
 
         // Prepare Player
         Vector2Int startLocation = new Vector2Int(0, 0);
-        if (overrideSpawnSequence != null)
+        if (overrideSpawnSequence.Length > 0)
+        {
             startLocation = overrideSpawnSequence[0].playerSpawnLocation;
+        }
+            
         GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
         Debug.Log(player.name + " has been instantiated.");
 
@@ -84,6 +91,7 @@ public class GameManager : MonoBehaviour
         
         CurrentTick += 1;
         //gm.ResetSpawns();
+        pm.GatherLoot(gm.WorldToGrid(pm.currentWorldLocation));
         pm.InputActive = true;
         pm.OnPlayerAdvance += OnTick;
 
@@ -99,5 +107,10 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("GameManager.OnAddHazard() called.");
         hm.AddHazard(hazardToAdd, position, placeOnGrid);
+    }
+
+    private void CreateLocalSpawnSequence(SpawnSequence input)
+    {
+
     }
 }

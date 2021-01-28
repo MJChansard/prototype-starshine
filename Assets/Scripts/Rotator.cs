@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class Rotator : MonoBehaviour
 {
-    [SerializeField] float xRotationSpeed = 50.0f;
-    [SerializeField] float yRotationSpeed = 50.0f;
-    [SerializeField] float zRotationSpeed = 50.0f;
+    [SerializeField] float xRotationSpeed;
+    [SerializeField] float yRotationSpeed;
+    [SerializeField] float zRotationSpeed;
+    [SerializeField] Hazard.HazardType hazardType;
    
     void Update()
     {
@@ -17,9 +18,17 @@ public class Rotator : MonoBehaviour
 
     public void RotateUp()
     {
-        xRotationSpeed = 50.0f;
-        yRotationSpeed = 0.0f;
-        zRotationSpeed = 0.0f;
+        if(hazardType == Hazard.HazardType.Comet)
+        {
+
+        }
+        else
+        {
+            xRotationSpeed = 50.0f;
+            yRotationSpeed = 0.0f;
+            zRotationSpeed = 0.0f;
+        }
+
     }
 
     public void RotateDown()
@@ -41,5 +50,38 @@ public class Rotator : MonoBehaviour
         xRotationSpeed = 0.0f;
         yRotationSpeed = 50.0f;
         zRotationSpeed = -50.0f;
+    }
+
+    public void ApplyRotation(Hazard.HazardType type, string border)
+    {
+        if (type == Hazard.HazardType.Comet)
+        {
+            xRotationSpeed = 0.0f;
+            yRotationSpeed = 20.0f;
+            zRotationSpeed = 0.0f;
+        }
+        else
+        {
+            switch(border)
+            {
+                case "Bottom":
+                    RotateUp();
+                    break;
+
+                case "Top":
+                    RotateDown();
+                    break;
+
+                case "Left":
+                    RotateRight();
+                    break;
+
+                case "Right":
+                    RotateLeft();
+                    break;
+            }
+                
+
+        }
     }
 }

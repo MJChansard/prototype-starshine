@@ -395,13 +395,13 @@ public class GridManager : MonoBehaviour {
             {
                 if (rules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
                 {
-                    Debug.LogFormat("Location is perimeter eligible: {0} .", EligiblePerimeterSpawns.Contains(levelGrid[i, j].location));
+                    //Debug.LogFormat("Location is perimeter eligible: {0} .", EligiblePerimeterSpawns.Contains(levelGrid[i, j].location));
                     if (EligiblePerimeterSpawns.Contains(levelGrid[i, j].location))
                     availableSpawnLocations.Add(levelGrid[i, j].location);
                 }
                 else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
                 {
-                    Debug.LogFormat("Location is interior eligible: {0} .", EligibleInteriorSpawns.Contains(levelGrid[i, j].location));
+                    //Debug.LogFormat("Location is interior eligible: {0} .", EligibleInteriorSpawns.Contains(levelGrid[i, j].location));
                     if (EligibleInteriorSpawns.Contains(levelGrid[i, j].location))
                         availableSpawnLocations.Add(levelGrid[i, j].location);
                 }
@@ -569,6 +569,7 @@ public class GridManager : MonoBehaviour {
         public SpawnRegion spawnRegion = SpawnRegion.Anywhere;
         public bool avoidHazardPaths = false;
         public bool avoidAdjacentToPlayer = false;
+        public bool requiresOrientation = false;
     }
 
 }

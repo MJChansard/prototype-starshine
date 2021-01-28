@@ -20,9 +20,10 @@ public class PlayerManager : MonoBehaviour
     [Header("Player Components")]
     [SerializeField] private GameObject Thruster;
     [SerializeField] private GameObject Cannon;
+    [SerializeField] private GameObject MissileLauncher;
     [SerializeField] private Transform weaponSource;
 
-    [Header("Weapon Inventory")]
+    [Header("Weapon Selection Inventory")]
     [SerializeField] private Weapon[] weaponInventory;
     int selectedWeaponIndex;
     #endregion
@@ -169,7 +170,7 @@ public class PlayerManager : MonoBehaviour
         else if (delta != Vector2Int.zero)
         {
             Vector2Int destinationGrid = Move();
-            GatherLoot(destinationGrid);
+            GatherLoot(destinationGrid, true);
             return moveWaitTime;
             
         }
@@ -203,12 +204,12 @@ public class PlayerManager : MonoBehaviour
         else return originGridPosition;
     }
 
-    private void GatherLoot(Vector2Int gridBlockWithLoot)
+    public void GatherLoot(Vector2Int searchBlock, bool delayed = false)
     {
         // Gather loot if any exists
         Debug.Log("PlayerManager.GatherLoot() called.");
         
-        GridBlock lootBlock = gm.FindGridBlockByLocation(gridBlockWithLoot);
+        GridBlock lootBlock = gm.FindGridBlockByLocation(searchBlock);
 
         for (int i = lootBlock.objectsOnBlock.Count - 1; i >= 0; i--)
         {
@@ -220,11 +221,29 @@ public class PlayerManager : MonoBehaviour
                     Debug.Log("Jump Fuel found.");
                     amountOfJumpFuelStored += currentLoot.LootAmount;
                     gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
-                    Destroy(currentLoot.gameObject, moveWaitTime);
+                    if (delayed == true) Destroy(currentLoot.gameObject, moveWaitTime);
+                }
+
+                if (currentLoot.Type == LootData.LootType.MissileAmmo)
+                {
+                    Debug.Log("Missile Ammo found.");
+                    for (int j = 0; j < weaponInventory.Length; j++)
+                    {
+                        if (weaponInventory[j].Name == "Missile Launcher")
+                        {
+                            weaponInventory[j].weaponAmmunition += currentLoot.LootAmount;
+                            if (delayed == false) ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+                            break;
+                        }
+                    }
+                    gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
+                    if (delayed == true) Destroy(currentLoot.gameObject, moveWaitTime);
+                    else Destroy(currentLoot.gameObject);
                 }
             }
         }
     }    
+
 
     private IEnumerator AnimateThrusterCoroutine()
     {
@@ -261,6 +280,12 @@ public class PlayerManager : MonoBehaviour
 
         // Update UI
         ui.UpdateHUDFuel(amountOfJumpFuelStored, maxFuelAmount);
+
+        for (int j = 0; j < weaponInventory.Length; j++)
+        {
+            ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+        }
+
     }
 
 

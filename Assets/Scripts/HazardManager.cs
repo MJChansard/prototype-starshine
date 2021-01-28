@@ -5,40 +5,32 @@ using UnityEngine;
 
 public class HazardManager : MonoBehaviour
 {
-    #region Inspector Attributes
-    [SerializeField] Hazard[] hazardPrefabs;
-    [SerializeField] bool VerboseConsole = true;
-    #endregion
-
     #region Hazard Manager Data   
+    [SerializeField] private bool VerboseConsole = true;
+
     private GridManager gm;
 
     private int currentTick = 0;
 
-
     private Vector2Int minVector2;
     private Vector2Int maxVector2;
 
+    private List<Hazard> hazardsInPlay = new List<Hazard>();
     #endregion
 
-    private List<Hazard> hazardsInPlay = new List<Hazard>();
 
-    #region Spawn Sequencing
-    public List<SpawnSequence> insertSpawnSequences = new List<SpawnSequence>();
+    #region Hazard Spawning
+    [Header("Spawn Management")]
+    [SerializeField] private int minTicksUntilSpawn = 2;
+    [SerializeField] private int maxTicksUntilSpawn = 4;
+    
+    [HideInInspector] public List<SpawnSequence> insertSpawnSequences = new List<SpawnSequence>();
     private Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
-    private bool overrideSpawnThisTick = false;
-
+    //     private bool overrideSpawnThisTick = false;      #DEPRECATED
     private int ticksUntilNewSpawn;
-    private int minTicksUntilSpawn = 2;
-    private int maxTicksUntilSpawn = 4;
 
-    /*
-    private int spawnSequenceLimit = 0;
-    private int spawnSequenceIndex = 0;
-    private int spawnStepLimit = 0;
-    private int spawnStepIndex = 0;
-    */
-
+    [Header("Hazard Inventory")]
+    [SerializeField] private Hazard[] hazardPrefabs;
     #endregion
 
 
@@ -69,54 +61,10 @@ public class HazardManager : MonoBehaviour
         }
         else
         {
-            CreateSpawnStep();
+            AddSpawnStep();
             CreateHazard(spawnQueue.Dequeue());
         }
-        /*  ##SpawnSequence/SpawnStep Implementation V1
-        if (insertSpawnSequences.Count > 0)
-            overrideSpawnThisTick = true;
         
-        if (overrideSpawnThisTick)
-        {
-            spawnSequenceLimit = insertSpawnSequences.Count - 1;
-            spawnStepLimit = insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps.Length - 1;
-
-            if(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex] != null)
-            {
-                if (spawnStepIndex < spawnStepLimit)
-                {
-                    CreateHazard(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
-                    spawnStepIndex += 1;
-                }
-                else if (spawnStepIndex == spawnStepLimit && spawnSequenceIndex < spawnSequenceLimit)
-                { 
-                    CreateHazard(insertSpawnSequences[spawnSequenceIndex].hazardSpawnSteps[spawnStepIndex]);
-                    spawnStepIndex = 0;
-                    spawnSequenceIndex += 1;
-                }
-                else
-                {
-                    overrideSpawnThisTick = false;
-                }
-            }
-            */
-        /*
-        for (int i = 0; i < spawnSequences.Count; i++)
-        {
-            for (int j = 0; j < spawnSequences[i].hazardSpawnSteps.Length; j++)
-            {
-                CreateHazard(spawnSequences[i].hazardSpawnSteps[j]);
-            }
-        }
-
-        spawnSequences.Clear();
-
-    }
-    else
-    {
-        CreateHazard();
-    }
-    */
     }
 
     // Move to Grid Manager
@@ -125,7 +73,8 @@ public class HazardManager : MonoBehaviour
     // Then HM further wittles down the list based on hazard specific criteria
     // HM.GetLocationsInHazardPaths()
 
-    private void CreateSpawnStep()
+
+    private void AddSpawnStep()
     {
         /*	SUMMARY
          *	-   Randomly selects a Hazard
@@ -135,11 +84,10 @@ public class HazardManager : MonoBehaviour
 
         if (VerboseConsole) Debug.Log("HazardManager.CreateSpawnStep() called.");
 
-        int hazardSelector = 0;
+        int hazardSelector = Random.Range(0, hazardPrefabs.Length);
         Vector2Int hazardSpawnLocation = new Vector2Int();
 
-        // Identify hazard to spawn
-        hazardSelector = Random.Range(0, hazardPrefabs.Length);
+        // DEBUG: Make sure spawn selection is working appropriately
         if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardSelector);
     
         // Identify an appropriate spawn location
@@ -147,7 +95,10 @@ public class HazardManager : MonoBehaviour
         Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
         hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
 
-        spawnQueue.Enqueue(new SpawnStep(hazardPrefabs[hazardSelector].hazardType, hazardSpawnLocation));
+        //spawnQueue.Enqueue(new SpawnStep(hazardPrefabs[hazardSelector].hazardType, hazardSpawnLocation));
+        SpawnStep newSpawnStep = ScriptableObject.CreateInstance<SpawnStep>();
+        newSpawnStep.Init(hazardPrefabs[hazardSelector].hazardType, hazardSpawnLocation);
+        spawnQueue.Enqueue(newSpawnStep);
     }
 
     private void CreateHazard(SpawnStep spawnStep)
@@ -186,7 +137,7 @@ public class HazardManager : MonoBehaviour
         //Debug line
         //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
 
-        hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn);
+        hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn, hazardToSpawn.hazardType);
         hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
 
         MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
@@ -196,22 +147,40 @@ public class HazardManager : MonoBehaviour
         {
             case "Bottom":
                 spawnMovement.SetMovePatternUp();
-                spawnRotator.RotateUp();
+                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
                 break;
 
             case "Top":
+                if (hazardToSpawn.spawnRules.requiresOrientation)
+                {
+                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
+                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
+                }
+
                 spawnMovement.SetMovePatternDown();
-                spawnRotator.RotateDown();
+                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
                 break;
 
             case "Right":
+                if (hazardToSpawn.spawnRules.requiresOrientation)
+                {
+                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
+                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                }
+
                 spawnMovement.SetMovePatternLeft();
-                spawnRotator.RotateLeft();
+                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
                 break;
 
             case "Left":
+                if (hazardToSpawn.spawnRules.requiresOrientation)
+                {
+                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
+                }
+                
                 spawnMovement.SetMovePatternRight();
-                spawnRotator.RotateRight();
+                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
                 break;
         }
 
@@ -248,12 +217,12 @@ public class HazardManager : MonoBehaviour
         }
     }
 
-    public void RemoveHazardFromPlay(Hazard hazard)
+    public void RemoveHazardFromPlay(Hazard hazard, bool removeFromGrid = true)
     {
         GameObject hazardToRemove = hazard.gameObject;
         Vector2Int gridPosition = gm.FindGridBlockContainingObject(hazardToRemove).location;
         
-        gm.RemoveObjectFromGrid(hazardToRemove, gridPosition);
+        if (removeFromGrid) gm.RemoveObjectFromGrid(hazardToRemove, gridPosition);
         hazardsInPlay.Remove(hazard);
     }
 
@@ -302,6 +271,7 @@ public class HazardManager : MonoBehaviour
          *  2) Move hazards
          *  3) Detect Fly-Bys
          *  4) Hazard Health Check
+         *  5) Collisions on a GridBlock
          */
 
         #region Hazard Tick Duration
@@ -369,7 +339,7 @@ public class HazardManager : MonoBehaviour
 
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
-                    hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play);
+                    hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play, hazardsInPlay[i].hazardType);
 
                     Rotator hazardRotator = hazardsInPlay[i].GetComponent<Rotator>();
                     if (hazardRotator != null) hazardRotator.enabled = true;
@@ -471,12 +441,14 @@ public class HazardManager : MonoBehaviour
                 for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
                 {
                     GameObject gameObject = gridBlock.objectsOnBlock[i];
+                    Hazard hazard = gameObject.GetComponent<Hazard>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
 
                     for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
                     {
                         GameObject otherGameObject = gridBlock.objectsOnBlock[j];
+                        Hazard otherHazard = otherGameObject.GetComponent<Hazard>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
 
@@ -490,6 +462,16 @@ public class HazardManager : MonoBehaviour
                         {
                             Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
                             gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
+                        }
+
+                        if (gameObject.CompareTag("Player") && otherHazard != null)
+                        {
+                            if (otherHazard.hazardType == Hazard.HazardType.AmmoCrate) RemoveHazardFromPlay(otherHazard, false);
+                        }
+
+                        if (hazard != null && otherGameObject.CompareTag("Player"))
+                        {
+                            if (hazard.hazardType == Hazard.HazardType.AmmoCrate) RemoveHazardFromPlay(hazard, false);
                         }
                     }
                 }
@@ -520,7 +502,7 @@ public class HazardManager : MonoBehaviour
             }
             else
             {
-                CreateSpawnStep();
+                AddSpawnStep();
                 CreateHazard(spawnQueue.Dequeue());
             }
             //gm.ResetSpawns();

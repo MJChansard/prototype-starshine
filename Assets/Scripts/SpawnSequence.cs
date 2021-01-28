@@ -8,11 +8,21 @@ public class SpawnSequence : ScriptableObject
     public Vector2Int playerSpawnLocation;
     //public List<SpawnStep> hazardSpawnSteps;
     public SpawnStep[] hazardSpawnSteps;
-}
 
-[CreateAssetMenu(fileName = "SpawnStep", menuName = "Scriptable Objects/Spawn Step", order = 1)]
-public class SpawnStep : ScriptableObject
-{
-    public Hazard.HazardType HazardType;
-    public Vector2Int SpawnLocation;
+    public SpawnSequence Clone()
+    {
+        //SpawnSequence newSpawnSequence = new SpawnSequence();
+
+        SpawnSequence newSpawnSequence = CreateInstance<SpawnSequence>();
+
+        newSpawnSequence.playerSpawnLocation = this.playerSpawnLocation;
+        newSpawnSequence.hazardSpawnSteps = new SpawnStep[this.hazardSpawnSteps.Length];
+
+        for (int i = 0; i < this.hazardSpawnSteps.Length; i++)
+        {
+            newSpawnSequence.hazardSpawnSteps[i] = this.hazardSpawnSteps[i];
+        }
+
+        return newSpawnSequence;
+    }
 }

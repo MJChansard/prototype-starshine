@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class LootData : MonoBehaviour
 {
     [Header("Loot Item Properties")]
@@ -24,5 +25,12 @@ public class LootData : MonoBehaviour
     {
         get { return lootAmount; }
     }
-    
+
+    public void RandomizeLoot()
+    {
+        int lootSelect = Random.Range(1, 11);
+
+        if (lootSelect <= 5) lootType = LootType.MissileAmmo;
+        else lootType = LootType.RailgunAmmo; 
+    }
 }

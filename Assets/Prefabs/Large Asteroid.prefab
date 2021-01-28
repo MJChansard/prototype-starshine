@@ -166,13 +166,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hazardName: Large Asteroid
+  hazardType: 2
   moveSpeed: 1
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   spawnWarningObject: {fileID: 1448031916}
   spawnRules:
-    spawnRegion: 0
-    avoidHazardPaths: 0
+    spawnRegion: 1
+    avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
 --- !u!114 &114194421757701184
 MonoBehaviour:
@@ -242,10 +243,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 013c09a4ae665da44932d1bf422381b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isRotating: 0
   xRotationSpeed: 0
-  yRotationSpeed: 50
-  zRotationSpeed: 50
+  yRotationSpeed: 0
+  zRotationSpeed: 0
+  hazardType: 2
 --- !u!1 &1737041624129610704
 GameObject:
   m_ObjectHideFlags: 0
