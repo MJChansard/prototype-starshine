@@ -30,6 +30,7 @@ public class PlayerManager : MonoBehaviour
 
     #region References
     private GridManager gm;
+    private GridObjectManager gom;
     private PlayerHUD ui;
     #endregion
 
@@ -73,7 +74,7 @@ public class PlayerManager : MonoBehaviour
     private void Start()
     {
         gm = GameObject.FindWithTag("GameController").GetComponent<GridManager>();
-        
+        gom = GameObject.FindWithTag("GameController").GetComponent<GridObjectManager>();
         ui = FindObjectOfType<PlayerHUD>();
         ui.Init(weaponInventory, maxFuelAmount, maxPlayerHP);
     }
@@ -170,7 +171,8 @@ public class PlayerManager : MonoBehaviour
         else if (delta != Vector2Int.zero)
         {
             Vector2Int destinationGrid = Move();
-            GatherLoot(destinationGrid, true);
+            gom.InsertGridBlockCollision(destinationGrid);
+            //GatherLoot(destinationGrid, true);
             return moveWaitTime;
             
         }
@@ -244,6 +246,28 @@ public class PlayerManager : MonoBehaviour
         }
     }    
 
+    public void AcceptLoot(LootData.LootType type, int amount)
+    {
+        if (type == LootData.LootType.JumpFuel)
+        {
+            Debug.Log("Jump Fuel found.");
+            amountOfJumpFuelStored += amount;
+        }
+
+        if (type == LootData.LootType.MissileAmmo)
+        {
+            Debug.Log("Missile Ammo found.");
+            for (int j = 0; j < weaponInventory.Length; j++)
+            {
+                if (weaponInventory[j].Name == "Missile Launcher")
+                {
+                    weaponInventory[j].weaponAmmunition += amount;
+                    ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+                    break;
+                }
+            }
+        }
+    }
 
     private IEnumerator AnimateThrusterCoroutine()
     {

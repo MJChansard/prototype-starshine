@@ -47,7 +47,7 @@ public class GridBlock
         for (int i = 0; i < objectsOnBlock.Count; i++)
         {
             Hazard hazard = objectsOnBlock[i].GetComponent<Hazard>();
-            if (hazard != null) countOfObjects += 1;
+            if (hazard != null && hazard.hazardType != Hazard.HazardType.AmmoCrate) countOfObjects += 1;
         }
         return countOfObjects > 0;
     }

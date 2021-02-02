@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     #endregion
 
     #region References
-    HazardManager hm;
+    GridObjectManager gom;
     PlayerManager pm;
     EnemyManager em;
     GridManager gm;
@@ -28,9 +28,9 @@ public class GameManager : MonoBehaviour
     {
         gm = GetComponent<GridManager>();
         gm.Init();
+                
+        gom = GetComponent<GridObjectManager>();
         
-        
-        hm = GetComponent<HazardManager>();
         // Spawn Overrides
         if (overrideSpawnSequence != null)
         {
@@ -42,15 +42,11 @@ public class GameManager : MonoBehaviour
                 // GM should be responsible for passing clean, reliable data to HM
                 // HM should be free to do what it needs to 
                 
-                hm.insertSpawnSequences.Add(overrideSpawnSequence[i].Clone());
+                gom.insertSpawnSequences.Add(overrideSpawnSequence[i].Clone());
             }
         }
-        hm.Init();
-      
-        em = GetComponent<EnemyManager>();
 
-        if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
-        
+        if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();     
 
         // Prepare Player
         Vector2Int startLocation = new Vector2Int(0, 0);
@@ -66,7 +62,10 @@ public class GameManager : MonoBehaviour
         pm = player.GetComponent<PlayerManager>();
         pm.currentWorldLocation = gm.GridToWorld(startLocation);
         pm.targetWorldLocation = gm.GridToWorld(startLocation);
-        
+
+        // Initialze Game Object Manager now that player exists
+        gom.Init();
+
         pm.OnPlayerAdvance += OnTick;
     }
 
@@ -85,13 +84,13 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         pm.OnPlayerAddHazard -= OnAddHazard;
 
-        float hazardDelay = hm.OnTickUpdate();
+        float hazardDelay = gom.OnTickUpdate();
         yield return new WaitForSeconds(hazardDelay);
         // pm.CheckHP();
         
         CurrentTick += 1;
         //gm.ResetSpawns();
-        pm.GatherLoot(gm.WorldToGrid(pm.currentWorldLocation));
+        //pm.GatherLoot(gm.WorldToGrid(pm.currentWorldLocation));
         pm.InputActive = true;
         pm.OnPlayerAdvance += OnTick;
 
@@ -106,11 +105,7 @@ public class GameManager : MonoBehaviour
     private void OnAddHazard(Hazard hazardToAdd, Vector2Int position, bool placeOnGrid = true)
     {
         Debug.Log("GameManager.OnAddHazard() called.");
-        hm.AddHazard(hazardToAdd, position, placeOnGrid);
+        gom.AddHazard(hazardToAdd, position, placeOnGrid);
     }
 
-    private void CreateLocalSpawnSequence(SpawnSequence input)
-    {
-
-    }
 }
