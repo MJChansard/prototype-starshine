@@ -2,67 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Hazard : MonoBehaviour
+public class Hazard : GridObject
 {
     [Header("Hazard Properties")]
-    [SerializeField] string hazardName;
-    public HazardType hazardType;
-    //[SerializeField] float moveSpeed = 1.0f;
 
-    public float MoveSpeed
-    {
-        get {return moveSpeed; }
-    }
+    [SerializeField] private Type hazardType;
+    public Type HazardType { get { return hazardType; } }
 
-    // Could put movement data object here
-    // Been wanting to replace string hazardName with a HazardType enum
-    
-    public float moveSpeed = 1.0f;      // Animation move speed
-    public Vector3 currentWorldLocation;
-    public Vector3 targetWorldLocation;
+    public string HazardName { get { return hazardType.ToString("G"); } }
 
-    [Header("Hazard Spawning Options")]
-    public GameObject spawnWarningObject;
-    public GridManager.SpawnRule spawnRules;
-
-    private HazardMode currentMode;
-
-    public float Distance
-    {
-        get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
-    }
-
-    public string HazardName
-    {
-        get { return hazardName; }
-    }
-
-    public enum HazardType
+    public enum Type
     {
         SmallAsteroid = 1,
         LargeAsteroid = 2,
-        Comet =  3,
+        Comet = 3,
         Shipwreck = 4,
         AmmoCrate = 5,
         PlayerMissile = 11
     }
-
-
-    public enum HazardMode
-    { 
-        Spawn = 1,
-        Play = 2
-    }
-
-    public HazardMode CurrentMode
-    {
-        get
-        {
-            return currentMode;
-        }
-    }
-
-
+       
     public bool RequiresSpawnAnimation
     {
         get
@@ -71,7 +29,7 @@ public class Hazard : MonoBehaviour
         }
     }
 
-    public void SetHazardAnimationMode(HazardMode mode, HazardType type)
+    public void SetAnimationMode(Mode mode, Type type)
     {
         if (RequiresSpawnAnimation)
         { 
@@ -82,28 +40,28 @@ public class Hazard : MonoBehaviour
             ParticleSystem particleSystem1 = GetComponent<ParticleSystem>(); ;
             ParticleSystem particleSystem2 = GetComponentInChildren<ParticleSystem>();
 
-            if (mode == HazardMode.Spawn)
+            if (mode == Mode.Spawn)
             {
-                currentMode = HazardMode.Spawn;
+                currentMode = Mode.Spawn;
                 mesh.enabled = false;
                 sprite.enabled = true;
                 anim.SetBool("InSpawnMode", true);
 
-                if(type == HazardType.Comet)
+                if(type == Type.Comet)
                 {
                     particleSystem1.Stop();
                     particleSystem2.Stop();
                 }
             }
 
-            if (mode == HazardMode.Play)
+            if (mode == Mode.Play)
             {
-                currentMode = HazardMode.Play;
+                currentMode = Mode.Play;
                 sprite.enabled = false;
                 anim.SetBool("InSpawnMode", false);
                 mesh.enabled = true;
 
-                if(type == HazardType.Comet)
+                if(type == Type.Comet)
                 {
                     particleSystem1.Play();
                     particleSystem2.Play();
@@ -117,3 +75,36 @@ public class Hazard : MonoBehaviour
     }
 }
 
+//moveSpeed = 1.0f;      // Animation move speed
+//public Vector3 currentWorldLocation;
+//public Vector3 targetWorldLocation;
+
+//[Header("Hazard Spawning Options")]
+//public GameObject spawnWarningObject;
+//public GridManager.SpawnRule spawnRules;
+
+//private HazardMode currentMode;
+
+/*
+public float Distance
+{
+    get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
+}
+*/
+
+/*
+public enum HazardMode
+{ 
+    Spawn = 1,
+    Play = 2
+}
+*/
+/*
+    public HazardMode CurrentMode
+    {
+        get
+        {
+            return currentMode;
+        }
+    }
+*/

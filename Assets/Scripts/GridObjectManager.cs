@@ -16,7 +16,7 @@ public class GridObjectManager : MonoBehaviour
     private Vector2Int minVector2;
     private Vector2Int maxVector2;
 
-    private List<Hazard> hazardsInPlay = new List<Hazard>();
+    private List<GridObject> gridObjectsInPlay = new List<GridObject>();
     private List<GridBlock> uniquePossibleBlockCollisions = new List<GridBlock>();
     #endregion
 
@@ -31,7 +31,7 @@ public class GridObjectManager : MonoBehaviour
     private int ticksUntilNewSpawn;
 
     [Header("Grid Object Inventory")]
-    [SerializeField] private Hazard[] hazardPrefabs;
+    [SerializeField] private GridObject[] gridObjectPrefabs;
     #endregion
 
 
@@ -65,12 +65,12 @@ public class GridObjectManager : MonoBehaviour
                 }
             }
 
-            CreateHazard(spawnQueue.Dequeue());
+            CreateGridObject(spawnQueue.Dequeue());
         }
         else
         {
             AddSpawnStep();
-            CreateHazard(spawnQueue.Dequeue());
+            CreateGridObject(spawnQueue.Dequeue());
         }
 
     }
@@ -92,23 +92,33 @@ public class GridObjectManager : MonoBehaviour
 
         if (VerboseConsole) Debug.Log("HazardManager.CreateSpawnStep() called.");
 
-        int hazardSelector = Random.Range(0, hazardPrefabs.Length);
+        int gridObjectSelector = Random.Range(0, gridObjectPrefabs.Length);
         Vector2Int hazardSpawnLocation = new Vector2Int();
 
         // DEBUG: Make sure spawn selection is working appropriately
-        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", hazardPrefabs.Length, hazardSelector);
+        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
 
         // Identify an appropriate spawn location
-        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(hazardPrefabs[hazardSelector].spawnRules);
+        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
         Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
         hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
 
+        // Identify what to spawn
+        /*
+        GridObject identifyObject = gridObjectPrefabs[gridObjectSelector];
+        if (identifyObject.GetType() == typeof(Hazard))
+        {
+
+        }
+        */
+
+        // Create the SpawnStep
         SpawnStep newSpawnStep = ScriptableObject.CreateInstance<SpawnStep>();
-        newSpawnStep.Init(hazardPrefabs[hazardSelector].hazardType, hazardSpawnLocation);
+        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
         spawnQueue.Enqueue(newSpawnStep);
     }
 
-    private void CreateHazard(SpawnStep spawnStep)
+    private void CreateGridObject(SpawnStep spawnStep)
     {
         /*  SUMMARY
         *   - Process SpawnStep data to identify hazard to spawn and spawn location
@@ -120,20 +130,23 @@ public class GridObjectManager : MonoBehaviour
         *       ~ Sets MovePattern
         */
 
-        if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() called.");
+        if (VerboseConsole) Debug.Log("GridObjectManager.CreateHazard() called.");
 
         // Question Pat about this part
+        /*
         int hazardIndex = 0;
-        for (int i = 0; i < hazardPrefabs.Length; i++)
+        for (int i = 0; i < gridObjectPrefabs.Length; i++)
         {
-            if (hazardPrefabs[i].hazardType == spawnStep.HazardType)
+            if (gridObjectPrefabs[i].hazardType == spawnStep.HazardType)
             {
                 hazardIndex = i;
                 break;
             }
         }
+        */
 
-        Hazard hazardToSpawn = Instantiate(hazardPrefabs[hazardIndex]);
+        //Hazard hazardToSpawn = Instantiate(gridObjectPrefabs[hazardIndex]);
+        GridObject newSpawn = Instantiate(spawnStep.gridObject);
 
         string borderName = "";
         if (spawnStep.SpawnLocation.y == gm.BoundaryBottomActual) borderName = "Bottom";
@@ -141,62 +154,73 @@ public class GridObjectManager : MonoBehaviour
         else if (spawnStep.SpawnLocation.x == gm.BoundaryRightActual) borderName = "Right";
         else if (spawnStep.SpawnLocation.x == gm.BoundaryLeftActual) borderName = "Left";
 
+        newSpawn.Init(borderName);
+
         //Debug line
         //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
 
-        hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn, hazardToSpawn.hazardType);
-        hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
+        //hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn, hazardToSpawn.hazardType);
+        //hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
 
-        MovePattern spawnMovement = hazardToSpawn.GetComponent<MovePattern>();
-        Rotator spawnRotator = hazardToSpawn.GetComponent<Rotator>();
+        /*
+        newSpawn.SetAnimationMode(GridObject.Mode.Spawn);
+        Health newSpawnHealth = newSpawn.GetComponent<Health>();
+        if (newSpawnHealth != null) newSpawnHealth.ToggleInvincibility(true);
 
-        switch (borderName)
+        MovePattern newSpawnMove = newSpawn.GetComponent<MovePattern>();
+        Rotator newSpawnRotator = newSpawn.GetComponent<Rotator>();
+
+        if(newSpawnMove != null && newSpawnRotator != null)
         {
-            case "Bottom":
-                spawnMovement.SetMovePatternUp();
-                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
-                break;
+            switch (borderName)
+            {
+                case "Bottom":
+                    newSpawnMove.SetMovePatternUp();
+                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
+                    break;
 
-            case "Top":
-                if (hazardToSpawn.spawnRules.requiresOrientation)
-                {
-                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
-                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
-                }
+                case "Top":
+                    if (newSpawn.spawnRules.requiresOrientation)
+                    {
+                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
+                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
+                    }
 
-                spawnMovement.SetMovePatternDown();
-                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
-                break;
+                    newSpawnMove.SetMovePatternDown();
+                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
+                    break;
 
-            case "Right":
-                if (hazardToSpawn.spawnRules.requiresOrientation)
-                {
-                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
-                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
-                }
+                case "Right":
+                    if (newSpawn.spawnRules.requiresOrientation)
+                    {
+                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
+                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                    }
 
-                spawnMovement.SetMovePatternLeft();
-                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
-                break;
+                    newSpawnMove.SetMovePatternLeft();
+                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
+                    break;
 
-            case "Left":
-                if (hazardToSpawn.spawnRules.requiresOrientation)
-                {
-                    hazardToSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
-                    hazardToSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
-                }
+                case "Left":
+                    if (newSpawn.spawnRules.requiresOrientation)
+                    {
+                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
+                    }
 
-                spawnMovement.SetMovePatternRight();
-                spawnRotator.ApplyRotation(hazardToSpawn.hazardType, borderName);
-                break;
+                    newSpawnMove.SetMovePatternRight();
+                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
+                    break;
+            }
         }
+        */
+        
+        AddGridObject(newSpawn, spawnStep.SpawnLocation);
 
-        AddHazard(hazardToSpawn, spawnStep.SpawnLocation);
-
-        if (VerboseConsole) Debug.Log("HazardManager.CreateHazard() completed.");
+        if (VerboseConsole) Debug.Log("GridObjectManager.CreateGridObject() completed.");
     }
 
-    public void AddHazard(Hazard hazard, Vector2Int gridLocation, bool placeOnGrid = true)
+    public void AddGridObject(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
         Debug.Log("GridObjectManager.AddHazard() called.");
 
@@ -206,31 +230,31 @@ public class GridObjectManager : MonoBehaviour
         //if(destinationGridPosition.IsAvailableForPlayer && placeOnGrid == false)
         if (placeOnGrid == false)
         {
-            hazard.currentWorldLocation = worldLocation;
-            hazard.targetWorldLocation = worldLocation;
+            gridObject.currentWorldLocation = worldLocation;
+            gridObject.targetWorldLocation = worldLocation;
 
-            hazardsInPlay.Add(hazard);
+            gridObjectsInPlay.Add(gridObject);
         }
         //else if(!destinationGridPosition.IsAvailableForPlayer)
         else
         {
-            hazard.transform.position = worldLocation;
-            gm.AddObjectToGrid(hazard.gameObject, gridLocation);
+            gridObject.transform.position = worldLocation;
+            gm.AddObjectToGrid(gridObject.gameObject, gridLocation);
 
-            hazard.currentWorldLocation = worldLocation;
-            hazard.targetWorldLocation = worldLocation;
+            gridObject.currentWorldLocation = worldLocation;
+            gridObject.targetWorldLocation = worldLocation;
 
-            hazardsInPlay.Add(hazard);
+            gridObjectsInPlay.Add(gridObject);
         }
     }
 
-    public void RemoveHazardFromPlay(Hazard hazard, bool removeFromGrid = true)
+    public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true)
     {
-        GameObject hazardToRemove = hazard.gameObject;
-        Vector2Int gridPosition = gm.FindGridBlockContainingObject(hazardToRemove).location;
+        GameObject gameObjectToRemove = objectToRemove.gameObject;
+        Vector2Int gridPosition = gm.FindGridBlockContainingObject(gameObjectToRemove).location;
 
-        if (removeFromGrid) gm.RemoveObjectFromGrid(hazardToRemove, gridPosition);
-        hazardsInPlay.Remove(hazard);
+        if (removeFromGrid) gm.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
+        gridObjectsInPlay.Remove(objectToRemove);
     }
 
 
@@ -247,9 +271,9 @@ public class GridObjectManager : MonoBehaviour
     }
 
 
-    private IEnumerator HazardDropLoot(Hazard hazard, Vector3 dropLocation, float delayAppear = 1.0f)
+    private IEnumerator HazardDropLoot(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
     {
-        LootHandler lh = hazard.gameObject.GetComponent<LootHandler>();
+        LootHandler lh = gridObject.gameObject.GetComponent<LootHandler>();
         if (lh != null)
         {
             GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
@@ -274,7 +298,7 @@ public class GridObjectManager : MonoBehaviour
     {
         /*  STEPS
          * 
-         *  1) Hazard Health Check
+         *  1) GridObject Health Check
          *  2) Move hazards
          *  3) Detect Fly-Bys
          *  4) Hazard Health Check
@@ -295,38 +319,38 @@ public class GridObjectManager : MonoBehaviour
         if (uniquePossibleBlockCollisions.Count > 0) ProcessCollisionsOnGridBlock(ref uniquePossibleBlockCollisions);
 
         // Hazard Health Check - Check for hazards destroyed during Player turn
-        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
-            if (!CheckHazardHasHealth(hazardsInPlay[i].gameObject))
+            if (!CheckHazardHasHealth(gridObjectsInPlay[i].gameObject))
             {
-                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i]));
+                StartCoroutine(DestroyHazardCoroutine(gridObjectsInPlay[i]));
 
                 // Current location for processing damage during Player phase
                 //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].currentWorldLocation); 
-                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].currentWorldLocation, 0.0f));
+                StartCoroutine(HazardDropLoot(gridObjectsInPlay[i], gridObjectsInPlay[i].currentWorldLocation, 0.0f));
 
-                RemoveHazardFromPlay(hazardsInPlay[i]);
+                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
             }
         }
 
         // Movement and Collision collections
         List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
-        Vector2Int[] allOriginGridLocations = new Vector2Int[hazardsInPlay.Count];
-        Vector2Int[] allDestinationGridLocations = new Vector2Int[hazardsInPlay.Count];
+        Vector2Int[] allOriginGridLocations = new Vector2Int[gridObjectsInPlay.Count];
+        Vector2Int[] allDestinationGridLocations = new Vector2Int[gridObjectsInPlay.Count];
 
         // Manage Movement Data
-        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
-            GameObject hazardObject = hazardsInPlay[i].gameObject;
+            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
             MovePattern move = hazardObject.GetComponent<MovePattern>();
             move.OnTickUpdate();
 
-            Vector2Int originGridLocation = gm.WorldToGrid(hazardsInPlay[i].currentWorldLocation);
+            Vector2Int originGridLocation = gm.WorldToGrid(gridObjectsInPlay[i].currentWorldLocation);
             allOriginGridLocations[i] = originGridLocation;
 
             if (move.CanMoveThisTurn())
             {
-                Debug.Log(hazardsInPlay[i].HazardName + " is moving by " + move.delta);
+                Debug.Log(gridObjectsInPlay[i].ToString() + " is moving by " + move.delta);
 
                 Vector2Int destinationGridLocation = originGridLocation + move.delta;
                 allDestinationGridLocations[i] = destinationGridLocation;
@@ -335,26 +359,27 @@ public class GridObjectManager : MonoBehaviour
 
                 if (!moveInBounds)
                 {
-                    StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
-                    RemoveHazardFromPlay(hazardsInPlay[i]);
+                    StartCoroutine(DestroyHazardCoroutine(gridObjectsInPlay[i], 2.0f));
+                    RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
                     hazardDestroyedThisTick = true;
                 }
                 else
                 {
                     gm.RemoveObjectFromGrid(hazardObject, originGridLocation);
-                    Debug.Log("Removing " + hazardsInPlay[i].HazardName + " from " + originGridLocation.ToString());
+                    Debug.Log("Removing " + gridObjectsInPlay[i].ToString() + " from " + originGridLocation.ToString());
 
                     gm.AddObjectToGrid(hazardObject, destinationGridLocation);
-                    Debug.Log("Adding " + hazardsInPlay[i].HazardName + " to " + destinationGridLocation.ToString());
+                    Debug.Log("Adding " + gridObjectsInPlay[i].ToString() + " to " + destinationGridLocation.ToString());
 
                     // Handle spawning cases
                     hazardObject.GetComponent<Health>().ToggleInvincibility(false);
-                    hazardsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play, hazardsInPlay[i].hazardType);
+                    //gridObjectsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play, gridObjectsInPlay[i].hazardType);
+                    gridObjectsInPlay[i].SetAnimationMode(GridObject.Mode.Play);
 
-                    Rotator hazardRotator = hazardsInPlay[i].GetComponent<Rotator>();
+                    Rotator hazardRotator = gridObjectsInPlay[i].GetComponent<Rotator>();
                     if (hazardRotator != null) hazardRotator.enabled = true;
 
-                    hazardsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
+                    gridObjectsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
 
                     allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridLocation));
                     //InsertGridBlockCollision(destinationGridLocation);    -- Try this!
@@ -362,7 +387,7 @@ public class GridObjectManager : MonoBehaviour
             }
             else
             {
-                hazardsInPlay[i].targetWorldLocation = hazardsInPlay[i].currentWorldLocation;
+                gridObjectsInPlay[i].targetWorldLocation = gridObjectsInPlay[i].currentWorldLocation;
                 allOriginGridLocations[i] = originGridLocation;
                 allDestinationGridLocations[i] = originGridLocation;
             }
@@ -384,8 +409,8 @@ public class GridObjectManager : MonoBehaviour
                     // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
                     //Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
 
-                    Hazard flyByHazard1 = hazardsInPlay[i];
-                    Hazard flyByHazard2 = hazardsInPlay[j];
+                    GridObject flyByHazard1 = gridObjectsInPlay[i];
+                    GridObject flyByHazard2 = gridObjectsInPlay[j];
 
                     Health flyByHazard1HP = flyByHazard1.gameObject.GetComponent<Health>();
                     flyByHazard1HP.SubtractHealth(flyByHazard2.GetComponent<ContactDamage>().DamageAmount);
@@ -393,12 +418,16 @@ public class GridObjectManager : MonoBehaviour
                     Health flyByHazard2HP = flyByHazard2.gameObject.GetComponent<Health>();
                     flyByHazard2HP.SubtractHealth(flyByHazard1.GetComponent<ContactDamage>().DamageAmount);
 
-                    if (flyByHazard1.HazardName == "Missile" || flyByHazard2.HazardName == "Missile")
+                    //if (flyByHazard1.HazardName == "Missile" || flyByHazard2.HazardName == "Missile")
+                    /*
+                    if (flyByHazard1.HazardType == Hazard.Type.PlayerMissile ||
+                        flyByHazard2.HazardType == Hazard.Type.PlayerMissile)
                     {
-                        if (flyByHazard1.HazardName == "Missile") StartCoroutine(MoveHazardCoroutine(flyByHazard2, 1.0f));
-                        if (flyByHazard2.HazardName == "Missile") StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
+                        if (flyByHazard1.HazardType == Hazard.Type.PlayerMissile) StartCoroutine(MoveHazardCoroutine(flyByHazard2, 1.0f));
+                        if (flyByHazard2.HazardType == Hazard.Type.PlayerMissile) StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
                     }
-                    else if (!CheckHazardHasHealth(flyByHazard1.gameObject) && !CheckHazardHasHealth(flyByHazard2.gameObject))
+                    else*/
+                    if (!CheckHazardHasHealth(flyByHazard1.gameObject) && !CheckHazardHasHealth(flyByHazard2.gameObject))
                     {
                         StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
                     }
@@ -417,26 +446,26 @@ public class GridObjectManager : MonoBehaviour
         }
 
         // Hazard Health check following Fly-By processing
-        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
-            GameObject hazardObject = hazardsInPlay[i].gameObject;
+            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
 
             if (!CheckHazardHasHealth(hazardObject))
             {
-                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 2.0f));
+                StartCoroutine(DestroyHazardCoroutine(gridObjectsInPlay[i], 2.0f));
                 //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Target location for Fly-By cases
-                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation));
-                RemoveHazardFromPlay(hazardsInPlay[i]);
+                StartCoroutine(HazardDropLoot(gridObjectsInPlay[i], gridObjectsInPlay[i].targetWorldLocation));
+                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
         }
 
         // Move hazards
-        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
-            if (hazardsInPlay[i].currentWorldLocation != hazardsInPlay[i].targetWorldLocation)
+            if (gridObjectsInPlay[i].currentWorldLocation != gridObjectsInPlay[i].targetWorldLocation)
             {
-                StartCoroutine(MoveHazardCoroutine(hazardsInPlay[i]));
+                StartCoroutine(MoveHazardCoroutine(gridObjectsInPlay[i]));
                 moveOccurredThisTick = true;
             }
         }
@@ -446,31 +475,31 @@ public class GridObjectManager : MonoBehaviour
         ProcessCollisionsOnGridBlock(ref uniquePossibleBlockCollisions);
 
         // Hazard Health Check following Hazard movement
-        for (int i = hazardsInPlay.Count - 1; i > -1; i--)
+        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
-            GameObject hazardObject = hazardsInPlay[i].gameObject;
+            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
 
             if (!CheckHazardHasHealth(hazardObject))
             {
-                StartCoroutine(DestroyHazardCoroutine(hazardsInPlay[i], 1.0f));
+                StartCoroutine(DestroyHazardCoroutine(gridObjectsInPlay[i], 1.0f));
                 //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Drop loot where hazard will end up after MoveHazardCoroutine();
-                StartCoroutine(HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation));
-                RemoveHazardFromPlay(hazardsInPlay[i]);
+                StartCoroutine(HazardDropLoot(gridObjectsInPlay[i], gridObjectsInPlay[i].targetWorldLocation));
+                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
                 hazardDestroyedThisTick = true;
             }
         }
 
         // Spawn stuff
-        if (ticksUntilNewSpawn == 0 || hazardsInPlay.Count == 0)
+        if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
         {
             if (spawnQueue.Count > 0)
             {
-                CreateHazard(spawnQueue.Dequeue());
+                CreateGridObject(spawnQueue.Dequeue());
             }
             else
             {
                 AddSpawnStep();
-                CreateHazard(spawnQueue.Dequeue());
+                CreateGridObject(spawnQueue.Dequeue());
             }
 
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
@@ -495,14 +524,19 @@ public class GridObjectManager : MonoBehaviour
                 for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
                 {
                     GameObject gameObject = gridBlock.objectsOnBlock[i];
-                    Hazard hazard = gameObject.GetComponent<Hazard>();
+                    //Hazard hazard = gameObject.GetComponent<Hazard>();
+                    GridObject gridObject = gameObject.GetComponent<GridObject>();
+
+                    LootData loot = gameObject.GetComponent<LootData>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
 
                     for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
                     {
                         GameObject otherGameObject = gridBlock.objectsOnBlock[j];
-                        Hazard otherHazard = otherGameObject.GetComponent<Hazard>();
+                        //Hazard otherHazard = otherGameObject.GetComponent<Hazard>();
+                        GridObject othergridObject = otherGameObject.GetComponent<GridObject>();
+                        LootData otherLoot = otherGameObject.GetComponent<LootData>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
 
@@ -518,24 +552,16 @@ public class GridObjectManager : MonoBehaviour
                             gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
                         }
 
-                        if (gameObject.CompareTag("Player") && otherHazard != null)
+                        if (gameObject.CompareTag("Player") && otherLoot != null)
                         {
-                            if (otherHazard.hazardType == Hazard.HazardType.AmmoCrate)
-                            {
-                                LootData ammo = otherHazard.GetComponent<LootData>();
-                                pm.AcceptLoot(ammo.Type, ammo.LootAmount);
-                                otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
-                            }
+                            pm.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
+                            otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
                         }
 
-                        if (hazard != null && otherGameObject.CompareTag("Player"))
+                        if (loot != null && otherGameObject.CompareTag("Player"))
                         {
-                            if (hazard.hazardType == Hazard.HazardType.AmmoCrate)
-                            {
-                                LootData ammo = hazard.GetComponent<LootData>();
-                                pm.AcceptLoot(ammo.Type, ammo.LootAmount);
-                                gameObjectHealth.SubtractHealth(gameObjectHealth.CurrentHP);
-                            }
+                            pm.AcceptLoot(loot.Type, loot.LootAmount);
+                            gameObjectHealth.SubtractHealth(gameObjectHealth.CurrentHP);
                         }
                     }
                 }
@@ -565,7 +591,7 @@ public class GridObjectManager : MonoBehaviour
 
 
 
-    private IEnumerator MoveHazardCoroutine(Hazard hazardToMove, float hazardTravelLength = 1.0f)
+    private IEnumerator MoveHazardCoroutine(GridObject objectToMove, float hazardTravelLength = 1.0f)
     {
         float startTime = Time.time;
         float percentTraveled = 0.0f;
@@ -573,20 +599,20 @@ public class GridObjectManager : MonoBehaviour
         while (percentTraveled <= hazardTravelLength)
         {
             float traveled = (Time.time - startTime) * 1.0f;
-            percentTraveled = traveled / hazardToMove.Distance;
-            hazardToMove.transform.position = Vector3.Lerp(hazardToMove.currentWorldLocation, hazardToMove.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+            percentTraveled = traveled / objectToMove.Distance;
+            objectToMove.transform.position = Vector3.Lerp(objectToMove.currentWorldLocation, objectToMove.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
 
             yield return null;
         }
 
-        hazardToMove.currentWorldLocation = hazardToMove.targetWorldLocation;
+        objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
     }
 
-    private IEnumerator DestroyHazardCoroutine(Hazard hazardToDestroy, float delay = 0.0f)
+    private IEnumerator DestroyHazardCoroutine(GridObject objectToDestroy, float delay = 0.0f)
     {
         Debug.Log("DestroyHazardCoroutine() called.");
         yield return new WaitForSeconds(delay);
-        Destroy(hazardToDestroy.gameObject);
+        Destroy(objectToDestroy.gameObject);
         Debug.Log("DestroyHazardCoroutine() ended.");
 
         //TODO: Spawn explosion here

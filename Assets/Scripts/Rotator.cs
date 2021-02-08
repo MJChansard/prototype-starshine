@@ -4,11 +4,25 @@ using UnityEngine;
 
 public class Rotator : MonoBehaviour
 {
-    [SerializeField] float xRotationSpeed;
-    [SerializeField] float yRotationSpeed;
-    [SerializeField] float zRotationSpeed;
-    [SerializeField] Hazard.HazardType hazardType;
-   
+    [SerializeField] bool UseDefaultValues = true;
+    [SerializeField] Vector3 RotateUpValues = new Vector3();
+    [SerializeField] Vector3 RotateDownValues = new Vector3();
+    [SerializeField] Vector3 RotateLeftValues = new Vector3();
+    [SerializeField] Vector3 RotateRightValues = new Vector3();
+    
+    private float xRotationSpeed;
+    private float yRotationSpeed;
+    private float zRotationSpeed;
+    //[SerializeField] Hazard.Type hazardType;
+
+    private Dictionary<string, Vector3> DefaultRotations = new Dictionary<string, Vector3>()
+    {
+        {"Up", new Vector3(50.0f, 0.0f, 0.0f) },
+        {"Down", new Vector3(-50.0f, 0.0f, 0.0f) },
+        {"Left", new Vector3(0.0f, 50.0f, 50.0f) },
+        {"Right", new Vector3(0.0f, 50.0f, -50.0f) }
+    };  
+
     void Update()
     {
         gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
@@ -16,72 +30,97 @@ public class Rotator : MonoBehaviour
         gameObject.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
     }
 
-    public void RotateUp()
+    private void RotateUp()
     {
-        if(hazardType == Hazard.HazardType.Comet)
+        if(UseDefaultValues)
         {
-
+            Vector3 values = DefaultRotations["Up"];
+            xRotationSpeed = values.x;
+            yRotationSpeed = values.y;
+            zRotationSpeed = values.z;
         }
         else
         {
-            xRotationSpeed = 50.0f;
-            yRotationSpeed = 0.0f;
-            zRotationSpeed = 0.0f;
+
+            xRotationSpeed = RotateUpValues.x;
+            yRotationSpeed = RotateUpValues.y;
+            zRotationSpeed = RotateUpValues.z;
         }
-
     }
 
-    public void RotateDown()
+    private void RotateDown()
     {
-        xRotationSpeed = -50.0f;
-        yRotationSpeed = 0.0f;
-        zRotationSpeed = 0.0f;
-    }
-
-    public void RotateLeft()
-    {
-        xRotationSpeed = 0.0f;
-        yRotationSpeed = 50.0f;
-        zRotationSpeed = 50.0f;
-    }
-
-    public void RotateRight()
-    {
-        xRotationSpeed = 0.0f;
-        yRotationSpeed = 50.0f;
-        zRotationSpeed = -50.0f;
-    }
-
-    public void ApplyRotation(Hazard.HazardType type, string border)
-    {
-        if (type == Hazard.HazardType.Comet)
+        if (UseDefaultValues)
         {
-            xRotationSpeed = 0.0f;
-            yRotationSpeed = 20.0f;
-            zRotationSpeed = 0.0f;
+            Vector3 values = DefaultRotations["Down"];
+            xRotationSpeed = values.x;
+            yRotationSpeed = values.y;
+            zRotationSpeed = values.z;
         }
         else
         {
-            switch(border)
-            {
-                case "Bottom":
-                    RotateUp();
-                    break;
 
-                case "Top":
-                    RotateDown();
-                    break;
+            xRotationSpeed = RotateDownValues.x;
+            yRotationSpeed = RotateDownValues.y;
+            zRotationSpeed = RotateDownValues.z;
+        }
+    }
 
-                case "Left":
-                    RotateRight();
-                    break;
+    private void RotateLeft()
+    {
+        if (UseDefaultValues)
+        {
+            Vector3 values = DefaultRotations["Left"];
+            xRotationSpeed = values.x;
+            yRotationSpeed = values.y;
+            zRotationSpeed = values.z;
+        }
+        else
+        {
 
-                case "Right":
-                    RotateLeft();
-                    break;
-            }
-                
+            xRotationSpeed = RotateLeftValues.x;
+            yRotationSpeed = RotateLeftValues.y;
+            zRotationSpeed = RotateLeftValues.z;
+        }
+    }
 
+    private void RotateRight()
+    {
+        if (UseDefaultValues)
+        {
+            Vector3 values = DefaultRotations["Right"];
+            xRotationSpeed = values.x;
+            yRotationSpeed = values.y;
+            zRotationSpeed = values.z;
+        }
+        else
+        {
+
+            xRotationSpeed = RotateRightValues.x;
+            yRotationSpeed = RotateRightValues.y;
+            zRotationSpeed = RotateRightValues.z;
+        }
+    }
+
+    public void ApplyRotation(ref string border)
+    {
+        switch(border)
+        {
+            case "Bottom":
+                RotateUp();
+                break;
+
+            case "Top":
+                RotateDown();
+                break;
+
+            case "Left":
+                RotateRight();
+                break;
+
+            case "Right":
+                RotateLeft();
+                break;
         }
     }
 }

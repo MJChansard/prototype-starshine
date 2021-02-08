@@ -775,11 +775,7 @@ MonoBehaviour:
   minTicksUntilSpawn: 2
   maxTicksUntilSpawn: 4
   insertSpawnSequences: []
-  hazardPrefabs:
-  - {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
-  - {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
-  - {fileID: 5736782391450772102, guid: bbc90035ca11dc44e95516e4b9218161, type: 3}
-  - {fileID: 6570479300321256562, guid: 2aeb550423b3d1c40a27eba9c63a5fa8, type: 3}
+  gridObjectPrefabs: []
 --- !u!114 &477210642
 MonoBehaviour:
   m_ObjectHideFlags: 0

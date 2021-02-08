@@ -4,12 +4,14 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "SpawnStep", menuName = "Scriptable Objects/Spawn Step", order = 1)]
 public class SpawnStep : ScriptableObject
-{   
-    public Hazard.HazardType HazardType;
+{
+    //public Hazard.Type HazardType;
+    public GridObject gridObject;   // Reference to the GridObject Prefab
     public Vector2Int SpawnLocation;
 
-    // CONSTRUCTORS
-    public SpawnStep (Hazard.HazardType hazardType, Vector2Int spawnLocation)
+    // CONSTRUCTORS V1
+/*
+    public SpawnStep (Hazard.Type hazardType, Vector2Int spawnLocation)
     {
         this.HazardType = hazardType;
         this.SpawnLocation = spawnLocation;
@@ -20,18 +22,42 @@ public class SpawnStep : ScriptableObject
         this.HazardType = spawnData.HazardType;
         this.SpawnLocation = spawnData.SpawnLocation;
     }
+*/
+    // CONSTRUCTORS V2
+    public SpawnStep (GridObject newGridObject, Vector2Int spawnLocation)
+    {
+        this.gridObject = newGridObject;
+        this.SpawnLocation = spawnLocation;
+
+        /*
+        if (gridObject.GetType() == typeof(Hazard))
+        {
+            Hazard hazard = gridObject as Hazard;
+            this.ObjectType = Hazard.Type;
+        }
+        */
+    }
+
     // Add a constructor here that accepts required parameters to create a SpawnStep
     // Override the constructor with a SpawnStep parameter
     // Calls original constructor
 
 
     // METHODS
-    public void Init(Hazard.HazardType type, Vector2Int location)
+    public void Init(GridObject type, Vector2Int location)
     {
-        this.HazardType = type;
+        /*
+        if (type.GetType() == typeof(Hazard))
+        {
+            this.hazardType = type;
+            this.SpawnLocation = location;
+        }
+        */
+        this.gridObject = type;
         this.SpawnLocation = location;
     }
     
+    /*
     public SpawnStep Clone()
     {
         SpawnStep spawnStepClone = CreateInstance<SpawnStep>();
@@ -41,4 +67,5 @@ public class SpawnStep : ScriptableObject
 
         return spawnStepClone;
     }
+    */
 }

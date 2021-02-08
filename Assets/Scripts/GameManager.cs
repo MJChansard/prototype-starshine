@@ -102,10 +102,10 @@ public class GameManager : MonoBehaviour
         yield return null;
     }
 
-    private void OnAddHazard(Hazard hazardToAdd, Vector2Int position, bool placeOnGrid = true)
+    private void OnAddHazard(GridObject gridObjectToAdd, Vector2Int position, bool placeOnGrid = true)
     {
         Debug.Log("GameManager.OnAddHazard() called.");
-        gom.AddHazard(hazardToAdd, position, placeOnGrid);
+        gom.AddGridObject(gridObjectToAdd, position, placeOnGrid);
     }
 
 }

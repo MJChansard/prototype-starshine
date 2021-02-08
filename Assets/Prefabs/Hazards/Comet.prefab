@@ -9723,17 +9723,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hazardName: 
-  hazardType: 3
-  moveSpeed: 1
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
   spawnWarningObject: {fileID: 5736782390652883209}
   spawnRules:
     spawnRegion: 1
     avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
     requiresOrientation: 1
+  moveSpeed: 1
+  currentWorldLocation: {x: 0, y: 0, z: 0}
+  targetWorldLocation: {x: 0, y: 0, z: 0}
+  hazardType: 3
 --- !u!114 &5736782391450772107
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9741,15 +9740,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5736782391450772108}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 013c09a4ae665da44932d1bf422381b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xRotationSpeed: 0
-  yRotationSpeed: 10
-  zRotationSpeed: 0
-  hazardType: 3
+  UseDefaultValues: 0
+  RotateUpValues: {x: 0, y: 20, z: 0}
+  RotateDownValues: {x: 0, y: 20, z: 0}
+  RotateLeftValues: {x: 0, y: 20, z: 0}
+  RotateRightValues: {x: 0, y: 20, z: 0}
 --- !u!114 &7215729519047811940
 MonoBehaviour:
   m_ObjectHideFlags: 0

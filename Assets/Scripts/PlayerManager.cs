@@ -173,8 +173,7 @@ public class PlayerManager : MonoBehaviour
             Vector2Int destinationGrid = Move();
             gom.InsertGridBlockCollision(destinationGrid);
             //GatherLoot(destinationGrid, true);
-            return moveWaitTime;
-            
+            return moveWaitTime;   
         }
         
         return waitWaitTime;
