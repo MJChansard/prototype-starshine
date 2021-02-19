@@ -8,21 +8,21 @@ public class GameManager : MonoBehaviour
     public int CurrentTick = 1;
     public int CurrentLevel = 1;
     
-    public bool EnableDebug = true;
+    public bool VerboseConsole = true;
 
     [Header("Spawn Sequences")]
     public SpawnSequence[] overrideSpawnSequence;   // Don't make this an array
     #endregion
 
     #region References
-    GridObjectManager gom;
-    PlayerManager pm;
-    EnemyManager em;
     GridManager gm;
+    GridObjectManager gom;
+    Player pm;
+
     DebugHUD debugHUD;
     #endregion
 
-    [SerializeField] GameObject playerPrefab;
+    //[SerializeField] GameObject playerPrefab;
 
     private void Start()
     {
@@ -32,10 +32,8 @@ public class GameManager : MonoBehaviour
         gom = GetComponent<GridObjectManager>();
         
         // Spawn Overrides
-        if (overrideSpawnSequence != null)
+        if (overrideSpawnSequence.Length > 0)
         {
-
-
             for (int i = 0; i < overrideSpawnSequence.Length; i++)
             {
                 //SpawnSequence insert = new SpawnSequence();
@@ -46,7 +44,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (EnableDebug) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();     
+        if (VerboseConsole) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();     
 
         // Prepare Player
         Vector2Int startLocation = new Vector2Int(0, 0);
@@ -54,16 +52,17 @@ public class GameManager : MonoBehaviour
         {
             startLocation = overrideSpawnSequence[0].playerSpawnLocation;
         }
-            
-        GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
-        Debug.Log(player.name + " has been instantiated.");
+
+        //GameObject player = Instantiate(playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
+        GameObject player = Instantiate(gom.playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
+        if (VerboseConsole) Debug.Log(player.name + " has been instantiated.");
 
         gm.AddObjectToGrid(player, startLocation);
-        pm = player.GetComponent<PlayerManager>();
+        pm = player.GetComponent<Player>();
         pm.currentWorldLocation = gm.GridToWorld(startLocation);
         pm.targetWorldLocation = gm.GridToWorld(startLocation);
 
-        // Initialze Game Object Manager now that player exists
+        // Initialize Game Object Manager now that player exists
         gom.Init();
 
         pm.OnPlayerAdvance += OnTick;
@@ -81,10 +80,11 @@ public class GameManager : MonoBehaviour
 
         pm.OnPlayerAddHazard += OnAddHazard;
         float delay = pm.OnTickUpdate();
+        gom.OnTickUpdate(GridObjectManager.GamePhase.Player);
         yield return new WaitForSeconds(delay);
         pm.OnPlayerAddHazard -= OnAddHazard;
 
-        float hazardDelay = gom.OnTickUpdate();
+        float hazardDelay = gom.OnTickUpdate(GridObjectManager.GamePhase.Manager);
         yield return new WaitForSeconds(hazardDelay);
         // pm.CheckHP();
         
@@ -95,7 +95,7 @@ public class GameManager : MonoBehaviour
         pm.OnPlayerAdvance += OnTick;
 
         // Debug Options
-        if (EnableDebug)
+        if (VerboseConsole)
         {
             debugHUD.IncrementTickValue(CurrentTick);
         }
@@ -105,7 +105,7 @@ public class GameManager : MonoBehaviour
     private void OnAddHazard(GridObject gridObjectToAdd, Vector2Int position, bool placeOnGrid = true)
     {
         Debug.Log("GameManager.OnAddHazard() called.");
-        gom.AddGridObject(gridObjectToAdd, position, placeOnGrid);
+        gom.AddObjectToGrid(gridObjectToAdd, position, placeOnGrid);
     }
 
 }

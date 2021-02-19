@@ -34,7 +34,7 @@ public class Player : GridObject
     //private Vector2Int delta = Vector2Int.zero;
 
     private float attackWaitTime = 2.0f;
-    private float moveWaitTime = 0.0f;
+    private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
     #endregion
 
@@ -140,11 +140,8 @@ public class Player : GridObject
             Attack();
             return attackWaitTime;
         }
-        else // if (delta != Vector2Int.zero)
+        else
         {
-            //Vector2Int destinationGrid = Move();
-            //gom.InsertGridBlockCollision(destinationGrid);
-            //GatherLoot(destinationGrid, true);
             Move();
             return moveWaitTime;
         }
@@ -152,35 +149,11 @@ public class Player : GridObject
         //return waitWaitTime;
     }
 
-    //private Vector2Int Move()
+
     private void Move()
     {
-        /*
-        Vector2Int originGridPosition = gm.FindGridBlockContainingObject(this.gameObject).location;
-        if (originGridPosition == null) Debug.LogError("Unable to find Player object on the Grid.");
-
-        Vector2Int destinationGridPosition = originGridPosition + delta;
-
-        bool moveIsValid = gm.CheckIfGridBlockInBounds(originGridPosition) && gm.CheckIfGridBlockIsAvailable(destinationGridPosition);
-        Debug.Log("Player move is validated: " + moveIsValid);
-
-        if (moveIsValid)
-        {
-            targetWorldLocation = gm.GridToWorld(destinationGridPosition);
-        
-            if (thrusterCoroutineIsRunning == false) StartCoroutine(AnimateThrusterCoroutine());
-            if (moveCoroutineIsRunning == false) StartCoroutine(AnimateMovementCoroutine());
-        
-            gm.AddObjectToGrid(this.gameObject, destinationGridPosition);
-            gm.RemoveObjectFromGrid(this.gameObject, originGridPosition);
-
-            return destinationGridPosition;
-        }
-        else return originGridPosition;
-        */
-
         StartCoroutine(AnimateThrusterCoroutine());
-        
+        StartCoroutine(UpdateUICoroutine());
     }
 
     /*
@@ -261,27 +234,9 @@ public class Player : GridObject
         //thrusterCoroutineIsRunning = false;
     }
 
-    private IEnumerator AnimateMovementCoroutine()
+    private IEnumerator UpdateUICoroutine()
     {
-        //moveCoroutineIsRunning = true;
-
-        // D = s * t
-        float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
-        float startTime = Time.time;
-        float percentTraveled = 0.0f;
-
-        while (percentTraveled <= 1.0f)
-        {
-            float traveled = (Time.time - startTime) * moveSpeed;
-            percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
-            transform.position = Vector3.Lerp(currentWorldLocation, targetWorldLocation, Mathf.SmoothStep(0f, 1f, percentTraveled));
-
-            yield return null;
-        }
-
-        currentWorldLocation = targetWorldLocation;
-        //moveCoroutineIsRunning = false;
-
+        yield return new WaitForSeconds(1.0f);
         // Update UI
         ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
 

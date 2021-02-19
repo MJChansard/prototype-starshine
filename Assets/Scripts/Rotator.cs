@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Rotator : MonoBehaviour
 {
+    [SerializeField] GameObject objectToRotate;
     [SerializeField] bool UseDefaultValues = true;
     [SerializeField] Vector3 RotateUpValues = new Vector3();
     [SerializeField] Vector3 RotateDownValues = new Vector3();
@@ -25,9 +26,18 @@ public class Rotator : MonoBehaviour
 
     void Update()
     {
-        gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
-        gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
-        gameObject.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
+        if (objectToRotate == null)
+        {
+            gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
+            gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
+            gameObject.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
+        }
+        else
+        {
+            objectToRotate.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
+            objectToRotate.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
+            objectToRotate.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
+        }
     }
 
     private void RotateUp()

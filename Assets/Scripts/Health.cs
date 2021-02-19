@@ -4,9 +4,7 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
-    [SerializeField] private int maxHP;
-    
-    
+    [SerializeField] private int maxHP;    
     [SerializeField] private int currentHP;
 
     public int CurrentHP
@@ -14,6 +12,7 @@ public class Health : MonoBehaviour
         get { return currentHP; }
     }
         
+    public bool HasHP { get { return currentHP > 0; } }
 
     private bool isInvincible;
 

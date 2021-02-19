@@ -10,7 +10,7 @@ public class LootHandler : MonoBehaviour
     {
         if (forced || EligibleToDropLoot())
         {
-            GameObject loot = DropLoot(spawnLocation);
+            GameObject loot = CreateLootObject(spawnLocation);
             return loot;
         }
         else return null;
@@ -21,7 +21,7 @@ public class LootHandler : MonoBehaviour
         return Random.Range(0, 10) > 4;
     }
 
-    private GameObject DropLoot(Vector3 spawnLocation)
+    private GameObject CreateLootObject(Vector3 spawnLocation)
     {      
         int index = Random.Range(0, lootInventory.Length);
         GameObject droppedLoot = Instantiate(lootInventory[index], spawnLocation, Quaternion.Euler(-32.0f, -18.0f, -26.0f));

@@ -32,7 +32,6 @@ public class GridObjectManager : MonoBehaviour
             Depart = 2,
             Move = 3,
             FlyBy = 4,
-            
         }
 
         public TickBehavior(GridObject _gridObject, TickOutcome _outcome = TickOutcome.Undecided)
@@ -41,8 +40,6 @@ public class GridObjectManager : MonoBehaviour
             this.tickOutcome = _outcome;
         }
     }
-
-    //List<GridBlock> allPossibleBlockCollisions = new List<GridBlock>();
     #endregion
 
     public enum GamePhase
@@ -50,7 +47,7 @@ public class GridObjectManager : MonoBehaviour
         Player = 1,
         Manager = 2
     }
-    private GamePhase currentPhase;
+    //private GamePhase currentPhase;
     
 
 
@@ -87,9 +84,9 @@ public class GridObjectManager : MonoBehaviour
     public void Init()
     {
         currentTick = 1;
-        currentPhase = GamePhase.Player;
+        //currentPhase = GamePhase.Player;
 
-        gridObjectsInPlay[0] = GameObject.FindWithTag("Player").GetComponent<Player>();
+        gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
 
         if (insertSpawnSequences.Count > 0)
         {
@@ -326,6 +323,7 @@ public class GridObjectManager : MonoBehaviour
             TickBehavior behavior = new TickBehavior(objects[i]);
 
             MovePattern targetMovement = objects[i].GetComponent<MovePattern>();
+            targetMovement.OnTickUpdate();
             if (targetMovement.CanMoveThisTurn)
             {
                 Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
@@ -359,7 +357,7 @@ public class GridObjectManager : MonoBehaviour
         {
             for (int j = 0; j < allDestinationGridLocations.Length; j++)
             {
-                if (i == j) continue;
+                if (objects.Count > 1 && i == j) continue;
                 else if (allOriginGridLocations[i].x == 99) continue;
                 else if (allDestinationGridLocations[j].x == 99) continue;
                 else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
@@ -399,6 +397,8 @@ public class GridObjectManager : MonoBehaviour
             }
             else if (objects[i].tickOutcome == TickBehavior.TickOutcome.Move)
             {
+                if (objects[i].gridObject.CurrentMode == GridObject.Mode.Spawn)
+                    objects[i].gridObject.SetAnimationMode(GridObject.Mode.Play);
                 MovePattern moveTarget = objects[i].gridObject.GetComponent<MovePattern>();
                 moveTarget.OnTickUpdate();
 
@@ -444,7 +444,7 @@ public class GridObjectManager : MonoBehaviour
         for (int i = objects.Count - 1; i > -1; i--)
         {
             Health hp = objects[i].GetComponent<Health>();
-            if (hp != null && hp.HasHP)
+            if (hp != null && !hp.HasHP)
             {
                 StartCoroutine(GridObjectDestructionCoroutine(objects[i]));
                 StartCoroutine(DropLootCoroutine(objects[i], objects[i].currentWorldLocation, 0.0f));
@@ -504,7 +504,7 @@ public class GridObjectManager : MonoBehaviour
          *  5) Collisions on a GridBlock
          */
 
-        #region Hazard Tick Duration
+        #region Tick Duration
         bool moveOccurredThisTick = true;
         float moveDurationSeconds = 1.0f;
 
@@ -522,7 +522,7 @@ public class GridObjectManager : MonoBehaviour
             Player player = gridObjectsInPlay[0].GetComponent<Player>();
             if (!player.IsAttackingThisTick)
             {
-                ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(gridObjectsInPlay));
+                ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(objectProcessing));
             }
         }
         
@@ -531,204 +531,35 @@ public class GridObjectManager : MonoBehaviour
             ProcessGridObjectHealth(gridObjectsInPlay);
 
             // Process GridObject behavior for current Tick
-            ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(gridObjectsInPlay));
+            for (int i = 0; i < gridObjectsInPlay.Count; i++)
+            {
+                if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager) objectProcessing.Add(gridObjectsInPlay[i]);
+            }
+            ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(objectProcessing));
 
             gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay);
-        }
 
-        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
-
-
-        // Player collision check
-        //if (potentialBlockCollisions.Count > 0) ProcessCollisionsOnGridBlock(ref potentialBlockCollisions);
-
-        // Hazard Health Check - Check for hazards destroyed during Player turn
-
-        /*
-        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
-        {
-            if (!CheckGridObjectHasHealth(gridObjectsInPlay[i]))
+            // Spawn stuff
+            if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
             {
-                StartCoroutine(GridObjectDestructionCoroutine(gridObjectsInPlay[i]));
-                StartCoroutine(DropLoot(gridObjectsInPlay[i], gridObjectsInPlay[i].currentWorldLocation, 0.0f));
-                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-            }
-        }
-        */
-
-
-        /*
-        // Manage Movement Data
-        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
-        {
-            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
-            MovePattern move = hazardObject.GetComponent<MovePattern>();
-            move.OnTickUpdate();
-
-            Vector2Int originGridLocation = gm.WorldToGrid(gridObjectsInPlay[i].currentWorldLocation);
-            allOriginGridLocations[i] = originGridLocation;
-
-            if (move.CanMoveThisTurn)
-            {
-                Debug.Log(gridObjectsInPlay[i].ToString() + " is moving by " + move.delta);
-
-                Vector2Int destinationGridLocation = originGridLocation + move.delta;
-                allDestinationGridLocations[i] = destinationGridLocation;
-
-                bool moveInBounds = gm.CheckIfGridBlockInBounds(destinationGridLocation);
-
-                if (!moveInBounds)
+                if (spawnQueue.Count > 0)
                 {
-                    StartCoroutine(GridObjectDestructionCoroutine(gridObjectsInPlay[i], 2.0f));
-                    RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-                    hazardDestroyedThisTick = true;
+                    CreateGridObject(spawnQueue.Dequeue());
                 }
                 else
                 {
-                    gm.RemoveObjectFromGrid(hazardObject, originGridLocation);
-                    Debug.Log("Removing " + gridObjectsInPlay[i].ToString() + " from " + originGridLocation.ToString());
-
-                    gm.AddObjectToGrid(hazardObject, destinationGridLocation);
-                    Debug.Log("Adding " + gridObjectsInPlay[i].ToString() + " to " + destinationGridLocation.ToString());
-
-                    // Handle spawning cases
-                    hazardObject.GetComponent<Health>().ToggleInvincibility(false);
-                    //gridObjectsInPlay[i].SetHazardAnimationMode(Hazard.HazardMode.Play, gridObjectsInPlay[i].hazardType);
-                    gridObjectsInPlay[i].SetAnimationMode(GridObject.Mode.Play);
-
-                    Rotator hazardRotator = gridObjectsInPlay[i].GetComponent<Rotator>();
-                    if (hazardRotator != null) hazardRotator.enabled = true;
-
-                    gridObjectsInPlay[i].targetWorldLocation = gm.GridToWorld(destinationGridLocation);
-
-                    allPossibleBlockCollisions.Add(gm.FindGridBlockByLocation(destinationGridLocation));
-                    //InsertGridBlockCollision(destinationGridLocation);    -- Try this!
-                }
-            }
-            else
-            {
-                gridObjectsInPlay[i].targetWorldLocation = gridObjectsInPlay[i].currentWorldLocation;
-                allOriginGridLocations[i] = originGridLocation;
-                allDestinationGridLocations[i] = originGridLocation;
-            }
-        }
-
-        // Fly-By detection
-        Debug.Log("Fly-By detection starting.");
-        for (int i = 0; i < allOriginGridLocations.Length; i++)
-        {
-            for (int j = 0; j < allDestinationGridLocations.Length; j++)
-            {
-                if (i == j)
-                {
-                    continue;
+                    AddSpawnStep();
+                    CreateGridObject(spawnQueue.Dequeue());
                 }
 
-                if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
-                {
-                    // HazardsInPlay[i] and HazardsInPlay[j] are the Fly-By colliders
-                    //Debug.LogFormat("Fly-By Object 1: {0}, Fly-By Object 2: {1}", hazardsInPlay[i], hazardsInPlay[j]);
-
-                    GridObject flyByHazard1 = gridObjectsInPlay[i];
-                    GridObject flyByHazard2 = gridObjectsInPlay[j];
-
-                    Health flyByHazard1HP = flyByHazard1.gameObject.GetComponent<Health>();
-                    flyByHazard1HP.SubtractHealth(flyByHazard2.GetComponent<ContactDamage>().DamageAmount);
-
-                    Health flyByHazard2HP = flyByHazard2.gameObject.GetComponent<Health>();
-                    flyByHazard2HP.SubtractHealth(flyByHazard1.GetComponent<ContactDamage>().DamageAmount);
-
-                    //if (flyByHazard1.HazardName == "Missile" || flyByHazard2.HazardName == "Missile")
-                    /*
-                    if (flyByHazard1.HazardType == Hazard.Type.PlayerMissile ||
-                        flyByHazard2.HazardType == Hazard.Type.PlayerMissile)
-                    {
-                        if (flyByHazard1.HazardType == Hazard.Type.PlayerMissile) StartCoroutine(MoveHazardCoroutine(flyByHazard2, 1.0f));
-                        if (flyByHazard2.HazardType == Hazard.Type.PlayerMissile) StartCoroutine(MoveHazardCoroutine(flyByHazard1, 1.0f));
-                    }
-                    else
-                    if (!CheckGridObjectHasHealth(flyByHazard1.gameObject) && !CheckGridObjectHasHealth(flyByHazard2.gameObject))
-                    {
-                        StartCoroutine(GridObjectMovementCoroutine(flyByHazard1, 1.0f));
-                    }
-                    else if (!CheckGridObjectHasHealth(flyByHazard1.gameObject))
-                    {
-                        // If flyByHazard1 did not survive ...
-                        StartCoroutine(GridObjectMovementCoroutine(flyByHazard1, 1.0f));
-                    }
-                    else if (!CheckGridObjectHasHealth(flyByHazard2.gameObject))
-                    {
-                        // If flyByHazard2 did not survive...
-                        StartCoroutine(GridObjectMovementCoroutine(flyByHazard2, 1.0f));
-                    }
-                }
-            }
-        }
-        
-
-        // Hazard Health check following Fly-By processing
-        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
-        {
-            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
-
-            if (!CheckGridObjectHasHealth(hazardObject))
-            {
-                StartCoroutine(GridObjectDestructionCoroutine(gridObjectsInPlay[i], 2.0f));
-                //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Target location for Fly-By cases
-                StartCoroutine(DropLoot(gridObjectsInPlay[i], gridObjectsInPlay[i].targetWorldLocation));
-                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-                gridObjectDestroyedThisTick = true;
-            }
-        }
-        
-        // Move hazards
-        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
-        {
-            if (gridObjectsInPlay[i].currentWorldLocation != gridObjectsInPlay[i].targetWorldLocation)
-            {
-                StartCoroutine(GridObjectMovementCoroutine(gridObjectsInPlay[i]));
-                moveOccurredThisTick = true;
-            }
-        }
-        */
-        // GridBlock Collisions
-        //potentialBlockCollisions = allPossibleBlockCollisions.Distinct().ToList();
-
-
-        // Hazard Health Check following Hazard movement
-        /*
-        for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
-        {
-            GameObject hazardObject = gridObjectsInPlay[i].gameObject;
-
-            if (!CheckGridObjectHasHealth(hazardObject))
-            {
-                StartCoroutine(GridObjectDestructionCoroutine(gridObjectsInPlay[i], 1.0f));
-                //HazardDropLoot(hazardsInPlay[i], hazardsInPlay[i].targetWorldLocation); // Drop loot where hazard will end up after MoveHazardCoroutine();
-                StartCoroutine(DropLootCoroutine(gridObjectsInPlay[i], gridObjectsInPlay[i].targetWorldLocation));
-                RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-                gridObjectDestroyedThisTick = true;
-            }
-        }
-        */
-        // Spawn stuff
-        if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
-        {
-            if (spawnQueue.Count > 0)
-            {
-                CreateGridObject(spawnQueue.Dequeue());
-            }
-            else
-            {
-                AddSpawnStep();
-                CreateGridObject(spawnQueue.Dequeue());
+                ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
             }
 
-            ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
+            currentTick++;
+            ticksUntilNewSpawn--;
         }
 
-        currentTick++;
-        ticksUntilNewSpawn--;
+        ProcessCollisionsOnGridBlock(potentialBlockCollisions);  
 
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;
         if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
@@ -792,7 +623,7 @@ public class GridObjectManager : MonoBehaviour
                         if (loot != null && otherGameObject.CompareTag("Player"))
                         {
                             Player p2 = otherGridObject as Player;
-                            p2.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
+                            p2.AcceptLoot(loot.Type, loot.LootAmount);
                             gameObjectHealth.SubtractHealth(gameObjectHealth.CurrentHP);
                         }
                     }
@@ -800,7 +631,8 @@ public class GridObjectManager : MonoBehaviour
             }
         }
 
-        gridBlocks.Clear();
+        gridBlocks.Clear();     // This might be a source of a bug.  Clear() is being called on a method parameter.
+                                // Do I need to use the ref modifier?
     }
 
     public void InsertGridBlockCollision(Vector2Int gridLocation)
@@ -838,15 +670,15 @@ public class GridObjectManager : MonoBehaviour
         }
 
         objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
-        StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
+        //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
     }
 
     private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f)
     {
-        Debug.Log("DestroyHazardCoroutine() called.");
+        if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");
         yield return new WaitForSeconds(delay);
         Destroy(objectToDestroy.gameObject);
-        Debug.Log("DestroyHazardCoroutine() ended.");
+        if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine ended.");
 
         //TODO: Spawn explosion here
     }

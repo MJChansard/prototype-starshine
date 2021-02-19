@@ -5,7 +5,6 @@ using UnityEngine;
 public class Hazard : GridObject
 {
     [Header("Hazard Properties")]
-
     [SerializeField] private Type hazardType;
     public Type HazardType { get { return hazardType; } }
 
@@ -20,7 +19,7 @@ public class Hazard : GridObject
         AmmoCrate = 5,
         PlayerMissile = 11
     }
-       
+    
     public bool RequiresSpawnAnimation
     {
         get
@@ -29,7 +28,13 @@ public class Hazard : GridObject
         }
     }
 
-    public void SetAnimationMode(Mode mode, Type type)
+    public override void Init(string spawnBorder)
+    {
+        base.Init(spawnBorder);
+
+    }
+
+    public override void SetAnimationMode(Mode mode)
     {
         if (RequiresSpawnAnimation)
         { 
@@ -47,7 +52,7 @@ public class Hazard : GridObject
                 sprite.enabled = true;
                 anim.SetBool("InSpawnMode", true);
 
-                if(type == Type.Comet)
+                if(HazardType == Type.Comet)
                 {
                     particleSystem1.Stop();
                     particleSystem2.Stop();
@@ -61,7 +66,7 @@ public class Hazard : GridObject
                 anim.SetBool("InSpawnMode", false);
                 mesh.enabled = true;
 
-                if(type == Type.Comet)
+                if(HazardType == Type.Comet)
                 {
                     particleSystem1.Play();
                     particleSystem2.Play();

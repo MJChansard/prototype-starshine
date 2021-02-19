@@ -4,53 +4,35 @@ using UnityEngine;
 
 public abstract class GridObject : MonoBehaviour
 {
+    [Header("General Properties")]
+    public GridObjectManager.GamePhase ProcessingPhase;
+    [SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
+    private int ticksRemainingUntilMove;
+
     [Header("Spawn Properties")]
     public GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
     
-    // Animation & Movement Settings
-    public float moveSpeed;
-    public Vector3 currentWorldLocation;
-    public Vector3 targetWorldLocation;
-    
+    [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int
+    [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int
+    public float moveSpeed;                         // Animation movement speed?
+        
     public float Distance
     {
         get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
     }
 
     // Object Modes
-    protected Mode currentMode;
-
     public enum Mode
     {
         Spawn = 1,
         Play = 2
     }
+    protected Mode currentMode;
+    public Mode CurrentMode { get { return currentMode; } }
 
+    
     // METHODS
-    public virtual void SetAnimationMode(Mode newMode)
-    {
- 
-        MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
-        SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
-        Animator anim = spawnWarningObject.GetComponent<Animator>();
-
-        if (newMode == Mode.Spawn)
-        {
-            currentMode = Mode.Spawn;
-            mesh.enabled = false;
-            sprite.enabled = true;
-            anim.SetBool("InSpawnMode", true);
-        }
-        else if (newMode == Mode.Play)
-        {
-            currentMode = Mode.Play;
-            sprite.enabled = false;
-            anim.SetBool("InSpawnMode", false);
-            mesh.enabled = true;
-        }
-    }
-
     public virtual void Init(string spawnBorder)
     {
         currentMode = GridObject.Mode.Spawn;
@@ -88,7 +70,7 @@ public abstract class GridObject : MonoBehaviour
                     if (spawnRules.requiresOrientation)
                     {
                         transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
-                        spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                        spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
                     }
                     movement.SetMovePatternRight();
                     break;
@@ -97,8 +79,33 @@ public abstract class GridObject : MonoBehaviour
 
         Rotator r = GetComponent<Rotator>();
         if (r != null) r.ApplyRotation(ref spawnBorder);
+
+        ticksRemainingUntilMove = ticksPerMove;
+        SetAnimationMode(Mode.Spawn);
     }
 
+
+    public virtual void SetAnimationMode(Mode newMode)
+    {
+        MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
+        SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
+        Animator anim = spawnWarningObject.GetComponent<Animator>();
+
+        if (newMode == Mode.Spawn)
+        {
+            currentMode = Mode.Spawn;
+            mesh.enabled = false;
+            sprite.enabled = true;
+            anim.SetBool("InSpawnMode", true);
+        }
+        else if (newMode == Mode.Play)
+        {
+            currentMode = Mode.Play;
+            sprite.enabled = false;
+            anim.SetBool("InSpawnMode", false);
+            mesh.enabled = true;
+        }
+    }
     // Can use a Type enum here that is a master list
 }
 

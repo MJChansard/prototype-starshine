@@ -380,6 +380,25 @@ public class GridManager : MonoBehaviour {
         return gridBlockPath;
     }
 
+    public List<GridBlock> GetAvailableGridBlockForMovement(Vector2Int origin, Vector2Int direction)
+    {
+        List<GridBlock> possibleDestinations = new List<GridBlock>();
+
+        if(origin.x + Vector2Int.left.x >= BoundaryLeftPlay)
+            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.left));
+
+        if(origin.x + Vector2Int.right.x <= BoundaryRightPlay)
+            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.right));
+
+        if (origin.y + Vector2Int.up.y <= BoundaryTopPlay)
+            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.up));
+
+        if (origin.y + Vector2Int.down.y >= BoundaryBottomPlay)
+            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.down));
+
+        return possibleDestinations;
+    }
+
     public List<Vector2Int> GetSpawnLocations(SpawnRule rules)
     {
         Debug.Log("GridManager.GetSpawnLocations() called.");
@@ -417,7 +436,7 @@ public class GridManager : MonoBehaviour {
                         {
                             if (rules.avoidHazardPaths)
                             {
-                                if (currentHazardMove.delta == Vector2Int.up)
+                                if (currentHazardMove.DirectionOnGrid == Vector2Int.up)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
                                     Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryTopActual);
@@ -425,71 +444,71 @@ public class GridManager : MonoBehaviour {
                                     ineligibleSpawnLocations.Add(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on left playable boundary
-                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryLeftPlay)
+                                    if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.x == BoundaryLeftPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.up + Vector2Int.left;
                                         Debug.LogFormat("Adding {0} to the ineligible spawn list.", forwardLocationToRemove.ToString());
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                     // Disable spawning immediately in front of current hazard on right playable boundary
-                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryRightPlay)
+                                    else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.x == BoundaryRightPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.up + Vector2Int.right;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                 }
-                                else if (currentHazardMove.delta == Vector2Int.down)
+                                else if (currentHazardMove.DirectionOnGrid == Vector2Int.down)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
                                     Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryBottomActual);
                                     ineligibleSpawnLocations.Add(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on left playable boundary
-                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryLeftPlay)
+                                    if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.x == BoundaryLeftPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.down + Vector2Int.left;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                     // Disable spawning immediately in front of current hazard on right playable boundary
-                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.x == BoundaryRightPlay)
+                                    else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.x == BoundaryRightPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.down + Vector2Int.right;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                 }
-                                else if (currentHazardMove.delta == Vector2Int.left)
+                                else if (currentHazardMove.DirectionOnGrid == Vector2Int.left)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
                                     Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryLeftActual);
                                     ineligibleSpawnLocations.Add(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on top playable boundary
-                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryTopPlay)
+                                    if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryTopPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.up;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                     // Disable spawning immediately in front of current hazard on right playable boundary
-                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryBottomPlay)
+                                    else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryBottomPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.down;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
                                 }
-                                else if (currentHazardMove.delta == Vector2Int.right)
+                                else if (currentHazardMove.DirectionOnGrid == Vector2Int.right)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
                                     Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryRightActual);
                                     availableSpawnLocations.Remove(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on top playable boundary
-                                    if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryTopPlay)
+                                    if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryTopPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.up;
                                         availableSpawnLocations.Remove(forwardLocationToRemove);
                                     }
                                     // Disable spawning immediately in front of current hazard on right playable boundary
-                                    else if (currentHazardMove.CanMoveThisTurn() && boundaryLocationToRemove.y == BoundaryBottomPlay)
+                                    else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryBottomPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.down;
                                         availableSpawnLocations.Remove(forwardLocationToRemove);
@@ -512,7 +531,7 @@ public class GridManager : MonoBehaviour {
 
                             if (rules.avoidHazardPaths)
                             {
-                                Vector2Int direction = currentHazardMove.delta;
+                                Vector2Int direction = currentHazardMove.DirectionOnGrid;
                                 List<Vector2Int> gridLocationsToRemove = GetGridBlockPath(currentHazardGridLocation, direction);
                             }
 
