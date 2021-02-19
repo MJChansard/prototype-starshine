@@ -9,7 +9,7 @@ public class GridObjectManager : MonoBehaviour
     [SerializeField] private bool VerboseConsole = true;
 
     private GridManager gm;
-    private Player pm;
+    //private Player pm;
 
     private int currentTick = 0;
 
@@ -316,6 +316,11 @@ public class GridObjectManager : MonoBehaviour
             allDestinationGridLocations[i].Set(99, 99);
         }
 
+        /*  QUESTION FOR PAT
+         * 
+         *  I'm adding a MovePattern component to Player to have one code path through the method
+         *  Should I split this method into processing for Player vs processing for GridObjects with a MovePattern?
+         */
         for (int i = 0; i < objects.Count; i++)
         {
             TickBehavior behavior = new TickBehavior(objects[i]);
@@ -324,7 +329,7 @@ public class GridObjectManager : MonoBehaviour
             if (targetMovement.CanMoveThisTurn)
             {
                 Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
-                Vector2Int destinationLocation = currentLocation + targetMovement.delta;
+                Vector2Int destinationLocation = currentLocation + targetMovement.DirectionOnGrid;
 
                 if (gm.CheckIfGridBlockInBounds(destinationLocation))
                 {
@@ -369,7 +374,6 @@ public class GridObjectManager : MonoBehaviour
         return returnList;
     }
 
-    //public void MoveGridObject(GridObject target)
     private void ExecuteGridObjectBehaviorForTick(List<TickBehavior> objects)
     {
         /*  SUMMARY
@@ -399,7 +403,7 @@ public class GridObjectManager : MonoBehaviour
                 moveTarget.OnTickUpdate();
 
                 Vector2Int currentLocation = gm.WorldToGrid(objects[i].gridObject.currentWorldLocation);
-                Vector2Int destinationLocation = currentLocation + moveTarget.delta;
+                Vector2Int destinationLocation = currentLocation + moveTarget.DirectionOnGrid;
 
                 // I don't like how many calls to GridManager this is making.  #Optimize
                 gm.RemoveObjectFromGrid(objects[i].gridObject.gameObject, currentLocation);
@@ -488,7 +492,8 @@ public class GridObjectManager : MonoBehaviour
     }
 
 
-    public float OnTickUpdate()
+    //public float OnTickUpdate()
+    public float OnTickUpdate(GamePhase phase)
     {
         /*  STEPS
          * 
@@ -509,11 +514,36 @@ public class GridObjectManager : MonoBehaviour
         float delayTime = 0.0f;
         #endregion
 
+        List<GridObject> objectProcessing = new List<GridObject>();
+
+        if (phase == GamePhase.Player)
+        {
+            objectProcessing.Add(gridObjectsInPlay[0]);
+            Player player = gridObjectsInPlay[0].GetComponent<Player>();
+            if (!player.IsAttackingThisTick)
+            {
+                ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(gridObjectsInPlay));
+            }
+        }
+        
+        if (phase == GamePhase.Manager)
+        {
+            ProcessGridObjectHealth(gridObjectsInPlay);
+
+            // Process GridObject behavior for current Tick
+            ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(gridObjectsInPlay));
+
+            gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay);
+        }
+
+        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
+
+
         // Player collision check
-        if (potentialBlockCollisions.Count > 0) ProcessCollisionsOnGridBlock(ref potentialBlockCollisions);
+        //if (potentialBlockCollisions.Count > 0) ProcessCollisionsOnGridBlock(ref potentialBlockCollisions);
 
         // Hazard Health Check - Check for hazards destroyed during Player turn
-        ProcessGridObjectHealth(gridObjectsInPlay);
+
         /*
         for (int i = gridObjectsInPlay.Count - 1; i > -1; i--)
         {
@@ -525,12 +555,7 @@ public class GridObjectManager : MonoBehaviour
             }
         }
         */
-        // Set GridObject behavior for current Tick
-        List<TickBehavior> currentTick = SetGridObjectBehaviorForTick(gridObjectsInPlay);
 
-        // Process GridObject behavior for current Tick
-        ExecuteGridObjectBehaviorForTick(currentTick);
-        gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay);
 
         /*
         // Manage Movement Data
@@ -668,7 +693,7 @@ public class GridObjectManager : MonoBehaviour
         */
         // GridBlock Collisions
         //potentialBlockCollisions = allPossibleBlockCollisions.Distinct().ToList();
-        ProcessCollisionsOnGridBlock(ref potentialBlockCollisions);
+
 
         // Hazard Health Check following Hazard movement
         /*
@@ -710,7 +735,7 @@ public class GridObjectManager : MonoBehaviour
         return delayTime;
     }
 
-    private void ProcessCollisionsOnGridBlock(ref List<GridBlock> gridBlocks)
+    private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {
         foreach (GridBlock gridBlock in gridBlocks)
         {
@@ -732,7 +757,7 @@ public class GridObjectManager : MonoBehaviour
                     {
                         GameObject otherGameObject = gridBlock.objectsOnBlock[j];
                         //Hazard otherHazard = otherGameObject.GetComponent<Hazard>();
-                        GridObject othergridObject = otherGameObject.GetComponent<GridObject>();
+                        GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
                         LootData otherLoot = otherGameObject.GetComponent<LootData>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
@@ -749,15 +774,25 @@ public class GridObjectManager : MonoBehaviour
                             gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
                         }
 
-                        if (gameObject.CompareTag("Player") && otherLoot != null)
+                        //if (gameObject.CompareTag("Player") && otherLoot != null)
+                        Player p = gridObject as Player;
+                        if (p != null)
                         {
-                            pm.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
+                            /*  QUESTION
+                             *  
+                             *  Will this approach work?  My thinking is that GridObjects without a Player script will fail
+                             *  this typecast.  It is possible though that the typecast will succeed and then the method calls
+                             *  will fail.
+                             */
+                            //Player p = gridObject as Player;
+                            p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
                             otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
                         }
 
                         if (loot != null && otherGameObject.CompareTag("Player"))
                         {
-                            pm.AcceptLoot(loot.Type, loot.LootAmount);
+                            Player p2 = otherGridObject as Player;
+                            p2.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
                             gameObjectHealth.SubtractHealth(gameObjectHealth.CurrentHP);
                         }
                     }
