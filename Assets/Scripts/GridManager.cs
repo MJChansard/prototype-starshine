@@ -110,7 +110,7 @@ public class GridManager : MonoBehaviour {
 
     public void Init() {
         InitializeGrid(debugGridPrefab, 0f);
-        ResetSpawns();
+        //ResetSpawns();
     }
 
 
@@ -238,7 +238,7 @@ public class GridManager : MonoBehaviour {
             gridBlock.canSpawn = false;
             gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
         }
-    }
+    }   // DEPRECATED
 
 
     public Vector3 GridToWorld(Vector2Int gridLocation) {
@@ -479,7 +479,7 @@ public class GridManager : MonoBehaviour {
                                 else if (currentHazardMove.DirectionOnGrid == Vector2Int.left)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
-                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryLeftActual);
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int(BoundaryLeftActual, (int)currentHazard.currentWorldLocation.y);
                                     ineligibleSpawnLocations.Add(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on top playable boundary
@@ -488,7 +488,7 @@ public class GridManager : MonoBehaviour {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.up;
                                         ineligibleSpawnLocations.Add(forwardLocationToRemove);
                                     }
-                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    // Disable spawning immediately in front of current hazard on bottom playable boundary
                                     else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryBottomPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.left + Vector2Int.down;
@@ -498,7 +498,7 @@ public class GridManager : MonoBehaviour {
                                 else if (currentHazardMove.DirectionOnGrid == Vector2Int.right)
                                 {
                                     // Disable spawning on opposing GridBlock at boundary
-                                    Vector2Int boundaryLocationToRemove = new Vector2Int((int)currentHazard.currentWorldLocation.x, BoundaryRightActual);
+                                    Vector2Int boundaryLocationToRemove = new Vector2Int(BoundaryRightActual, (int)currentHazard.currentWorldLocation.y);
                                     availableSpawnLocations.Remove(boundaryLocationToRemove);
 
                                     // Disable spawning immediately in front of current hazard on top playable boundary
@@ -507,7 +507,7 @@ public class GridManager : MonoBehaviour {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.up;
                                         availableSpawnLocations.Remove(forwardLocationToRemove);
                                     }
-                                    // Disable spawning immediately in front of current hazard on right playable boundary
+                                    // Disable spawning immediately in front of current hazard on bottom playable boundary
                                     else if (currentHazardMove.CanMoveThisTurn && boundaryLocationToRemove.y == BoundaryBottomPlay)
                                     {
                                         Vector2Int forwardLocationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right + Vector2Int.down;
