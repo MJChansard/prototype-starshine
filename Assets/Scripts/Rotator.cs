@@ -10,6 +10,8 @@ public class Rotator : MonoBehaviour
     [SerializeField] Vector3 RotateDownValues = new Vector3();
     [SerializeField] Vector3 RotateLeftValues = new Vector3();
     [SerializeField] Vector3 RotateRightValues = new Vector3();
+
+    [SerializeField] bool ApplyManualRotation = false;
     
     private float xRotationSpeed;
     private float yRotationSpeed;
@@ -22,23 +24,73 @@ public class Rotator : MonoBehaviour
         {"Down", new Vector3(-50.0f, 0.0f, 0.0f) },
         {"Left", new Vector3(0.0f, 50.0f, 50.0f) },
         {"Right", new Vector3(0.0f, 50.0f, -50.0f) }
-    };  
+    };
 
-    void Update()
+    Transform parentTransform;
+
+    private void Awake()
     {
+        if(ApplyManualRotation)
+        {
+            Vector3 values = DefaultRotations["Up"];
+            xRotationSpeed = values.x;
+            yRotationSpeed = values.y;
+            zRotationSpeed = values.z;
+        }
+    }
+
+    private void Start()
+    {
+        parentTransform = gameObject.GetComponentInParent<Transform>();
+        //parentTransform.position.x;
+    }
+
+
+
+    private void Update()
+    {
+        /*
         if (objectToRotate == null)
         {
             gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
             gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
             gameObject.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
         }
+        /*
         else
         {
             objectToRotate.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
             objectToRotate.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
             objectToRotate.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
         }
+        */
+        //gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime, Space.Self);
+        //gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime, Space.Self);
+
+        if (parentTransform == null)
+        {
+            Debug.Log("Parent Transform is null dood.");
+
+        }
+                   
+        gameObject.transform.RotateAround(parentTransform.position, Vector3.right, 50 * Time.deltaTime);
+
     }
+
+    /*
+    private float x;
+    private float rotationSpeed = 50.0f;
+
+    private void FixedUpdate()
+    {
+        x += Time.deltaTime * rotationSpeed;
+
+        if (x > 360.0f) x = 0.0f;
+    
+        transform.localRotation = Quaternion.Euler(x, 0, 0);
+    }
+    */
+    
 
     private void RotateUp()
     {
