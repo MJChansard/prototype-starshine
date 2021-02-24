@@ -9,7 +9,7 @@ public class GridObjectManager : MonoBehaviour
     [SerializeField] private bool VerboseConsole = true;
 
     private GridManager gm;
-    //private Player pm;
+    private Player player;
 
     private int currentTick = 0;
 
@@ -69,6 +69,7 @@ public class GridObjectManager : MonoBehaviour
     private void Start()
     {
         gm = GetComponent<GridManager>();
+        player = gridObjectsInPlay[0].GetComponent<Player>();
 
         minVector2 = new Vector2Int(gm.BoundaryLeftActual, gm.BoundaryBottomActual);
         maxVector2 = new Vector2Int(gm.BoundaryRightActual, gm.BoundaryTopActual);
@@ -252,7 +253,6 @@ public class GridObjectManager : MonoBehaviour
 
         if (VerboseConsole) Debug.Log("GridObjectManager.CreateGridObject() completed.");
     }
-
     public void AddObjectToGrid(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
         Debug.Log("GridObjectManager.AddHazard() called.");
@@ -277,7 +277,6 @@ public class GridObjectManager : MonoBehaviour
             gridObjectsInPlay.Add(gridObject);
         }
     }
-
     public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true)
     {
         GameObject gameObjectToRemove = objectToRemove.gameObject;
@@ -371,7 +370,6 @@ public class GridObjectManager : MonoBehaviour
 
         return returnList;
     }
-
     private void ExecuteGridObjectBehaviorForTick(List<TickBehavior> objects)
     {
         /*  SUMMARY
@@ -381,6 +379,8 @@ public class GridObjectManager : MonoBehaviour
          *      ~ Remove GridObject from play
          *
          *   - TickOutcome.Move
+         *      ~ If object is a fresh spawn, disable spawn warning
+         *      ~ Call MovePattern.OnTickUpdate()
          *      ~ Remove GridObject from current location
          *      ~ Place GridObject at destination location
          *      ~ Add destination location to Collision Test List
@@ -399,6 +399,7 @@ public class GridObjectManager : MonoBehaviour
             {
                 if (objects[i].gridObject.CurrentMode == GridObject.Mode.Spawn)
                     objects[i].gridObject.SetAnimationMode(GridObject.Mode.Play);
+
                 MovePattern moveTarget = objects[i].gridObject.GetComponent<MovePattern>();
                 moveTarget.OnTickUpdate();
 
@@ -439,6 +440,7 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 
+
     private bool ProcessGridObjectHealth(List<GridObject> objects)
     {
         for (int i = objects.Count - 1; i > -1; i--)
@@ -467,7 +469,7 @@ public class GridObjectManager : MonoBehaviour
             return true;
         }
         return false;
-    }
+    }   // DEPRECATED
 
 
     private IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
@@ -519,10 +521,13 @@ public class GridObjectManager : MonoBehaviour
         if (phase == GamePhase.Player)
         {
             objectProcessing.Add(gridObjectsInPlay[0]);
-            Player player = gridObjectsInPlay[0].GetComponent<Player>();
             if (!player.IsAttackingThisTick)
             {
                 ExecuteGridObjectBehaviorForTick(SetGridObjectBehaviorForTick(objectProcessing));
+            }
+            else
+            {
+                GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
             }
         }
         
@@ -648,12 +653,24 @@ public class GridObjectManager : MonoBehaviour
                 Debug.Log("Location already in Collision List.");
                 break;
             }
+
         }
 
         potentialBlockCollisions.Add(gm.FindGridBlockByLocation(gridLocation));
     }
 
+    private List<GridBlock> GetGridBlocksInPath(Vector2Int origin, Vector2Int direction)
+    {
+        List<GridBlock> gridBlockPath = new List<GridBlock>();
+        List<Vector2Int> gridLocations = gm.GetGridPath(origin, direction);
 
+        for (int i = 0; i < gridLocations.Count; i++)
+        {
+            gridBlockPath.Add(gm.FindGridBlockByLocation(gridLocations[i]));
+        }
+
+        return gridBlockPath;
+    }
 
     private IEnumerator GridObjectMovementCoroutine(GridObject objectToMove, float travelLength = 1.0f)
     {
