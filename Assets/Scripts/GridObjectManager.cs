@@ -333,10 +333,6 @@ public class GridObjectManager : MonoBehaviour
                 {
                     // Depart
                     objects[i].IsLeavingGrid = true;
-                    //StartCoroutine(GridObjectDestructionCoroutine(objects[i], 2.0f));
-                    //RemoveGridObjectFromPlay(objects[i]);
-                    //behavior.tickOutcome = TickBehavior.TickOutcome.Depart;
-                    //returnList.Add(behavior);
                 }
             }
         }
@@ -389,11 +385,11 @@ public class GridObjectManager : MonoBehaviour
                     StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
                 }
                 else
-                {
+                {   // Departing
                     objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
 
                     StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
-                    StartCoroutine(GridObjectDestructionCoroutine(objects[i], 2.0f));
+                    StartCoroutine(GridObjectDestructionCoroutine(objects[i], 1.1f));
                 }
             }
         }
@@ -463,33 +459,66 @@ public class GridObjectManager : MonoBehaviour
 
         if (phase == GamePhase.Player)
         {
-            objectProcessing.Add(gridObjectsInPlay[0]);
-
-            if (!player.IsAttackingThisTick) MoveGridObjectsForTick(objectProcessing);
+            if (!player.IsAttackingThisTick)
+            {
+                for (int i = 0; i < gridObjectsInPlay.Count; i++)
+                {
+                    if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player) objectProcessing.Add(gridObjectsInPlay[i]);
+                }
+                MoveGridObjectsForTick(objectProcessing);
+            }
             else
             {
-                List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
-
-                for (int i = 0; i < targetBlocks.Count; i++)
+                for (int i = 0; i < gridObjectsInPlay.Count; i++)
                 {
-                    for (int j = 0; j < targetBlocks[i].objectsOnBlock.Count; j++)
-                    {
-                        Health hp = targetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
-                        if (hp != null)
-                        {
-                            hp.SubtractHealth(player.SelectedWeaponDamage);
-
-                            if (!player.SelectedWeaponDoesPenetrate)
-                            {
-                                player.ExecuteAttackAnimation(targetBlocks[i]);
-                                break;
-                            }
-                            else if (player.SelectedWeaponDoesPenetrate && i == targetBlocks.Count - 1)
-                                player.ExecuteAttackAnimation(targetBlocks[i]);
-                        }
-                    }
+                    if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player && !gridObjectsInPlay[i].CompareTag("Player"))
+                        objectProcessing.Add(gridObjectsInPlay[i]);
                 }
 
+                if (player.SelectedWeaponDoesFunction)
+                {
+                    List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
+
+                    if (player.SelectedWeaponRequiresInstance)
+                    {
+                        GameObject weaponInstance = Instantiate(player.SelectedWeaponProjectile, player.currentWorldLocation, player.transform.rotation);
+                        weaponInstance.GetComponent<MovePattern>().SetMovePattern(player.Direction);
+
+                        GridObject weaponObject = weaponInstance.GetComponent<GridObject>();
+                        AddObjectToGrid(weaponObject, gm.WorldToGrid(player.currentWorldLocation));
+                        weaponObject.targetWorldLocation = weaponObject.currentWorldLocation + gm.GridToWorld(player.Direction);
+
+                        // #Optimize.  Can I feed this into objectProcessing instead of creating a new List?
+                        List<GridObject> weaponList = new List<GridObject>();
+                        weaponList.Add(weaponObject);
+                        MoveGridObjectsForTick(weaponList);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < targetBlocks.Count; i++)
+                        {
+                            for (int j = 0; j < targetBlocks[i].objectsOnBlock.Count; j++)
+                            {
+                                Health hp = targetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
+                                if (hp != null)
+                                {
+                                    hp.SubtractHealth(player.SelectedWeaponDamage);
+
+                                    if (!player.SelectedWeaponDoesPenetrate)
+                                    {
+                                        player.ExecuteAttackAnimation(targetBlocks[i]);
+                                        break;
+                                    }
+                                    else if (player.SelectedWeaponDoesPenetrate && i == targetBlocks.Count - 1)
+                                        player.ExecuteAttackAnimation(targetBlocks[i]);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                MoveGridObjectsForTick(objectProcessing);
                 player.IsAttackingThisTick = false;
             }
         }
@@ -536,26 +565,25 @@ public class GridObjectManager : MonoBehaviour
 
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {
-        foreach (GridBlock gridBlock in gridBlocks)
+        //foreach (GridBlock gridBlock in gridBlocks)
+        for (int i = 0; i < gridBlocks.Count; i++)
         {
-            if (gridBlock.objectsOnBlock.Count > 1)
+            if (gridBlocks[i].objectsOnBlock.Count > 1)
             {
-                Debug.Log("Processing collision on " + gridBlock.location.ToString());
+                Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
 
-                for (int i = 0; i < gridBlock.objectsOnBlock.Count; i++)
+                for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
                 {
-                    GameObject gameObject = gridBlock.objectsOnBlock[i];
-                    //Hazard hazard = gameObject.GetComponent<Hazard>();
+                    GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
                     GridObject gridObject = gameObject.GetComponent<GridObject>();
 
                     LootData loot = gameObject.GetComponent<LootData>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
 
-                    for (int j = 1 + i; j < gridBlock.objectsOnBlock.Count; j++)
+                    for (int k = 1 + j; k < gridBlocks[i].objectsOnBlock.Count; k++)
                     {
-                        GameObject otherGameObject = gridBlock.objectsOnBlock[j];
-                        //Hazard otherHazard = otherGameObject.GetComponent<Hazard>();
+                        GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
                         GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
                         LootData otherLoot = otherGameObject.GetComponent<LootData>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
