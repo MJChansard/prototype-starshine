@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class GridObjectManager : MonoBehaviour
-{
+public class GridObjectManager : MonoBehaviour {
     #region Grid Object Manager Data   
     [SerializeField] private bool VerboseConsole = true;
 
@@ -18,15 +17,13 @@ public class GridObjectManager : MonoBehaviour
 
     private List<GridObject> gridObjectsInPlay = new List<GridObject>();            // Object tracking
     private List<TickBehavior> behaviorProcessing = new List<TickBehavior>();       // Object behavior on each tick
-    private List<GridBlock> potentialBlockCollisions = new List<GridBlock>();       // Collision tracker
+    //private List<GridBlock> potentialBlockCollisions = new List<GridBlock>();       // Collision tracker
 
-    private class TickBehavior
-    {
+    private class TickBehavior {
         public GridObject gridObject;
         public TickOutcome tickOutcome;
 
-        public enum TickOutcome
-        {
+        public enum TickOutcome {
             Undecided = 0,
             Nothing = 1,
             Depart = 2,
@@ -34,21 +31,19 @@ public class GridObjectManager : MonoBehaviour
             FlyBy = 4,
         }
 
-        public TickBehavior(GridObject _gridObject, TickOutcome _outcome = TickOutcome.Undecided)
-        {
+        public TickBehavior(GridObject _gridObject, TickOutcome _outcome = TickOutcome.Undecided) {
             this.gridObject = _gridObject;
             this.tickOutcome = _outcome;
         }
     }
     #endregion
 
-    public enum GamePhase
-    {
+    public enum GamePhase {
         Player = 1,
         Manager = 2
     }
     //private GamePhase currentPhase;
-    
+
 
 
     #region Object Spawning
@@ -66,37 +61,30 @@ public class GridObjectManager : MonoBehaviour
     #endregion
 
 
-    private void Start()
-    {
+    private void Start() {
         gm = GetComponent<GridManager>();
-        
+
         minVector2 = new Vector2Int(gm.BoundaryLeftActual, gm.BoundaryBottomActual);
         maxVector2 = new Vector2Int(gm.BoundaryRightActual, gm.BoundaryTopActual);
 
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
     }
 
-    public void Init()
-    {
+    public void Init() {
         currentTick = 1;
-        
-        gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
-        player = gridObjectsInPlay[0].GetComponent<Player>();      
 
-        if (insertSpawnSequences.Count > 0)
-        {
-            for (int i = 0; i < insertSpawnSequences.Count; i++)
-            {
-                for (int j = 0; j < insertSpawnSequences[i].hazardSpawnSteps.Length; j++)
-                {
+        gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
+        player = gridObjectsInPlay[0].GetComponent<Player>();
+
+        if (insertSpawnSequences.Count > 0) {
+            for (int i = 0; i < insertSpawnSequences.Count; i++) {
+                for (int j = 0; j < insertSpawnSequences[i].hazardSpawnSteps.Length; j++) {
                     spawnQueue.Enqueue(insertSpawnSequences[i].hazardSpawnSteps[j]);
                 }
             }
 
             CreateGridObject(spawnQueue.Dequeue());
-        }
-        else
-        {
+        } else {
             AddSpawnStep();
             CreateGridObject(spawnQueue.Dequeue());
         }
@@ -109,8 +97,7 @@ public class GridObjectManager : MonoBehaviour
     // HM.GetLocationsInHazardPaths()
 
 
-    private void AddSpawnStep()
-    {
+    private void AddSpawnStep() {
         /*	SUMMARY
          *	-   Randomly selects a Hazard
          *  -   Randomly selects a spawn location
@@ -144,8 +131,7 @@ public class GridObjectManager : MonoBehaviour
         newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
         spawnQueue.Enqueue(newSpawnStep);
     }
-    private void CreateGridObject(SpawnStep spawnStep)
-    {
+    private void CreateGridObject(SpawnStep spawnStep) {
         /*  SUMMARY
         *   - Process SpawnStep data to identify hazard to spawn and spawn location
         *   - Instantiate hazard
@@ -240,26 +226,22 @@ public class GridObjectManager : MonoBehaviour
             }
         }
         */
-        
+
         AddObjectToGrid(newSpawn, spawnStep.SpawnLocation);
 
         if (VerboseConsole) Debug.Log("GridObjectManager.CreateGridObject() completed.");
     }
-    public void AddObjectToGrid(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
-    {
+    public void AddObjectToGrid(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true) {
         Debug.Log("GridObjectManager.AddHazard() called.");
 
         Vector3 worldLocation = gm.GridToWorld(gridLocation);
 
-        if (placeOnGrid == false)
-        {
+        if (placeOnGrid == false) {
             gridObject.currentWorldLocation = worldLocation;
             gridObject.targetWorldLocation = worldLocation;
 
             gridObjectsInPlay.Add(gridObject);
-        }
-        else
-        {
+        } else {
             gridObject.transform.position = worldLocation;
             gm.AddObjectToGrid(gridObject.gameObject, gridLocation);
 
@@ -269,8 +251,7 @@ public class GridObjectManager : MonoBehaviour
             gridObjectsInPlay.Add(gridObject);
         }
     }
-    public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true)
-    {
+    public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true) {
         GameObject gameObjectToRemove = objectToRemove.gameObject;
         Vector2Int gridPosition = gm.FindGridBlockContainingObject(gameObjectToRemove).location;
 
@@ -278,10 +259,9 @@ public class GridObjectManager : MonoBehaviour
         gridObjectsInPlay.Remove(objectToRemove);
     }
 
-   
 
-    private void MoveGridObjectsForTick(List<GridObject> objects)
-    {
+
+    private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects) {
         /*  PLAN
          *   - Process a list of GridObjects' data
          *   - Determine one of the following behaviors for the current tick for each object:
@@ -296,6 +276,8 @@ public class GridObjectManager : MonoBehaviour
         Vector2Int[] allOriginGridLocations = new Vector2Int[objects.Count];
         Vector2Int[] allDestinationGridLocations = new Vector2Int[objects.Count];
 
+        List<GridBlock> collisionTestBlocks = new List<GridBlock>();
+
         //List<Vector2Int> allOriginGridLocations = new List<Vector2Int>();
         //List<Vector2Int> allDestinationGridLocations = new List<Vector2Int>();
 
@@ -304,12 +286,6 @@ public class GridObjectManager : MonoBehaviour
             allOriginGridLocations[i].Set(99, 99);
             allDestinationGridLocations[i].Set(99, 99);
         }
-
-        /*  QUESTION FOR PAT
-         * 
-         *  I'm adding a MovePattern component to Player to have one code path through the method
-         *  Should I split this method into processing for Player vs processing for GridObjects with a MovePattern?
-         */
 
         // Process movement data
         for (int i = 0; i < objects.Count; i++)
@@ -320,8 +296,8 @@ public class GridObjectManager : MonoBehaviour
             {
                 Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
                 Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
-                
-                if (gm.CheckIfGridBlockInBounds(destinationLocation))   
+
+                if (gm.CheckIfGridBlockInBounds(destinationLocation))
                 {
                     // Move or FlyBy
                     allOriginGridLocations[i] = currentLocation;            // Maintain index of objects requiring additional processing
@@ -336,7 +312,7 @@ public class GridObjectManager : MonoBehaviour
                 }
             }
         }
-        
+
         if (VerboseConsole) Debug.Log("Fly-By detection starting.");
 
         for (int i = 0; i < allOriginGridLocations.Length; i++)
@@ -346,11 +322,10 @@ public class GridObjectManager : MonoBehaviour
                 if (objects.Count > 1 && i == j) continue;
                 else if (allOriginGridLocations[i].x == 99) continue;
                 else if (allDestinationGridLocations[j].x == 99) continue;
-                else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
-                {
+                else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i]) {
                     Health hp = objects[i].GetComponent<Health>();
                     hp.SubtractHealth(objects[j].GetComponent<ContactDamage>().DamageAmount);
-                    
+
                     //if (hp.HasHP) StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
 
                     // Possibility of executing GridObjectDestructionCoroutine here
@@ -363,7 +338,8 @@ public class GridObjectManager : MonoBehaviour
 
         for (int i = 0; i < objects.Count; i++)
         {
-            if (objects[i].CurrentMode == GridObject.Mode.Spawn) objects[i].SetGamePlayMode(GridObject.Mode.Play);
+            if (objects[i].CurrentMode == GridObject.Mode.Spawn)
+                objects[i].SetGamePlayMode(GridObject.Mode.Play);
 
             MovePattern mp = objects[i].GetComponent<MovePattern>();
             //mp.OnTickUpdate();
@@ -372,7 +348,7 @@ public class GridObjectManager : MonoBehaviour
             Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
 
             // I don't like how many calls to GridManager this is making.  #Optimize
-            if(mp.CanMoveThisTurn)
+            if (mp.CanMoveThisTurn)
             {
                 if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
                 {
@@ -381,7 +357,12 @@ public class GridObjectManager : MonoBehaviour
 
                     objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
 
-                    InsertGridBlockCollision(destinationLocation);
+                    //InsertGridBlockCollision(destinationLocation);
+                    if(!IsLocationInCollisionTracker(destinationLocation, collisionTestBlocks))
+                    {
+                        collisionTestBlocks.Add(gm.FindGridBlockByLocation(destinationLocation));
+                    }
+
                     StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
                 }
                 else
@@ -393,46 +374,9 @@ public class GridObjectManager : MonoBehaviour
                 }
             }
         }
+
+        return collisionTestBlocks;
     }
-    
-    private bool ProcessGridObjectHealth(List<GridObject> objects)
-    {
-        for (int i = objects.Count - 1; i > -1; i--)
-        {
-            Health hp = objects[i].GetComponent<Health>();
-            if (hp != null && !hp.HasHP)
-            {
-                StartCoroutine(DropLootCoroutine(objects[i], objects[i].currentWorldLocation, 0.0f));
-                StartCoroutine(GridObjectDestructionCoroutine(objects[i]));
-                
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
-    {
-        LootHandler lh = gridObject.gameObject.GetComponent<LootHandler>();
-        if (lh != null)
-        {
-            GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
-
-            if (lootObjectToDrop != null)
-            {
-                MeshRenderer renderer = lootObjectToDrop.GetComponent<MeshRenderer>();
-                renderer.enabled = false;
-
-                gm.AddObjectToGrid(lootObjectToDrop, gm.WorldToGrid(dropLocation));
-                lootObjectToDrop.GetComponent<Rotator>().enabled = true;
-
-                yield return new WaitForSeconds(delayAppear);
-                renderer.enabled = true;
-            }
-        }
-    }
-
 
     public float OnTickUpdate(GamePhase phase)
     {
@@ -456,6 +400,7 @@ public class GridObjectManager : MonoBehaviour
         #endregion
 
         List<GridObject> objectProcessing = new List<GridObject>();
+        List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
 
         if (phase == GamePhase.Player)
         {
@@ -463,9 +408,10 @@ public class GridObjectManager : MonoBehaviour
             {
                 for (int i = 0; i < gridObjectsInPlay.Count; i++)
                 {
-                    if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player) objectProcessing.Add(gridObjectsInPlay[i]);
+                    if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player)
+                        objectProcessing.Add(gridObjectsInPlay[i]);
                 }
-                MoveGridObjectsForTick(objectProcessing);
+                //potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
             }
             else
             {
@@ -475,7 +421,9 @@ public class GridObjectManager : MonoBehaviour
                         objectProcessing.Add(gridObjectsInPlay[i]);
                 }
 
-                if (player.SelectedWeaponDoesFunction)
+                Weapon playerWeapon = player.SelectedWeapon;
+
+                if (playerWeapon.weaponAmmunition > 0)
                 {
                     List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
 
@@ -489,9 +437,11 @@ public class GridObjectManager : MonoBehaviour
                         weaponObject.targetWorldLocation = weaponObject.currentWorldLocation + gm.GridToWorld(player.Direction);
 
                         // #Optimize.  Can I feed this into objectProcessing instead of creating a new List?
-                        List<GridObject> weaponList = new List<GridObject>();
-                        weaponList.Add(weaponObject);
-                        MoveGridObjectsForTick(weaponList);
+                        //List<GridObject> weaponList = new List<GridObject>();
+                        //weaponList.Add(weaponObject);
+                        //MoveGridObjectsForTick(weaponList);
+
+                        objectProcessing.Add(weaponObject);
                     }
                     else
                     {
@@ -515,14 +465,14 @@ public class GridObjectManager : MonoBehaviour
                             }
                         }
                     }
-
                 }
-
-                MoveGridObjectsForTick(objectProcessing);
-                player.IsAttackingThisTick = false;
             }
+
+            potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
+            //ProcessCollisionsOnGridBlock(potentialBlockCollisions);
+            player.IsAttackingThisTick = false;
         }
-        
+
         if (phase == GamePhase.Manager)
         {
             ProcessGridObjectHealth(gridObjectsInPlay);
@@ -530,9 +480,11 @@ public class GridObjectManager : MonoBehaviour
             // Process GridObject behavior for current Tick
             for (int i = 0; i < gridObjectsInPlay.Count; i++)
             {
-                if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager) objectProcessing.Add(gridObjectsInPlay[i]);
+                if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager)
+                    if (gridObjectsInPlay[i].GetComponent<Health>().HasHP)
+                        objectProcessing.Add(gridObjectsInPlay[i]);
             }
-            MoveGridObjectsForTick(objectProcessing);
+            potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
 
             gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay);
 
@@ -556,27 +508,92 @@ public class GridObjectManager : MonoBehaviour
             ticksUntilNewSpawn--;
         }
 
-        ProcessCollisionsOnGridBlock(potentialBlockCollisions);  
+        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
+        ProcessGridObjectHealth(gridObjectsInPlay, 1.0f);
 
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;
         if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
         return delayTime;
+
+        //StartCoroutine(AnimateTick);
+    }
+    /*
+List<AnimateTickBehaviors> tickBehaviors;
+
+IEnumerator AnimateTick() {
+
+    // ...
+
+
+    // Start of hazards moving
+    // do anything that needs to happen at this timestamp
+
+    return waitForSeconds(hazardTimeDelay * 0.5);
+
+    // do anything that needs to happen at halfway point (flybys)
+    DoAnimateTickBehavior(halfway);
+
+
+    return waitForSeconds(hazardTimeDelay * 0.5); 
+
+
+    DoAnimateTickBehavior(end);
+
+}
+
+void DoAnimateTickBehavior(Phase phase) {
+
+}
+*/
+
+
+
+/*
+    public void InsertGridBlockCollision(Vector2Int gridLocation, List<GridBlock> gridList) {
+        for (int i = 0; i < gridList.Count; i++)
+        {
+            if (gridList[i].location != gridLocation)
+            {
+                continue;
+            }
+            else
+            {
+                Debug.Log("Location already in Collision List.");
+                break;
+            }
+
+        }
+        gridList.Add(gm.FindGridBlockByLocation(gridLocation));
+    }
+*/
+    private bool IsLocationInCollisionTracker(Vector2Int gridLocation, List<GridBlock> gridList)
+    {
+        for (int i = 0; i < gridList.Count; i++)
+        {
+            if (gridList[i].location != gridLocation)
+            {
+                continue;
+            }
+            else
+            {
+                Debug.Log("Location already in Collision List.");
+                return true;
+            }
+        }
+        return false;
     }
 
+
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
-    {
-        //foreach (GridBlock gridBlock in gridBlocks)
-        for (int i = 0; i < gridBlocks.Count; i++)
-        {
-            if (gridBlocks[i].objectsOnBlock.Count > 1)
-            {
+    {    
+        for (int i = 0; i < gridBlocks.Count; i++) {
+            if (gridBlocks[i].objectsOnBlock.Count > 1) {
                 Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
 
                 for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
                 {
                     GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
                     GridObject gridObject = gameObject.GetComponent<GridObject>();
-
                     LootData loot = gameObject.GetComponent<LootData>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
@@ -602,21 +619,16 @@ public class GridObjectManager : MonoBehaviour
                         }
 
                         //if (gameObject.CompareTag("Player") && otherLoot != null)
-                        Player p = gridObject as Player;
-                        if (p != null)
+                        //Player p = gridObject as Player;
+                        if (gridObject is Player && otherLoot != null)
                         {
-                            /*  QUESTION
-                             *  
-                             *  Will this approach work?  My thinking is that GridObjects without a Player script will fail
-                             *  this typecast.  It is possible though that the typecast will succeed and then the method calls
-                             *  will fail.
-                             */
-                            //Player p = gridObject as Player;
+                            Player p = gridObject as Player;
                             p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
                             otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
                         }
 
-                        if (loot != null && otherGameObject.CompareTag("Player"))
+                        //if (loot != null && otherGameObject.CompareTag("Player"))
+                        if (otherGridObject is Player && loot != null)
                         {
                             Player p2 = otherGridObject as Player;
                             p2.AcceptLoot(loot.Type, loot.LootAmount);
@@ -627,27 +639,24 @@ public class GridObjectManager : MonoBehaviour
             }
         }
 
-        gridBlocks.Clear();     // This might be a source of a bug.  Clear() is being called on a method parameter.
-                                // Do I need to use the ref modifier?
+        //gridBlocks.Clear();   // This might be a source of a bug.  Clear() is being called on a method parameter.
+                              // Do I need to use the ref modifier?
     }
-
-    public void InsertGridBlockCollision(Vector2Int gridLocation)
+    private bool ProcessGridObjectHealth(List<GridObject> objects, float delayDestruction = 0.0f)
     {
-        for (int i = 0; i < potentialBlockCollisions.Count; i++)
-        {
-            if (potentialBlockCollisions[i].location != gridLocation)
-            {
-                continue;
-            }
-            else
-            {
-                Debug.Log("Location already in Collision List.");
-                break;
-            }
+        bool returnBool = false;
+        for (int i = objects.Count - 1; i > -1; i--) {
+            Health hp = objects[i].GetComponent<Health>();
+            if (hp != null && !hp.HasHP) {
+                StartCoroutine(DropLootCoroutine(objects[i], objects[i].currentWorldLocation, 0.0f));
+                StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayDestruction));
+                //ObjectsToDestroyAtStart(objects[i]);
 
+                returnBool = true;
+            }
         }
 
-        potentialBlockCollisions.Add(gm.FindGridBlockByLocation(gridLocation));
+        return returnBool;
     }
 
     private List<GridBlock> GetGridBlocksInPath(Vector2Int origin, Vector2Int direction)
@@ -655,7 +664,7 @@ public class GridObjectManager : MonoBehaviour
         List<GridBlock> gridBlockPath = new List<GridBlock>();
         List<Vector2Int> gridLocations = gm.GetGridPath(origin, direction);
 
-        for (int i = 0; i < gridLocations.Count; i++)   // i = 1 is intentional to exclude the origin GridBlock
+        for (int i = 0; i < gridLocations.Count; i++)
         {
             gridBlockPath.Add(gm.FindGridBlockByLocation(gridLocations[i]));
         }
@@ -680,7 +689,7 @@ public class GridObjectManager : MonoBehaviour
         objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
         //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
     }
-    private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f)
+    private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f) 
     {
         if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");
         yield return new WaitForSeconds(delay);
@@ -689,5 +698,37 @@ public class GridObjectManager : MonoBehaviour
         if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine ended.");
 
         //TODO: Spawn explosion here
+    }
+    private IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
+    {
+        LootHandler lh = gridObject.gameObject.GetComponent<LootHandler>();
+        if (lh != null)
+        {
+            GameObject lootObjectToDrop = lh.RequestLootDrop(dropLocation, forced: true);
+
+            if (lootObjectToDrop != null) {
+                //MeshRenderer renderer = lootObjectToDrop.GetComponent<MeshRenderer>();
+                MeshRenderer renderer = lootObjectToDrop.GetComponentInChildren<MeshRenderer>();
+                renderer.enabled = false;
+
+                gm.AddObjectToGrid(lootObjectToDrop, gm.WorldToGrid(dropLocation));
+                Rotator lootRotator = lootObjectToDrop.GetComponent<Rotator>();
+                lootRotator.enabled = true;
+                lootRotator.ApplyRotation("Left");
+
+                yield return new WaitForSeconds(delayAppear);
+                renderer.enabled = true;
+            }
+        }
+    }
+
+    public class AnimateTickBehavior
+    {
+        public enum ExecutionPhase { StartOfHazardPhase, HalfwayHazardPhase, EndOfHazardPhase}
+        public enum BehaviorType { Destroy, DropLoot }
+
+        public GridObject gridObject;
+        public ExecutionPhase executionPhase;
+        public BehaviorType behaviorType;
     }
 }
