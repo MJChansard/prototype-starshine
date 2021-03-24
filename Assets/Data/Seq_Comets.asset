@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c9daf11efde03b4e91c2326f7236a89, type: 3}
-  m_Name: CometTests
+  m_Name: Seq_Comets
   m_EditorClassIdentifier: 
   playerSpawnLocation: {x: 0, y: 0}
   hazardSpawnSteps:

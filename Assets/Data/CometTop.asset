@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
   m_Name: CometTop
   m_EditorClassIdentifier: 
-  HazardType: 3
+  gridObject: {fileID: 5736782391450772102, guid: bbc90035ca11dc44e95516e4b9218161,
+    type: 3}
   SpawnLocation: {x: 1, y: 4}

@@ -34,7 +34,7 @@ public class Hazard : GridObject
 
     }
 
-    public override void SetAnimationMode(Mode mode)
+    public override void SetGamePlayMode(Mode mode)
     {
         if (RequiresSpawnAnimation)
         { 
@@ -44,6 +44,8 @@ public class Hazard : GridObject
 
             ParticleSystem particleSystem1 = GetComponent<ParticleSystem>(); ;
             ParticleSystem particleSystem2 = GetComponentInChildren<ParticleSystem>();
+
+            Health health = GetComponent<Health>();
 
             if (mode == Mode.Spawn)
             {
@@ -65,6 +67,7 @@ public class Hazard : GridObject
                 sprite.enabled = false;
                 anim.SetBool("InSpawnMode", false);
                 mesh.enabled = true;
+                health.ToggleInvincibility(false);
 
                 if(HazardType == Type.Comet)
                 {

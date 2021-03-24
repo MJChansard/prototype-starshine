@@ -9,11 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6570479300321256563}
-  - component: {fileID: 6570479300321256562}
   - component: {fileID: 6570479300321256573}
   - component: {fileID: 6570479300321256572}
   - component: {fileID: 2828962143577590738}
-  - component: {fileID: 2128684263080395595}
+  - component: {fileID: 8324952338442174843}
   m_Layer: 0
   m_Name: AmmoCrate
   m_TagString: Untagged
@@ -37,29 +36,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6570479300321256562
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6570479300321256574}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hazardName: 
-  hazardType: 5
-  moveSpeed: 1
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
-  spawnWarningObject: {fileID: 6570479301102139920}
-  spawnRules:
-    spawnRegion: 1
-    avoidHazardPaths: 1
-    avoidAdjacentToPlayer: 0
-    requiresOrientation: 0
 --- !u!114 &6570479300321256573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,9 +48,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3243f8e393021ee469c00aec4e1285b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delta: {x: 0, y: 0}
   AlwaysMoveOnSpawn: 1
   waitTicksPerMove: 1
+  ticksUntilNextMove: 0
 --- !u!114 &6570479300321256572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87,10 +63,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 013c09a4ae665da44932d1bf422381b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xRotationSpeed: 0
-  yRotationSpeed: 0
-  zRotationSpeed: 0
-  hazardType: 0
+  objectToRotate: {fileID: 6570479301234427770}
+  UseDefaultValues: 1
+  RotateUpValues: {x: 0, y: 0, z: 0}
+  RotateDownValues: {x: 0, y: 0, z: 0}
+  RotateLeftValues: {x: 0, y: 0, z: 0}
+  RotateRightValues: {x: 0, y: 0, z: 0}
+  ApplyManualRotation: 0
 --- !u!114 &2828962143577590738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -105,7 +84,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   currentHP: 0
---- !u!114 &2128684263080395595
+--- !u!114 &8324952338442174843
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -114,11 +93,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 6570479300321256574}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6841b07f6cd505d42b35e1db5a9e49f0, type: 3}
+  m_Script: {fileID: 11500000, guid: f88e4212b71a0434d9c2dc0c4e852461, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lootType: 2
-  lootAmount: 1
+  ProcessingPhase: 2
+  spawnWarningObject: {fileID: 6570479301102139920}
+  spawnRules:
+    spawnRegion: 1
+    avoidHazardPaths: 1
+    avoidAdjacentToPlayer: 0
+    requiresOrientation: 0
+  IsLeavingGrid: 0
+  currentWorldLocation: {x: 0, y: 0, z: 0}
+  targetWorldLocation: {x: 0, y: 0, z: 0}
+  moveSpeed: 1
 --- !u!1 &6570479301102139920
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,6 +154,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -275,6 +264,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -302,3 +292,4 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}

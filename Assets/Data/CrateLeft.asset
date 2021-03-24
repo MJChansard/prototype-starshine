@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
   m_Name: CrateLeft
   m_EditorClassIdentifier: 
-  gridObject: {fileID: 6570479300321256562, guid: 2aeb550423b3d1c40a27eba9c63a5fa8,
+  gridObject: {fileID: 8324952338442174843, guid: 2aeb550423b3d1c40a27eba9c63a5fa8,
     type: 3}
   SpawnLocation: {x: -5, y: -1}

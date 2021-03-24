@@ -594,7 +594,7 @@ void DoAnimateTickBehavior(Phase phase) {
                 {
                     GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
                     GridObject gridObject = gameObject.GetComponent<GridObject>();
-                    LootData loot = gameObject.GetComponent<LootData>();
+                    Loot loot = gameObject.GetComponent<Loot>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
 
@@ -602,7 +602,7 @@ void DoAnimateTickBehavior(Phase phase) {
                     {
                         GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
                         GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
-                        LootData otherLoot = otherGameObject.GetComponent<LootData>();
+                        Loot otherLoot = otherGameObject.GetComponent<Loot>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
 
@@ -624,7 +624,8 @@ void DoAnimateTickBehavior(Phase phase) {
                         {
                             Player p = gridObject as Player;
                             p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
-                            otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
+                            //otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
+                            //StartCoroutine(GridObjectDestructionCoroutine())
                         }
 
                         //if (loot != null && otherGameObject.CompareTag("Player"))
@@ -645,9 +646,11 @@ void DoAnimateTickBehavior(Phase phase) {
     private bool ProcessGridObjectHealth(List<GridObject> objects, float delayDestruction = 0.0f)
     {
         bool returnBool = false;
-        for (int i = objects.Count - 1; i > -1; i--) {
+        for (int i = objects.Count - 1; i > -1; i--)
+        {
             Health hp = objects[i].GetComponent<Health>();
-            if (hp != null && !hp.HasHP) {
+            if (hp != null && !hp.HasHP)
+            {
                 StartCoroutine(DropLootCoroutine(objects[i], objects[i].currentWorldLocation, 0.0f));
                 StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayDestruction));
                 //ObjectsToDestroyAtStart(objects[i]);
@@ -712,6 +715,8 @@ void DoAnimateTickBehavior(Phase phase) {
                 renderer.enabled = false;
 
                 gm.AddObjectToGrid(lootObjectToDrop, gm.WorldToGrid(dropLocation));
+                gridObjectsInPlay.Add(lootObjectToDrop.GetComponent<Loot>());
+
                 Rotator lootRotator = lootObjectToDrop.GetComponent<Rotator>();
                 lootRotator.enabled = true;
                 lootRotator.ApplyRotation("Left");

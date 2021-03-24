@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
   m_Name: AsteroidTop
   m_EditorClassIdentifier: 
-  HazardType: 2
+  gridObject: {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71,
+    type: 3}
   SpawnLocation: {x: 0, y: 4}

@@ -165,16 +165,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hazardName: Large Asteroid
-  hazardType: 2
-  moveSpeed: 1
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
+  ProcessingPhase: 2
+  ticksPerMove: 2
   spawnWarningObject: {fileID: 1448031916}
   spawnRules:
     spawnRegion: 1
     avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
+    requiresOrientation: 0
+  currentWorldLocation: {x: 0, y: 0, z: 0}
+  targetWorldLocation: {x: 0, y: 0, z: 0}
+  moveSpeed: 1
+  hazardType: 2
 --- !u!114 &114194421757701184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,7 +216,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3243f8e393021ee469c00aec4e1285b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delta: {x: 0, y: 0}
   AlwaysMoveOnSpawn: 1
   waitTicksPerMove: 2
 --- !u!114 &22195418758050131
@@ -238,15 +239,18 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 226724313900393986}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 013c09a4ae665da44932d1bf422381b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xRotationSpeed: 0
-  yRotationSpeed: 0
-  zRotationSpeed: 0
-  hazardType: 2
+  objectToRotate: {fileID: 1737041624129610704}
+  UseDefaultValues: 1
+  RotateUpValues: {x: 0, y: 0, z: 0}
+  RotateDownValues: {x: 0, y: 0, z: 0}
+  RotateLeftValues: {x: 0, y: 0, z: 0}
+  RotateRightValues: {x: 0, y: 0, z: 0}
+  ApplyManualRotation: 0
 --- !u!1 &1737041624129610704
 GameObject:
   m_ObjectHideFlags: 0
@@ -272,8 +276,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737041624129610704}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.379, z: 0}
+  m_LocalRotation: {x: 0.000000049071026, y: 0.99999964, z: -4.282212e-11, w: -0.0008726556}
+  m_LocalPosition: {x: 0, y: -0.371, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5945174927175767820}

@@ -8,7 +8,7 @@ public class MovePattern : MonoBehaviour
     [SerializeField] private bool AlwaysMoveOnSpawn = true;
 
     [SerializeField] private int waitTicksPerMove;
-    private int ticksUntilNextMove;
+    public int ticksUntilNextMove;
 
     public Vector3 DirectionInWorld
     {
@@ -52,8 +52,15 @@ public class MovePattern : MonoBehaviour
         return delta;
     }
 
+    public void SetMovePattern(Vector2Int directionToMove)
+    {
+        delta = directionToMove;
+    }
 
-
+    /*  Careful with calls to this method as timing has a great impact
+     *  on GameObjectManager.OnTickUpdate() and 
+     *  GameObjectManager.MoveObjectsForTick()
+     */
     public void OnTickUpdate()
     {
         if(ticksUntilNextMove == 0)

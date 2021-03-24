@@ -6,7 +6,7 @@ public class LootHandler : MonoBehaviour
 {
     [SerializeField] private GameObject[] lootInventory;
 
-   public GameObject RequestLootDrop(Vector3 spawnLocation, bool forced = false)
+    public GameObject RequestLootDrop(Vector3 spawnLocation, bool forced = false)
     {
         if (forced || EligibleToDropLoot())
         {
@@ -16,10 +16,7 @@ public class LootHandler : MonoBehaviour
         else return null;
     }
 
-    private bool EligibleToDropLoot()
-    {
-        return Random.Range(0, 10) > 4;
-    }
+    private bool EligibleToDropLoot() { return Random.Range(0, 10) > 4; }
 
     private GameObject CreateLootObject(Vector3 spawnLocation)
     {      

@@ -9723,15 +9723,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ProcessingPhase: 2
+  ticksPerMove: 1
   spawnWarningObject: {fileID: 5736782390652883209}
   spawnRules:
     spawnRegion: 1
     avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
     requiresOrientation: 1
-  moveSpeed: 1
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
+  moveSpeed: 1
   hazardType: 3
 --- !u!114 &5736782391450772107
 MonoBehaviour:
@@ -9745,6 +9747,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 013c09a4ae665da44932d1bf422381b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  objectToRotate: {fileID: 5736782390709137545}
   UseDefaultValues: 0
   RotateUpValues: {x: 0, y: 20, z: 0}
   RotateDownValues: {x: 0, y: 20, z: 0}
@@ -9762,7 +9765,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3243f8e393021ee469c00aec4e1285b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delta: {x: 0, y: 0}
   AlwaysMoveOnSpawn: 1
   waitTicksPerMove: 1
 --- !u!114 &8119973715676747755

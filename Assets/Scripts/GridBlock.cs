@@ -35,7 +35,7 @@ public class GridBlock
         int countOfLootItems = 0;
         for (int i = 0; i < objectsOnBlock.Count; i++)
         {
-            LootData loot = objectsOnBlock[i].GetComponent<LootData>();
+            Loot loot = objectsOnBlock[i].GetComponent<Loot>();
             if (loot != null) countOfLootItems += 1;
         }
         return countOfLootItems > 0;

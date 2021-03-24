@@ -13,15 +13,6 @@ public class AutoCannon : Weapon
         }
     }
 
-    override public int Damage
-    {
-        get
-        {
-            weaponDamage = 50;
-            return weaponDamage;
-        }
-    }
-
     override protected IEnumerator AnimationCoroutine(GridBlock targetBlock)
     {
         ParticleSystem ps = GetComponent<ParticleSystem>();

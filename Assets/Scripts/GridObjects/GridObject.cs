@@ -6,12 +6,13 @@ public abstract class GridObject : MonoBehaviour
 {
     [Header("General Properties")]
     public GridObjectManager.GamePhase ProcessingPhase;
-    [SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
-    private int ticksRemainingUntilMove;
+    //[SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
+    //private int ticksRemainingUntilMove;
 
     [Header("Spawn Properties")]
     public GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
+    public bool IsLeavingGrid = false;
     
     [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int
     [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int
@@ -28,10 +29,10 @@ public abstract class GridObject : MonoBehaviour
         Spawn = 1,
         Play = 2
     }
-    protected Mode currentMode;
-    public Mode CurrentMode { get { return currentMode; } }
-
     
+    public Mode CurrentMode { get { return currentMode; } }
+    protected Mode currentMode;
+
     // METHODS
     public virtual void Init(string spawnBorder)
     {
@@ -78,18 +79,23 @@ public abstract class GridObject : MonoBehaviour
         }
 
         Rotator r = GetComponent<Rotator>();
-        if (r != null) r.ApplyRotation(ref spawnBorder);
+        if (r != null)
+        {
+            if (!r.enabled) r.enabled = true;   
+            r.ApplyRotation(spawnBorder);
+        }
 
-        ticksRemainingUntilMove = ticksPerMove;
-        SetAnimationMode(Mode.Spawn);
+        //ticksRemainingUntilMove = ticksPerMove;
+        SetGamePlayMode(Mode.Spawn);
     }
 
 
-    public virtual void SetAnimationMode(Mode newMode)
+    public virtual void SetGamePlayMode(Mode newMode)
     {
         MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
         SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
         Animator anim = spawnWarningObject.GetComponent<Animator>();
+        Health health = GetComponent<Health>();
 
         if (newMode == Mode.Spawn)
         {
@@ -104,6 +110,8 @@ public abstract class GridObject : MonoBehaviour
             sprite.enabled = false;
             anim.SetBool("InSpawnMode", false);
             mesh.enabled = true;
+
+            if (health != null) health.ToggleInvincibility(false);
         }
     }
     // Can use a Type enum here that is a master list

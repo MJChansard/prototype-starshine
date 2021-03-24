@@ -229,18 +229,7 @@ public class GridManager : MonoBehaviour {
 
     }
 
-    public void DeactivateGridBlockSpawn(Vector2Int gridBlockLocation) {
-        Debug.LogFormat("Disabling GridBlock: {0}", gridBlockLocation);
-
-        GridBlock gridBlock = FindGridBlockByLocation(gridBlockLocation);
-
-        if (gridBlock.canSpawn == true) {
-            gridBlock.canSpawn = false;
-            gridBlock.DebugRenderPoint.GetComponent<Renderer>().material.color = Color.red;
-        }
-    }   // DEPRECATED
-
-
+    
     public Vector3 GridToWorld(Vector2Int gridLocation) {
         return new Vector3
         (
@@ -261,11 +250,16 @@ public class GridManager : MonoBehaviour {
 
 
     public GridBlock FindGridBlockContainingObject(GameObject gameObject) {
-        for (int x = 0; x < levelGrid.GetLength(0); x++) {
-            for (int y = 0; y < levelGrid.GetLength(1); y++) {
+        for (int x = 0; x < levelGrid.GetLength(0); x++)
+        {
+            for (int y = 0; y < levelGrid.GetLength(1); y++)
+            {
                 int objectsOnBlock = levelGrid[x, y].objectsOnBlock.Count;
-                if (objectsOnBlock > 0) {
-                    for (int z = 0; z < objectsOnBlock; z++) {
+
+                if (objectsOnBlock > 0)
+                {
+                    for (int z = 0; z < objectsOnBlock; z++)
+                    {
                         if (levelGrid[x, y].objectsOnBlock[z] == gameObject) return levelGrid[x, y];
                     }
                 }
@@ -289,7 +283,8 @@ public class GridManager : MonoBehaviour {
     }
 
 
-    public bool CheckIfGridBlockInBounds(Vector2Int gridLocation) {
+    public bool CheckIfGridBlockInBounds(Vector2Int gridLocation)
+    {
         if
         (
             gridLocation.x >= BoundaryLeftPlay &&
@@ -336,7 +331,7 @@ public class GridManager : MonoBehaviour {
     }
 
 
-    public List<Vector2Int> GetGridBlockPath(Vector2Int origin, Vector2Int direction)
+    public List<Vector2Int> GetGridPath(Vector2Int origin, Vector2Int direction)
     {
         List<Vector2Int> gridBlockPath = new List<Vector2Int>();
 
@@ -369,11 +364,11 @@ public class GridManager : MonoBehaviour {
         }
         else if (direction == Vector2Int.right)   // y stays the same, x increments positively
         {
-            Vector2Int targetLocation = origin + Vector2Int.right;
+            Vector2Int targetLocation = origin + Vector2Int.right; 
             for (int i = origin.x; i < BoundaryRightActual; i++)
             {
-                gridBlockPath.Add(targetLocation);
-                targetLocation += Vector2Int.right;
+                gridBlockPath.Add(targetLocation);  
+                targetLocation += Vector2Int.right; 
             }
         }
 
@@ -518,7 +513,7 @@ public class GridManager : MonoBehaviour {
 
                             if (rules.avoidAdjacentToPlayer == true)
                             {
-                                Vector3 playerLocation = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerManager>().currentWorldLocation;
+                                Vector3 playerLocation = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>().currentWorldLocation;
                             }
                         }
                         else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
@@ -532,7 +527,7 @@ public class GridManager : MonoBehaviour {
                             if (rules.avoidHazardPaths)
                             {
                                 Vector2Int direction = currentHazardMove.DirectionOnGrid;
-                                List<Vector2Int> gridLocationsToRemove = GetGridBlockPath(currentHazardGridLocation, direction);
+                                List<Vector2Int> gridLocationsToRemove = GetGridPath(currentHazardGridLocation, direction);
                             }
 
                             if (rules.avoidAdjacentToPlayer)
@@ -559,22 +554,26 @@ public class GridManager : MonoBehaviour {
 
 
 
-    private void OnDrawGizmos() {
-        if (gridBlockLabels == true) {
+    private void OnDrawGizmos()
+    {
+        if (gridBlockLabels == true)
+        {
             Gizmos.color = Color.blue;
-            if (levelGrid != null) {
-                foreach (GridBlock block in levelGrid) {
-                    if (!block.IsAvailableForPlayer) {
-                        foreach (GameObject occupant in block.objectsOnBlock) {
-                            if (occupant != null) {
-                                GUIStyle GridObjectOccupantGizmoText = new GUIStyle();
-                                GridObjectOccupantGizmoText.normal.textColor = Color.red;
-                                GridObjectOccupantGizmoText.fontSize = 20;
-                                //GridObjectOccupantGizmoText.normal.background = Texture2D.blackTexture;
+            if (levelGrid != null)
+            {
+                foreach (GridBlock block in levelGrid)
+                {    
+                    foreach (GameObject occupant in block.objectsOnBlock)
+                    {
+                        if (occupant != null)
+                        {
+                            GUIStyle GridObjectOccupantGizmoText = new GUIStyle();
+                            GridObjectOccupantGizmoText.normal.textColor = Color.red;
+                            GridObjectOccupantGizmoText.fontSize = 20;
+                            //GridObjectOccupantGizmoText.normal.background = Texture2D.blackTexture;
 
-                                //Handles.Label(GridToWorld(block.location), occupant.name);
-                                Handles.Label(GridToWorld(block.location), occupant.name, GridObjectOccupantGizmoText);
-                            }
+                            //Handles.Label(GridToWorld(block.location), occupant.name);
+                            Handles.Label(GridToWorld(block.location), occupant.name, GridObjectOccupantGizmoText);
                         }
                     }
                 }

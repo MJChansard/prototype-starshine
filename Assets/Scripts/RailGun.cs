@@ -13,31 +13,22 @@ public class RailGun : Weapon
         }
     }
 
-    public override int Damage
-    {
-        get 
-        {
-            weaponDamage = 500;
-            return weaponDamage;
-        }
-    }
-
-    [SerializeField] GameObject railPrefab;
-
-    private GameObject railgunProjectile;
+    [SerializeField] private GameObject railPrefab;
+    
+    private GameObject launchedRailgunProjectile;
     private float railTravelSpeed = 5.0f;
     private Transform player;
 
     private void Start()
     {
-        player = GetComponentInParent<Transform>();
-     
+        player = GetComponentInParent<Transform>();     
     }
+    
     public bool FireRailgun(Vector3 currentWorldLocation)
     {
         if (weaponAmmunition > 0)
         {
-            railgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
+            launchedRailgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
             weaponAmmunition -= 1;
             return true;
         }
@@ -48,17 +39,17 @@ public class RailGun : Weapon
 
     protected override IEnumerator AnimationCoroutine(GridBlock target)
     {
-        if (railgunProjectile != null)
+        if (launchedRailgunProjectile != null)
         {      
             ParticleSystem ps = gameObject.GetComponent<ParticleSystem>();
             Vector3 rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-
+            
             var shape = ps.shape;
             shape.rotation = rotation;
             ps.Play();
 
             // D = s * t
-            Vector3 currentWorldLocation = railgunProjectile.transform.position;
+            Vector3 currentWorldLocation = launchedRailgunProjectile.transform.position;
             Vector3 targetWorldLocation = new Vector3(target.location.x, target.location.y, 0.0f);
         
             float distance = Vector3.Distance(currentWorldLocation, targetWorldLocation);
@@ -69,8 +60,8 @@ public class RailGun : Weapon
             {
                 float traveled = (Time.time - startTime) * railTravelSpeed;
                 percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
-                //railgunProjectile.gameObject.transform.position =
-                railgunProjectile.transform.position = 
+                
+                launchedRailgunProjectile.transform.position = 
                     Vector3.Lerp
                     (
                         currentWorldLocation,
@@ -81,8 +72,19 @@ public class RailGun : Weapon
                 yield return null;
             }
 
-            Destroy(railgunProjectile);
+            Destroy(launchedRailgunProjectile);
         }
     }
-
+    public override void StartAnimationCoroutine(GridBlock animationFinalGridBlock) 
+    {
+        if (FireRailgun(player.position))
+        {
+            //ui.UpdateHUDWeapons(indexSelectedWeapon, railGun.weaponAmmunition);  Might not need to do this now actually
+            base.StartAnimationCoroutine(animationFinalGridBlock);
+        }
+        else
+        {
+            Debug.Log("Out of Rail Gun ammunition.");
+        }
+    }           
 }

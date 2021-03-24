@@ -45,6 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbef1dd55f58685458bd3fdc92b315d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponDamage: 500
+  doesPenetrate: 1
   weaponAmmunition: 2
   weaponIcon: {fileID: 21300000, guid: 25f0e4b29a32a2948aeaece7af1dce61, type: 3}
   railPrefab: {fileID: 5989933133772402662, guid: 1e390fef251c24c4b82a193026c3aef5,

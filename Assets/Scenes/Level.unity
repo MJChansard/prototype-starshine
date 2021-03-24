@@ -775,7 +775,13 @@ MonoBehaviour:
   minTicksUntilSpawn: 2
   maxTicksUntilSpawn: 4
   insertSpawnSequences: []
-  gridObjectPrefabs: []
+  gridObjectPrefabs:
+  - {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
+  - {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
+  - {fileID: 5736782391450772102, guid: bbc90035ca11dc44e95516e4b9218161, type: 3}
+  - {fileID: 8324952338442174843, guid: 2aeb550423b3d1c40a27eba9c63a5fa8, type: 3}
+  playerPrefab: {fileID: 1294845988134193544, guid: 38180cfc29e24094989a019bbcb5780e,
+    type: 3}
 --- !u!114 &477210642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -790,11 +796,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentTick: 1
   CurrentLevel: 1
-  EnableDebug: 1
+  VerboseConsole: 0
   overrideSpawnSequence:
-  - {fileID: 11400000, guid: bbb02c84584a8e04283d71bc75e9d433, type: 2}
-  playerPrefab: {fileID: 7481129662563630788, guid: 71ffd1ff440611f478f08b815eb14737,
-    type: 3}
+  - {fileID: 11400000, guid: 28bb75032e5b59942819ea7510f0343d, type: 2}
 --- !u!1 &534669902
 GameObject:
   m_ObjectHideFlags: 0

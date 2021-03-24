@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
-  m_Name: CrateBottom
+  m_Name: Test4-SmallAsteroid
   m_EditorClassIdentifier: 
-  gridObject: {fileID: 8324952338442174843, guid: 2aeb550423b3d1c40a27eba9c63a5fa8,
+  gridObject: {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71,
     type: 3}
-  SpawnLocation: {x: -1, y: -4}
+  SpawnLocation: {x: 0, y: 4}

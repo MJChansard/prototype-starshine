@@ -12,23 +12,18 @@ public class MissileLauncher : Weapon
             return weaponName;
         }
     }
-    override public int Damage
-    {
-        get
-        {
-            weaponDamage = 0;
-            return weaponDamage;
-        }
-    }
 
-    public GameObject projectilePrefab;
+    //[SerializeField] private GameObject projectilePrefab;
     private Hazard launchedMissile;
-
-    private PlayerManager pm;
+    
+    private Player player;
 
     private void Awake()
     {
-         pm = GetComponentInParent<PlayerManager>();
+        player = GetComponentInParent<Player>();
+
+        Debug.LogFormat("MissileLauncher.projectilePrefab is null: {0}", RequiresInstance);
+        
     }
 
 

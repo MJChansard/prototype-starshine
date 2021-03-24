@@ -3,40 +3,50 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : GridObject
-{     
+{
     #region Player Attributes
     [Header("Player Components")]
     [SerializeField] private GameObject Thruster;
-    [SerializeField] private GameObject Cannon;
-    [SerializeField] private GameObject MissileLauncher;
-    [SerializeField] private Transform weaponSource;
-
+    
     [Header("Weapon Inventory")]
-    [SerializeField] private Weapon[] weaponInventory;
+    //    [SerializeField] private GameObject Cannon;
+    //    [SerializeField] private GameObject MissileLauncher;
+    //    [SerializeField] private GameObject RailGun;
+    [SerializeField] private GameObject[] weaponObjects;
+    [SerializeField] private Transform weaponSource;
+        
+    private Weapon[] weaponInventory;
     private int indexSelectedWeapon = 0;
 
     private int currentJumpFuel = 0;
     private int maxFuelAmount = 10;
 
-//    private int maxHP = 10;
-//    private int currentHP = 10; 
-
     [SerializeField] private float speed = 2.0f;
     #endregion
 
     #region Fields & Properties
-    public bool InputActive = true; 
+    public bool InputActive = true;
 
-    public bool IsAttackingThisTick { get { return isAttackingThisTick; } }
-    private bool isAttackingThisTick = false;
+    //public bool IsAttackingThisTick { get { return isAttackingThisTick; } }
+    //private bool isAttackingThisTick = false;
+    public bool IsAttackingThisTick = false;
 
-    private Vector2Int currentlyFacing = Vector2Int.up;
-    //private Vector2Int delta = Vector2Int.zero;
-
+    public Vector2Int Direction { get { return currentlyFacing; } }
+    private Vector2Int currentlyFacing;
+    
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
+
+    public int SelectedWeaponDamage { get { return weaponInventory[indexSelectedWeapon].Damage; } }
+    public bool SelectedWeaponDoesPenetrate { get { return weaponInventory[indexSelectedWeapon].DoesPenetrate; } }
+    public bool SelectedWeaponRequiresInstance { get { return weaponInventory[indexSelectedWeapon].RequiresInstance; } }
+    public bool SelectedWeaponDoesFunction { get { return weaponInventory[indexSelectedWeapon].weaponAmmunition > 0; } }
+    public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
+
+    public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
     #endregion
+
 
     #region References
     private PlayerHUD ui;
@@ -52,6 +62,14 @@ public class Player : GridObject
     {
         movePattern = GetComponent<MovePattern>();
         hp = GetComponent<Health>();
+
+        weaponInventory = new Weapon[weaponObjects.Length];
+        for (int i = 0; i < weaponObjects.Length; i++)
+        {
+            Weapon toInsert = weaponObjects[i].GetComponent<Weapon>();
+            weaponInventory[i] = toInsert;
+            Debug.LogFormat("Added {0} to weaponInventory.", toInsert.Name);
+        }
 
         ui = FindObjectOfType<PlayerHUD>();
         ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
@@ -83,40 +101,45 @@ public class Player : GridObject
         if (Input.GetKeyDown(KeyCode.W))
         {
             transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
-            //currentlyFacing = delta = Vector2Int.up;
+            currentlyFacing = Vector2Int.up;
             movePattern.SetMovePatternUp();
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
             transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
-            //currentlyFacing = delta = Vector2Int.down;
+            currentlyFacing = Vector2Int.down;
             movePattern.SetMovePatternDown();
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
-            //currentlyFacing = delta = Vector2Int.left;
+            currentlyFacing = Vector2Int.left;
             movePattern.SetMovePatternLeft();
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
-            //currentlyFacing = delta = Vector2Int.right;
+            currentlyFacing = Vector2Int.right;
             movePattern.SetMovePatternRight();
         }
         
         if (Input.GetKeyDown(KeyCode.F))
         {
-            isAttackingThisTick = true;
+            IsAttackingThisTick = true;
             if (OnPlayerAdvance != null) OnPlayerAdvance();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (OnPlayerAdvance != null) OnPlayerAdvance();
+        }
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Debug.LogFormat("Test of SelectedWeaponRequiresInstance: {0}", SelectedWeaponRequiresInstance);
         }
     }
 
@@ -134,10 +157,9 @@ public class Player : GridObject
 
     public float OnTickUpdate()
     {
-        if (isAttackingThisTick)
+        if (IsAttackingThisTick)
         {
-            isAttackingThisTick = false;
-            Attack();
+            //Attack();
             return attackWaitTime;
         }
         else
@@ -154,60 +176,17 @@ public class Player : GridObject
     {
         StartCoroutine(AnimateThrusterCoroutine());
         StartCoroutine(UpdateUICoroutine());
-    }
-
-    /*
-    public void GatherLoot(Vector2Int searchBlock, bool delayed = false)
-    {
-        // Gather loot if any exists
-        Debug.Log("PlayerManager.GatherLoot() called.");
-
-        GridBlock lootBlock = gm.FindGridBlockByLocation(searchBlock);
-
-        for (int i = lootBlock.objectsOnBlock.Count - 1; i >= 0; i--)
-        {
-            LootData currentLoot = lootBlock.objectsOnBlock[i].GetComponent<LootData>();
-            if (currentLoot != null)
-            {
-                if (currentLoot.Type == LootData.LootType.JumpFuel)
-                {
-                    Debug.Log("Jump Fuel found.");
-                    currentJumpFuel += currentLoot.LootAmount;
-                    gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
-                    if (delayed == true) Destroy(currentLoot.gameObject, moveWaitTime);
-                }
-
-                if (currentLoot.Type == LootData.LootType.MissileAmmo)
-                {
-                    Debug.Log("Missile Ammo found.");
-                    for (int j = 0; j < weaponInventory.Length; j++)
-                    {
-                        if (weaponInventory[j].Name == "Missile Launcher")
-                        {
-                            weaponInventory[j].weaponAmmunition += currentLoot.LootAmount;
-                            if (delayed == false) ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
-                            break;
-                        }
-                    }
-                    gm.RemoveObjectFromGrid(currentLoot.gameObject, lootBlock.location);
-                    if (delayed == true) Destroy(currentLoot.gameObject, moveWaitTime);
-                    else Destroy(currentLoot.gameObject);
-                }
-            }
-        }
-    }
-    */
+    }  
     
-    
-    public void AcceptLoot(LootData.LootType type, int amount)
+    public void AcceptLoot(Loot.LootType type, int amount)
     {
-        if (type == LootData.LootType.JumpFuel)
+        if (type == Loot.LootType.JumpFuel)
         {
             Debug.Log("Jump Fuel found.");
             currentJumpFuel += amount;
         }
 
-        if (type == LootData.LootType.MissileAmmo)
+        if (type == Loot.LootType.MissileAmmo)
         {
             Debug.Log("Missile Ammo found.");
             for (int j = 0; j < weaponInventory.Length; j++)
@@ -248,8 +227,22 @@ public class Player : GridObject
     }
 
 
+    public void ExecuteAttackAnimation(GridBlock gridBlock)
+    {
+
+        weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
+    }
+
     private void Attack()
     {
+        //isAttackingThisTick = true;
+        //Weapon currentWeapon = weaponInventory[indexSelectedWeapon];
+
+        if (weaponInventory[indexSelectedWeapon].Name == "AutoCannon")
+        {
+            //currentWeapon.StartAnimationCoroutine();                       
+        }
+
         /*
         GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
         Vector2Int currentPlayerGridLocation = currentGridBlock.location;
@@ -428,4 +421,5 @@ public class Player : GridObject
             }
         }*/
     }
+
 }

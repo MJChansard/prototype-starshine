@@ -39,59 +39,46 @@ public class Rotator : MonoBehaviour
         }
     }
 
+    /*
     private void Start()
     {
         parentTransform = gameObject.GetComponentInParent<Transform>();
         //parentTransform.position.x;
     }
-
+    */
 
 
     private void Update()
     {
-        /*
+        
         if (objectToRotate == null)
         {
             gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
             gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
             gameObject.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
         }
-        /*
+        
         else
         {
             objectToRotate.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime);
             objectToRotate.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime);
             objectToRotate.transform.Rotate(Vector3.forward * zRotationSpeed * Time.deltaTime);
         }
-        */
+        
         //gameObject.transform.Rotate(Vector3.up * yRotationSpeed * Time.deltaTime, Space.Self);
         //gameObject.transform.Rotate(Vector3.right * xRotationSpeed * Time.deltaTime, Space.Self);
 
-        if (parentTransform == null)
+        /*if (parentTransform == null)
         {
             Debug.Log("Parent Transform is null dood.");
 
         }
                    
         gameObject.transform.RotateAround(parentTransform.position, Vector3.right, 50 * Time.deltaTime);
+        */
 
     }
-
-    /*
-    private float x;
-    private float rotationSpeed = 50.0f;
-
-    private void FixedUpdate()
-    {
-        x += Time.deltaTime * rotationSpeed;
-
-        if (x > 360.0f) x = 0.0f;
     
-        transform.localRotation = Quaternion.Euler(x, 0, 0);
-    }
-    */
-    
-
     private void RotateUp()
     {
         if(UseDefaultValues)
@@ -164,7 +151,7 @@ public class Rotator : MonoBehaviour
         }
     }
 
-    public void ApplyRotation(ref string border)
+    public void ApplyRotation(string border)
     {
         switch(border)
         {

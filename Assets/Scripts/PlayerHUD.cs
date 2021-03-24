@@ -27,13 +27,6 @@ public class PlayerHUD : MonoBehaviour
     }
 
     
-    public void UpdateWeaponSelection(int disableWeapon, int enableWeapon)
-    {
-        PlayerHUDEntries[disableWeapon].transform.GetChild(0).gameObject.SetActive(false);
-        PlayerHUDEntries[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
-    }
-
-    
     public void Init(Weapon[] weaponsForUI, int maxFuelAmount, int maxPlayerHP)
     {
         PlayerHUDEntries = new PlayerHUDEntry[weaponsForUI.Length];
@@ -50,6 +43,12 @@ public class PlayerHUD : MonoBehaviour
 
         UpdateHUDFuel(0, maxFuelAmount);
         UpdateHUDHP(maxPlayerHP, maxPlayerHP);
+    }
+
+    public void UpdateWeaponSelection(int disableWeapon, int enableWeapon)
+    {
+        PlayerHUDEntries[disableWeapon].transform.GetChild(0).gameObject.SetActive(false);
+        PlayerHUDEntries[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
     }
 
     public void UpdateHUDWeapons(int indexOfWeaponRequiringUpdate, int newAmount)
