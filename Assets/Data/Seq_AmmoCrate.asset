@@ -13,4 +13,8 @@ MonoBehaviour:
   m_Name: Seq_AmmoCrate
   m_EditorClassIdentifier: 
   playerSpawnLocation: {x: 0, y: 0}
-  hazardSpawnSteps: []
+  hazardSpawnSteps:
+  - {fileID: 11400000, guid: f60f07264834372498955b7755d7d1c4, type: 2}
+  - {fileID: 11400000, guid: 4704e6014b430e74b9ef5f98bd5400ad, type: 2}
+  - {fileID: 11400000, guid: 14dff86d93ef6be469db299a45d23968, type: 2}
+  - {fileID: 11400000, guid: a237ed890210faf40a70767a3052d206, type: 2}

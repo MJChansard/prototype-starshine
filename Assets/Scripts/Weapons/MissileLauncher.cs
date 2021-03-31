@@ -15,18 +15,10 @@ public class MissileLauncher : Weapon
 
     //[SerializeField] private GameObject projectilePrefab;
     private Hazard launchedMissile;
-    
-    private Player player;
 
-    private void Awake()
-    {
-        player = GetComponentInParent<Player>();
+    //private Player player;
 
-        Debug.LogFormat("MissileLauncher.projectilePrefab is null: {0}", RequiresInstance);
-        
-    }
-
-
+    // #DEPRECATED
     public Hazard LaunchMissile(GridBlock currentGrid, Vector2Int facingDirection)
     {
         if (weaponAmmunition > 0)

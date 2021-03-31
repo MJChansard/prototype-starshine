@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
-  m_Name: CrateLeft
+  m_Name: AsteroidRight
   m_EditorClassIdentifier: 
-  gridObject: {fileID: 5818916632108218345, guid: ccad549250dc03b489a47bdb305cb558,
+  gridObject: {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71,
     type: 3}
-  SpawnLocation: {x: -5, y: -1}
+  SpawnLocation: {x: 5, y: 0}

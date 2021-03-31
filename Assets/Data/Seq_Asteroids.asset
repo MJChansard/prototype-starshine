@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c9daf11efde03b4e91c2326f7236a89, type: 3}
-  m_Name: Seq_CrateTests
+  m_Name: Seq_Asteroids
   m_EditorClassIdentifier: 
   playerSpawnLocation: {x: 0, y: 0}
   hazardSpawnSteps:
-  - {fileID: 11400000, guid: f60f07264834372498955b7755d7d1c4, type: 2}
-  - {fileID: 11400000, guid: 4704e6014b430e74b9ef5f98bd5400ad, type: 2}
-  - {fileID: 11400000, guid: 14dff86d93ef6be469db299a45d23968, type: 2}
-  - {fileID: 11400000, guid: a237ed890210faf40a70767a3052d206, type: 2}
+  - {fileID: 11400000, guid: a8e79af6e6fb5ee46bb4eab4d52d96cf, type: 2}
+  - {fileID: 11400000, guid: ea89c358f473f964689094604e670527, type: 2}
+  - {fileID: 11400000, guid: f8147693f6698e340a99d6ad36cea715, type: 2}
+  - {fileID: 11400000, guid: fd2e5723af5944846888b14d3c69b214, type: 2}

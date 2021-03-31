@@ -21,6 +21,10 @@ public abstract class Weapon : MonoBehaviour
 
     public Sprite weaponIcon;
 
+    public void SubtractAmmo()
+    {
+        weaponAmmunition--;
+    }    
 
     virtual public void StartAnimationCoroutine(GridBlock target)
     {

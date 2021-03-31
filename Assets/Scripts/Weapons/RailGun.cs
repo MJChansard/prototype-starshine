@@ -13,10 +13,10 @@ public class RailGun : Weapon
         }
     }
 
-    [SerializeField] private GameObject railPrefab;
+    [SerializeField] private GameObject railAnimationPrefab;
     
     private GameObject launchedRailgunProjectile;
-    private float railTravelSpeed = 5.0f;
+    private float railAnimateSpeed = 5.0f;
     private Transform player;
 
     private void Start()
@@ -24,11 +24,12 @@ public class RailGun : Weapon
         player = GetComponentInParent<Transform>();     
     }
     
+
     public bool FireRailgun(Vector3 currentWorldLocation)
     {
         if (weaponAmmunition > 0)
         {
-            launchedRailgunProjectile = Instantiate(railPrefab, currentWorldLocation, player.transform.rotation);
+            launchedRailgunProjectile = Instantiate(railAnimationPrefab, currentWorldLocation, player.transform.rotation);
             weaponAmmunition -= 1;
             return true;
         }
@@ -58,7 +59,7 @@ public class RailGun : Weapon
 
             while (percentTraveled <= 1.0f)
             {
-                float traveled = (Time.time - startTime) * railTravelSpeed;
+                float traveled = (Time.time - startTime) * railAnimateSpeed;
                 percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
                 
                 launchedRailgunProjectile.transform.position = 
@@ -77,10 +78,12 @@ public class RailGun : Weapon
     }
     public override void StartAnimationCoroutine(GridBlock animationFinalGridBlock) 
     {
-        if (FireRailgun(player.position))
+        bool isSuccessful = FireRailgun(player.position);
+        if (isSuccessful)
         {
+            Debug.Log("RailGun fired successfully.");
             //ui.UpdateHUDWeapons(indexSelectedWeapon, railGun.weaponAmmunition);  Might not need to do this now actually
-            base.StartAnimationCoroutine(animationFinalGridBlock);
+            StartCoroutine(AnimationCoroutine(animationFinalGridBlock));
         }
         else
         {

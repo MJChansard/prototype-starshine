@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3232773148501958750}
   - component: {fileID: 6925512560437902226}
   - component: {fileID: 4287194383628620724}
+  - component: {fileID: -2971584910345289596}
   m_Layer: 0
   m_Name: PlayerV3
   m_TagString: Player
@@ -81,7 +82,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 1
-  ticksPerMove: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
     spawnRegion: 0
@@ -116,6 +116,19 @@ MonoBehaviour:
   AlwaysMoveOnSpawn: 1
   waitTicksPerMove: 1
   ticksUntilNextMove: 0
+--- !u!114 &-2971584910345289596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1294845988134193544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d404c645065e0d34c95be8de3cd84507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageAmount: 10
 --- !u!1 &4019135644595476076
 GameObject:
   m_ObjectHideFlags: 0
@@ -171,6 +184,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -198,6 +212,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &4207615561098321790
 GameObject:
   m_ObjectHideFlags: 0
@@ -657,9 +672,19 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5031352432676404082}
     m_Modifications:
+    - target: {fileID: -5056111817283663639, guid: d2239fa9d3c5ad94f9218addefe00f41,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2093744548760199081, guid: d2239fa9d3c5ad94f9218addefe00f41,
         type: 3}
       propertyPath: projectilePrefab
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2093744548760199081, guid: d2239fa9d3c5ad94f9218addefe00f41,
+        type: 3}
+      propertyPath: railAnimationPrefab
       value: 
       objectReference: {fileID: 5989933133772402662, guid: 1e390fef251c24c4b82a193026c3aef5,
         type: 3}

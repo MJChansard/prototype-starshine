@@ -144,20 +144,6 @@ public class GridObjectManager : MonoBehaviour {
 
         if (VerboseConsole) Debug.Log("GridObjectManager.CreateHazard() called.");
 
-        // Question Pat about this part
-        /*
-        int hazardIndex = 0;
-        for (int i = 0; i < gridObjectPrefabs.Length; i++)
-        {
-            if (gridObjectPrefabs[i].hazardType == spawnStep.HazardType)
-            {
-                hazardIndex = i;
-                break;
-            }
-        }
-        */
-
-        //Hazard hazardToSpawn = Instantiate(gridObjectPrefabs[hazardIndex]);
         GridObject newSpawn = Instantiate(spawnStep.gridObject);
 
         string borderName = "";
@@ -170,62 +156,6 @@ public class GridObjectManager : MonoBehaviour {
 
         //Debug line
         //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
-
-        //hazardToSpawn.SetHazardAnimationMode(Hazard.HazardMode.Spawn, hazardToSpawn.hazardType);
-        //hazardToSpawn.GetComponent<Health>().ToggleInvincibility(true);
-
-        /*
-        newSpawn.SetAnimationMode(GridObject.Mode.Spawn);
-        Health newSpawnHealth = newSpawn.GetComponent<Health>();
-        if (newSpawnHealth != null) newSpawnHealth.ToggleInvincibility(true);
-
-        MovePattern newSpawnMove = newSpawn.GetComponent<MovePattern>();
-        Rotator newSpawnRotator = newSpawn.GetComponent<Rotator>();
-
-        if(newSpawnMove != null && newSpawnRotator != null)
-        {
-            switch (borderName)
-            {
-                case "Bottom":
-                    newSpawnMove.SetMovePatternUp();
-                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
-                    break;
-
-                case "Top":
-                    if (newSpawn.spawnRules.requiresOrientation)
-                    {
-                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
-                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
-                    }
-
-                    newSpawnMove.SetMovePatternDown();
-                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
-                    break;
-
-                case "Right":
-                    if (newSpawn.spawnRules.requiresOrientation)
-                    {
-                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
-                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
-                    }
-
-                    newSpawnMove.SetMovePatternLeft();
-                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
-                    break;
-
-                case "Left":
-                    if (newSpawn.spawnRules.requiresOrientation)
-                    {
-                        newSpawn.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
-                        newSpawn.spawnWarningObject.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
-                    }
-
-                    newSpawnMove.SetMovePatternRight();
-                    newSpawnRotator.ApplyRotation(newSpawn.hazardType, borderName);
-                    break;
-            }
-        }
-        */
 
         AddObjectToGrid(newSpawn, spawnStep.SpawnLocation);
 
@@ -347,7 +277,6 @@ public class GridObjectManager : MonoBehaviour {
             Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
             Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
 
-            // I don't like how many calls to GridManager this is making.  #Optimize
             if (mp.CanMoveThisTurn)
             {
                 if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
@@ -427,7 +356,8 @@ public class GridObjectManager : MonoBehaviour {
                 {
                     List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
 
-                    if (player.SelectedWeaponRequiresInstance)
+                    //if (player.SelectedWeaponRequiresInstance)
+                    if (playerWeapon.RequiresInstance)
                     {
                         GameObject weaponInstance = Instantiate(player.SelectedWeaponProjectile, player.currentWorldLocation, player.transform.rotation);
                         weaponInstance.GetComponent<MovePattern>().SetMovePattern(player.Direction);
@@ -457,14 +387,18 @@ public class GridObjectManager : MonoBehaviour {
                                     if (!player.SelectedWeaponDoesPenetrate)
                                     {
                                         player.ExecuteAttackAnimation(targetBlocks[i]);
+                                        // force i to = targetBlocks.Count? #Question
                                         break;
                                     }
-                                    else if (player.SelectedWeaponDoesPenetrate && i == targetBlocks.Count - 1)
-                                        player.ExecuteAttackAnimation(targetBlocks[i]);
                                 }
                             }
                         }
+                        // End animation at end of targetBlocks List
+                        player.ExecuteAttackAnimation(targetBlocks[targetBlocks.Count - 1]);
                     }
+
+                    playerWeapon.SubtractAmmo();
+                    StartCoroutine(player.UpdateUICoroutine());
                 }
             }
 
@@ -486,7 +420,7 @@ public class GridObjectManager : MonoBehaviour {
             }
             potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
 
-            gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay);
+            gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay, 1.0f);
 
             // Spawn stuff
             if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
@@ -586,8 +520,10 @@ void DoAnimateTickBehavior(Phase phase) {
 
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {    
-        for (int i = 0; i < gridBlocks.Count; i++) {
-            if (gridBlocks[i].objectsOnBlock.Count > 1) {
+        for (int i = 0; i < gridBlocks.Count; i++)
+        {
+            if (gridBlocks[i].objectsOnBlock.Count > 1)
+            {
                 Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
 
                 for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
@@ -620,8 +556,13 @@ void DoAnimateTickBehavior(Phase phase) {
 
                         //if (gameObject.CompareTag("Player") && otherLoot != null)
                         //Player p = gridObject as Player;
-                        if (gridObject is Player && otherLoot != null)
+                        //if (gridObject is Player && otherLoot != null)
+                        if (gridObject is Player && otherGridObject is Loot)
                         {
+                            if (VerboseConsole)
+                            {
+                                Debug.LogFormat("{0} is picking up {1}", gridObject.name, otherLoot.gameObject.name);
+                            }
                             Player p = gridObject as Player;
                             p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
                             //otherGameObjectHealth.SubtractHealth(otherGameObjectHealth.CurrentHP);
@@ -629,7 +570,8 @@ void DoAnimateTickBehavior(Phase phase) {
                         }
 
                         //if (loot != null && otherGameObject.CompareTag("Player"))
-                        if (otherGridObject is Player && loot != null)
+                        //if (otherGridObject is Player && loot != null)
+                        if (otherGridObject is Player && gridObject is Loot)
                         {
                             Player p2 = otherGridObject as Player;
                             p2.AcceptLoot(loot.Type, loot.LootAmount);
@@ -639,11 +581,9 @@ void DoAnimateTickBehavior(Phase phase) {
                 }
             }
         }
-
-        //gridBlocks.Clear();   // This might be a source of a bug.  Clear() is being called on a method parameter.
-                              // Do I need to use the ref modifier?
     }
-    private bool ProcessGridObjectHealth(List<GridObject> objects, float delayDestruction = 0.0f)
+
+    private bool ProcessGridObjectHealth(List<GridObject> objects, float delayAnimation = 0.0f)
     {
         bool returnBool = false;
         for (int i = objects.Count - 1; i > -1; i--)
@@ -651,8 +591,8 @@ void DoAnimateTickBehavior(Phase phase) {
             Health hp = objects[i].GetComponent<Health>();
             if (hp != null && !hp.HasHP)
             {
-                StartCoroutine(DropLootCoroutine(objects[i], objects[i].currentWorldLocation, 0.0f));
-                StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayDestruction));
+                StartCoroutine(DropLootCoroutine(objects[i], objects[i].targetWorldLocation, delayAnimation));    // <- objects[i].currentWorldLocation
+                StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayAnimation));
                 //ObjectsToDestroyAtStart(objects[i]);
 
                 returnBool = true;

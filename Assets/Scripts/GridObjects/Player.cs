@@ -41,7 +41,7 @@ public class Player : GridObject
     public int SelectedWeaponDamage { get { return weaponInventory[indexSelectedWeapon].Damage; } }
     public bool SelectedWeaponDoesPenetrate { get { return weaponInventory[indexSelectedWeapon].DoesPenetrate; } }
     public bool SelectedWeaponRequiresInstance { get { return weaponInventory[indexSelectedWeapon].RequiresInstance; } }
-    public bool SelectedWeaponDoesFunction { get { return weaponInventory[indexSelectedWeapon].weaponAmmunition > 0; } }
+    //public bool SelectedWeaponDoesFunction { get { return weaponInventory[indexSelectedWeapon].weaponAmmunition > 0; } }
     public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
 
     public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
@@ -213,213 +213,21 @@ public class Player : GridObject
         //thrusterCoroutineIsRunning = false;
     }
 
-    private IEnumerator UpdateUICoroutine()
+    public IEnumerator UpdateUICoroutine()
     {
         yield return new WaitForSeconds(1.0f);
-        // Update UI
+
         ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
 
         for (int j = 0; j < weaponInventory.Length; j++)
         {
             ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
         }
-
     }
-
 
     public void ExecuteAttackAnimation(GridBlock gridBlock)
     {
-
         weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-    }
-
-    private void Attack()
-    {
-        //isAttackingThisTick = true;
-        //Weapon currentWeapon = weaponInventory[indexSelectedWeapon];
-
-        if (weaponInventory[indexSelectedWeapon].Name == "AutoCannon")
-        {
-            //currentWeapon.StartAnimationCoroutine();                       
-        }
-
-        /*
-        GridBlock currentGridBlock = gm.FindGridBlockContainingObject(this.gameObject);
-        Vector2Int currentPlayerGridLocation = currentGridBlock.location;
-        Weapon currentWeapon = weaponInventory[indexSelectedWeapon];
-
-        int lengthX = gm.levelGrid.GetLength(0);
-        int lengthY = gm.levelGrid.GetLength(1);
-
-        int limitX = gm.GridWidth;
-        int limitY = gm.GridHeight;
-
-        if (currentWeapon.Name == "Missile Launcher")
-        {
-            MissileLauncher launcher = currentWeapon.GetComponent<MissileLauncher>();
-            Hazard launchedMissile = launcher.LaunchMissile(currentGridBlock, currentlyFacing);
-
-            if (launchedMissile == null)
-            {
-                Debug.Log("Out of Missile Launcher ammo.");
-                return;
-            }
-            else if (OnPlayerAddHazard == null)
-            {
-                Debug.Log("No subscribers to OnPlayerAddHazard().");
-                return;
-            }
-            else
-            {
-                OnPlayerAddHazard(launchedMissile, currentGridBlock.location, false);
-                ui.UpdateHUDWeapons(indexSelectedWeapon, launcher.weaponAmmunition);
-                return;
-            }
-        }
-
-
-        // Identify possible targets based on PlayerManager.currentlyFacing
-        // Targets eligible for both AutoCannon and Railgun
-        List<GridBlock> possibleTargetBlocks = new List<GridBlock>();
-
-        if (currentlyFacing == Vector2Int.up)
-        {
-            for (int i = 0; i < gm.GridWidth; i++)
-            {
-                for (int j = 0; j < gm.GridHeight; j++)
-                {
-                    if (gm.levelGrid[i, j].location.x == currentPlayerGridLocation.x &&
-                        gm.levelGrid[i, j].location.y > currentPlayerGridLocation.y &&
-                        gm.levelGrid[i, j].location.y <= gm.BoundaryTopPlay)
-                    {
-                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
-                    }
-                }
-            }
-        }
-        else if (currentlyFacing == Vector2Int.down)
-        {
-            for (int i = 0; i < gm.GridWidth; i++)
-            {
-                for (int j = 0; j < gm.GridHeight; j++)
-                {
-                    if (gm.levelGrid[i, j].location.x == currentPlayerGridLocation.x &&
-                        gm.levelGrid[i, j].location.y < currentPlayerGridLocation.y &&
-                        gm.levelGrid[i, j].location.y >= gm.BoundaryBottomPlay)
-                    {
-                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
-                    }
-                }
-            }
-        }
-        else if (currentlyFacing == Vector2Int.left)
-        {
-            for (int i = 0; i < gm.GridWidth; i++)
-            {
-                for (int j = 0; j < gm.GridHeight; j++)
-                {
-                    if (gm.levelGrid[i, j].location.y == currentPlayerGridLocation.y &&
-                        gm.levelGrid[i, j].location.x < currentPlayerGridLocation.x &&
-                        gm.levelGrid[i, j].location.x >= gm.BoundaryLeftPlay)
-                    {
-                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
-                    }
-                }
-            }
-        }
-        else if (currentlyFacing == Vector2Int.right)
-        {
-            for (int i = 0; i < gm.GridWidth; i++)
-            {
-                for (int j = 0; j < gm.GridHeight; j++)
-                {
-                    if (gm.levelGrid[i, j].location.y == currentPlayerGridLocation.y &&
-                        gm.levelGrid[i, j].location.x > currentPlayerGridLocation.x &&
-                        gm.levelGrid[i, j].location.x <= gm.BoundaryRightPlay)
-                    {
-                        possibleTargetBlocks.Add(gm.levelGrid[i, j]);
-                    }
-                }
-            }
-        }
-
-        if (currentWeapon.Name == "AutoCannon")
-        {
-            for (int i = 0; i < possibleTargetBlocks.Count; i++)
-            {
-                for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
-                {
-                    Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
-                    if (hp != null)
-                    {
-                        currentWeapon.StartAnimationCoroutine(possibleTargetBlocks[i]);
-                        hp.SubtractHealth(currentWeapon.Damage);
-                        Debug.Log("Target's current health: " + hp.CurrentHP);
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (currentWeapon.Name == "Railgun")
-        {
-            /*  STEPS
-             *   - Instantiate the Rail at Player's current location
-             *   - Start the animation coroutine, which propels the rail from the Player's location, in the
-             *      direction the player is facing, to the end of the grid
-             *   - Apply damage to all objects in between the Player and the end of the grid
-             *   - Move the player back two GridBlocks
-             *
-
-            RailGun railGun = currentWeapon.GetComponent<RailGun>();
-            if (railGun.FireRailgun(currentWorldLocation))
-            {
-                ui.UpdateHUDWeapons(indexSelectedWeapon, railGun.weaponAmmunition);
-
-                // Determine destination/final GridBlock
-                GridBlock endAnimationGridLocation;
-                if (currentlyFacing == Vector2Int.up)
-                {
-                    Vector2Int index = new Vector2Int(currentPlayerGridLocation.x, gm.BoundaryTopPlay);
-                    //Debug.LogFormat("Index when facing up: {0}", index);
-                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-                }
-                else if (currentlyFacing == Vector2Int.down)
-                {
-                    Vector2Int index = new Vector2Int(currentPlayerGridLocation.x, gm.BoundaryBottomPlay);
-                    //Debug.LogFormat("Index when facing down: {0}", index);
-                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-                }
-                else if (currentlyFacing == Vector2Int.left)
-                {
-                    Vector2Int index = new Vector2Int(gm.BoundaryLeftPlay, currentPlayerGridLocation.y);
-                    //Debug.LogFormat("Index when facing left: {0}", index);
-                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-                }
-                else
-                {
-                    Vector2Int index = new Vector2Int(gm.BoundaryRightPlay, currentPlayerGridLocation.y);
-                    //Debug.LogFormat("Index when facing right: {0}", index);
-                    endAnimationGridLocation = gm.FindGridBlockByLocation(index);
-                }
-
-                railGun.StartAnimationCoroutine(endAnimationGridLocation);
-
-                // Apply damage
-                for (int i = 0; i < possibleTargetBlocks.Count; i++)
-                {
-                    for (int j = 0; j < possibleTargetBlocks[i].objectsOnBlock.Count; j++)
-                    {
-                        Health hp = possibleTargetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
-                        if (hp != null)
-                        {
-                            hp.SubtractHealth(currentWeapon.Damage);
-                        }
-                    }
-                }
-            }
-        }*/
     }
 
 }
