@@ -10,7 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c9daf11efde03b4e91c2326f7236a89, type: 3}
-  m_Name: AmmoCrateTests
+  m_Name: Seq_AsteroidsLarge
   m_EditorClassIdentifier: 
   playerSpawnLocation: {x: 0, y: 0}
-  hazardSpawnSteps: []
+  hazardSpawnSteps:
+  - {fileID: 11400000, guid: 0891f22cab25e654ea2baefe37592539, type: 2}
+  - {fileID: 11400000, guid: 63e7d70453b05634989d14434253f98f, type: 2}
+  - {fileID: 11400000, guid: 3590123466484cb4796dd190679582c6, type: 2}
+  - {fileID: 11400000, guid: 627f9855aea883f4ba4a5e1103663b69, type: 2}

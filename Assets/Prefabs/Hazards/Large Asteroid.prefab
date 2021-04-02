@@ -47,6 +47,7 @@ SpriteRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -166,13 +167,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 2
-  ticksPerMove: 2
   spawnWarningObject: {fileID: 1448031916}
   spawnRules:
     spawnRegion: 1
     avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
+  IsLeavingGrid: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   moveSpeed: 1
@@ -218,6 +219,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AlwaysMoveOnSpawn: 1
   waitTicksPerMove: 2
+  ticksUntilNextMove: 0
 --- !u!114 &22195418758050131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,8 +278,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737041624129610704}
-  m_LocalRotation: {x: 0.000000049071026, y: 0.99999964, z: -4.282212e-11, w: -0.0008726556}
-  m_LocalPosition: {x: 0, y: -0.371, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5945174927175767820}
@@ -290,7 +292,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737041624129610704}
-  m_Mesh: {fileID: -24993354237138243, guid: b9ffbbc1dcb198e439da17a440e2bcfe, type: 3}
+  m_Mesh: {fileID: -24993354237138243, guid: 586656d1b9eab3745a12db41244e717e, type: 3}
 --- !u!23 &8135387177822178329
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -306,6 +308,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -330,3 +333,4 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}

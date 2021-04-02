@@ -9,9 +9,6 @@ public class Player : GridObject
     [SerializeField] private GameObject Thruster;
     
     [Header("Weapon Inventory")]
-    //    [SerializeField] private GameObject Cannon;
-    //    [SerializeField] private GameObject MissileLauncher;
-    //    [SerializeField] private GameObject RailGun;
     [SerializeField] private GameObject[] weaponObjects;
     [SerializeField] private Transform weaponSource;
         
@@ -27,8 +24,6 @@ public class Player : GridObject
     #region Fields & Properties
     public bool InputActive = true;
 
-    //public bool IsAttackingThisTick { get { return isAttackingThisTick; } }
-    //private bool isAttackingThisTick = false;
     public bool IsAttackingThisTick = false;
 
     public Vector2Int Direction { get { return currentlyFacing; } }

@@ -10,7 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0168b4e3c7536404e9620b7fac2550d6, type: 3}
-  m_Name: Test3-LargeAsteroid
+  m_Name: AsteroidLargeRight
   m_EditorClassIdentifier: 
-  HazardType: 2
-  SpawnLocation: {x: -2, y: 4}
+  gridObject: {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892,
+    type: 3}
+  SpawnLocation: {x: 5, y: 0}

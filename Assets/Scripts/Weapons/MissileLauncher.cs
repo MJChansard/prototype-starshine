@@ -13,10 +13,7 @@ public class MissileLauncher : Weapon
         }
     }
 
-    //[SerializeField] private GameObject projectilePrefab;
     private Hazard launchedMissile;
-
-    //private Player player;
 
     // #DEPRECATED
     public Hazard LaunchMissile(GridBlock currentGrid, Vector2Int facingDirection)
