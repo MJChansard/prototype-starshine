@@ -8,6 +8,7 @@ TagManager:
   - Hazard
   - Jump Fuel
   - Debug HUD
+  - Game Display
   layers:
   - Default
   - TransparentFX

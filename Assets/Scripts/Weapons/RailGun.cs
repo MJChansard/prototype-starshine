@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class RailGun : Weapon
 {
@@ -13,7 +14,7 @@ public class RailGun : Weapon
         }
     }
 
-    [SerializeField] private GameObject railAnimationPrefab;
+    [BoxGroup("Weapon Assets")] [SerializeField] private GameObject railAnimationPrefab;
     
     private GameObject launchedRailgunProjectile;
     private float railAnimateSpeed = 5.0f;

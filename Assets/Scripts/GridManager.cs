@@ -90,136 +90,32 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public Transform gridContainer;
     
     
+    [TitleGroup("GRID PROPERTIES")]
     [SerializeField] private int gridSpacing = 1;
     [SerializeField] private GameObject debugGridPrefab;
     [SerializeField] private bool gridBlockLabels = false;
-
-
-    [TitleGroup("LEVEL MANAGEMENT")]
-    [SerializeField] private LevelData levelData;
-    public int currentLevel;
-
-    [SerializeField] private bool overrideLevelData;
-    [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridWidth;
-    [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridHeight;
-
-    LevelData.LevelDataRow currentLevelData;
-    
-    /*  #DEPRECATING
-    private int gridWidth;
-    private int gridHeight;
-    private int jumpFuelNeededForNextLevel;
-    private int numberOfPhenomenaToSpawn;
-    */
-
+    public Transform gridContainer;
+           
     public System.Action OnUpdateBoard;
-    private GridBlock[,] levelGrid;
 
+    private GridBlock[,] levelGrid;
     private List<Vector2Int> eligiblePerimeterSpawns = new List<Vector2Int>();
     private List<Vector2Int> eligibleInteriorSpawns = new List<Vector2Int>();
     private List<Vector2Int> eligibleAllSpawns = new List<Vector2Int>();
+    private LevelData.LevelDataRow currentLevelData;
 
     public void Init()
     {
-        if (currentLevel == 0) currentLevel = 1;
-
-        if (overrideLevelData)
-        {
-            currentLevelData.levelWidth = inspectorGridWidth + 1;
-            currentLevelData.levelHeight = inspectorGridHeight + 1;
-            currentLevelData.jumpFuelAmount = 4;
-            currentLevelData.numberOfPhenomenaToSpawn = 0;
-        }
-        else
-        {
-            currentLevelData = levelData.LevelTable[currentLevel - 1];              //Offset for zero-indexed array
-        }
-        
         InitializeGrid(currentLevelData, debugGridPrefab, 0f);
-        Debug.LogFormat("Current value for [currentLevel]: {0}", currentLevel);
     }
 
-    /* V1
-    private void ReadLevelData(int levelNumber)
+
+    public void ReceiveLevelData(LevelData.LevelDataRow levelData)
     {
-        if (levelData == null)
-        {
-            gridWidth = 10;
-            gridHeight = 8;
-        }
-        else if (overrideLevelData)
-        {
-            gridWidth = inspectorGridWidth;
-            gridHeight = inspectorGridHeight;
-        }
-        else
-        {
-            gridWidth = levelData.LevelTable[levelNumber].levelWidth;
-            gridHeight = levelData.LevelTable[levelNumber].levelHeight;
-            jumpFuelNeededForNextLevel = levelData.LevelTable[levelNumber].jumpFuelAmount;
-            numberOfPhenomenaToSpawn = levelData.LevelTable[levelNumber].jumpFuelAmount;
-        }
-
-        // I could alter this method to have a return type of LevelData.LevelDataRow
-        // This could then be fed into InitializeGrid as a parameter, so it would know how to create the grid
-        // This would require nesting calls to these methods in another method tho ... which could be Init()
-        // Then another method NextLevel() could be used to call ReadLevelData() and InitializeGrid()
+        currentLevelData = levelData;
     }
-    */
-
-    /*
-    private LevelData.LevelDataRow GetLevelData(int levelNumber)
-    {       
-        if (levelData == null)
-        {
-            LevelData.LevelDataRow nextLevelData = new LevelData.LevelDataRow()
-            {
-                levelWidth = 10,
-                levelHeight = 8,
-                jumpFuelAmount = 4,
-                numberOfPhenomenaToSpawn = 0
-            };
-
-            return nextLevelData;
-        }
-        else if (overrideLevelData)
-        {
-
-            LevelData.LevelDataRow nextLevelData = new LevelData.LevelDataRow()
-            {
-                levelWidth = inspectorGridWidth,
-                levelHeight = inspectorGridHeight,
-                jumpFuelAmount = 4,
-                numberOfPhenomenaToSpawn = 0
-            };
-
-            return nextLevelData;
-        }
-        else
-        {
-            LevelData.LevelDataRow nextLevelData = new LevelData.LevelDataRow()
-            {
-                levelWidth = levelData.LevelTable[levelNumber].levelWidth,
-                levelHeight = levelData.LevelTable[levelNumber].levelHeight,
-                jumpFuelAmount = levelData.LevelTable[levelNumber].jumpFuelAmount,
-                numberOfPhenomenaToSpawn = levelData.LevelTable[levelNumber].jumpFuelAmount
-            };
-
-            return nextLevelData;
-        }
-
-        // Creates new LevelData.LevelDataRow objects to pass into InitializeGrid()
-        // I've just realized that this whole method isn't really needed ... motherfucker
-        // There goes 2 hours thinking about architecture for something that isn't even needed dammit!
-        // Anyway, I think InitializeGrid() can just accept a LevelData.LevelDataRow parameter, which will be provided by:
-        //  - Init()
-        //  - NextLevel()
-    }
-    */
-
     private void InitializeGrid()
     {
         levelGrid = new GridBlock[currentLevelData.levelWidth, currentLevelData.levelHeight];
@@ -249,7 +145,6 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    //private void InitializeGrid(GameObject gridPoint, float offset)
     private void InitializeGrid(LevelData.LevelDataRow initLevelData, GameObject gridPoint, float offset)
     {
         /*  SUMMARY
@@ -266,8 +161,8 @@ public class GridManager : MonoBehaviour
             initLevelData.numberOfPhenomenaToSpawn);
 
         // Pad width and height by 1 for spawn ring
-        int _width = initLevelData.levelWidth + 1;
-        int _height = initLevelData.levelHeight + 1;       
+        //int _width = initLevelData.levelWidth + 1;
+        //int _height = initLevelData.levelHeight + 1;       
         //levelGrid = new GridBlock[_width, _height];
         levelGrid = new GridBlock[initLevelData.levelWidth, initLevelData.levelHeight];
 
@@ -321,8 +216,26 @@ public class GridManager : MonoBehaviour
         Debug.Log("Object: [levelGrid] successfully created.");
         Debug.LogFormat("levelGrid d1 length: {0} \n levelgrid d2 length: {1}", levelGrid.GetLength(0), levelGrid.GetLength(1));
     }
+    private void DestroyGrid()
+    {
+        for (int i = 0; i < currentLevelData.levelWidth; i++)
+        {
+            for (int j = 0; j < currentLevelData.levelHeight; j++)
+            {
+                levelGrid[i, j].objectsOnBlock.Clear();
+                levelGrid[i, j] = null;
+            }
+        }
 
-    
+        levelGrid = null;
+    }
+    public void NextLevel(LevelData.LevelDataRow nextLevelData)
+    {
+        DestroyGrid();
+        InitializeGrid(nextLevelData, debugGridPrefab, 0f);
+    }
+  
+
     public Vector3 GridToWorld(Vector2Int gridLocation)
     {
         return new Vector3

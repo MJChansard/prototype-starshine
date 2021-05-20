@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 [CreateAssetMenu(fileName = "SpawnStep", menuName = "Scriptable Objects/Spawn Step", order = 1)]
 public class SpawnStep : ScriptableObject
 {
-    public GridObject gridObject;   // Reference to the GridObject Prefab
+    [AssetSelector(Paths = "Assets/Prefabs/GridObjects")]
+    public GridObject gridObject;
     public Vector2Int SpawnLocation;
 
     // CONSTRUCTORS

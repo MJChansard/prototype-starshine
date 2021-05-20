@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridObject: {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892,
     type: 3}
-  SpawnLocation: {x: 5, y: 0}
+  SpawnLocation: {x: 5, y: -1}

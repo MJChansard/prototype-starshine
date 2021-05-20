@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class GridObjectManager : MonoBehaviour {
+public class GridObjectManager : MonoBehaviour
+{
     #region Grid Object Manager Data   
     [SerializeField] private bool VerboseConsole = true;
 
@@ -23,9 +24,7 @@ public class GridObjectManager : MonoBehaviour {
         Player = 1,
         Manager = 2
     }
-    //private GamePhase currentPhase;
-
-
+    
 
     #region Object Spawning
     [Header("Spawn Management")]
@@ -42,30 +41,33 @@ public class GridObjectManager : MonoBehaviour {
     #endregion
 
 
-    private void Start() {
+    public void Init()
+    {
         gm = GetComponent<GridManager>();
-
+        
         minVector2 = new Vector2Int(gm.BoundaryLeftActual, gm.BoundaryBottomActual);
         maxVector2 = new Vector2Int(gm.BoundaryRightActual, gm.BoundaryTopActual);
 
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
-    }
-
-    public void Init() {
         currentTick = 1;
 
         gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
         player = gridObjectsInPlay[0].GetComponent<Player>();
 
-        if (insertSpawnSequences.Count > 0) {
-            for (int i = 0; i < insertSpawnSequences.Count; i++) {
-                for (int j = 0; j < insertSpawnSequences[i].hazardSpawnSteps.Length; j++) {
+        if (insertSpawnSequences.Count > 0)
+        {
+            for (int i = 0; i < insertSpawnSequences.Count; i++)
+            {
+                for (int j = 0; j < insertSpawnSequences[i].hazardSpawnSteps.Length; j++)
+                {
                     spawnQueue.Enqueue(insertSpawnSequences[i].hazardSpawnSteps[j]);
                 }
             }
 
             CreateGridObject(spawnQueue.Dequeue());
-        } else {
+        }
+        else
+        {
             AddSpawnStep();
             CreateGridObject(spawnQueue.Dequeue());
         }
@@ -325,21 +327,15 @@ public class GridObjectManager : MonoBehaviour {
                 {
                     List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
 
-                    //if (player.SelectedWeaponRequiresInstance)
-                    if (playerWeapon.RequiresInstance)
+                    if (playerWeapon.RequiresGridPlacement)
                     {
-                        GameObject weaponInstance = Instantiate(player.SelectedWeaponProjectile, player.currentWorldLocation, player.transform.rotation);
+                        //GameObject weaponInstance = Instantiate(player.SelectedWeaponProjectile, player.currentWorldLocation, player.transform.rotation);
+                        GameObject weaponInstance = Instantiate(playerWeapon.WeaponPrefab, player.currentWorldLocation, player.transform.rotation);
                         weaponInstance.GetComponent<MovePattern>().SetMovePattern(player.Direction);
 
                         GridObject weaponObject = weaponInstance.GetComponent<GridObject>();
                         AddObjectToGrid(weaponObject, gm.WorldToGrid(player.currentWorldLocation));
                         weaponObject.targetWorldLocation = weaponObject.currentWorldLocation + gm.GridToWorld(player.Direction);
-
-                        // #Optimize.  Can I feed this into objectProcessing instead of creating a new List?
-                        //List<GridObject> weaponList = new List<GridObject>();
-                        //weaponList.Add(weaponObject);
-                        //MoveGridObjectsForTick(weaponList);
-
                         objectProcessing.Add(weaponObject);
                     }
                     else
@@ -351,9 +347,9 @@ public class GridObjectManager : MonoBehaviour {
                                 Health hp = targetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
                                 if (hp != null)
                                 {
-                                    hp.SubtractHealth(player.SelectedWeaponDamage);
+                                    hp.SubtractHealth(player.SelectedWeapon.Damage);
 
-                                    if (!player.SelectedWeaponDoesPenetrate)
+                                    if (!player.SelectedWeapon.DoesPenetrate)
                                     {
                                         player.ExecuteAttackAnimation(targetBlocks[i]);
                                         // force i to = targetBlocks.Count? #Question
@@ -420,6 +416,17 @@ public class GridObjectManager : MonoBehaviour {
 
         //StartCoroutine(AnimateTick);
     }
+    public void NextLevel()
+    {
+        for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
+        {
+            Destroy(gridObjectsInPlay[i].gameObject);
+            gridObjectsInPlay.RemoveAt(i);
+        }
+
+        //gridObjectsInPlay[0].gameObject.SetActive(false);       //Disable Player 
+        StartCoroutine(player.AnimateNextLevel());
+    }
 
     /*
         List<AnimateTickBehaviors> tickBehaviors;
@@ -477,21 +484,24 @@ public class GridObjectManager : MonoBehaviour {
 
                         if (gameObjectDamage != null && otherGameObjectHealth != null)
                         {
-                            if (VerboseConsole) Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
+                            if (VerboseConsole)
+                                Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
 
                             otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
                         }
 
                         if (gameObjectHealth != null && otherGameObjectDamage != null)
                         {
-                            if (VerboseConsole) Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
+                            if (VerboseConsole)
+                                Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
 
                             gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
                         }
 
                         if (gridObject is Player && otherGridObject is Loot)
                         {
-                            if (VerboseConsole) Debug.LogFormat("{0} is picking up {1}", gridObject.name, otherLoot.gameObject.name);
+                            if (VerboseConsole)
+                                Debug.LogFormat("{0} is picking up {1}", gridObject.name, otherLoot.gameObject.name);
 
                             Player p = gridObject as Player;
                             p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
@@ -500,7 +510,8 @@ public class GridObjectManager : MonoBehaviour {
 
                         if (otherGridObject is Player && gridObject is Loot)
                         {
-                            if (VerboseConsole) Debug.LogFormat("{0} is picking up {1}", otherGridObject.name, loot.gameObject.name);
+                            if (VerboseConsole)
+                                Debug.LogFormat("{0} is picking up {1}", otherGridObject.name, loot.gameObject.name);
 
                             Player p = otherGridObject as Player;
                             p.AcceptLoot(loot.Type, loot.LootAmount);
@@ -526,8 +537,6 @@ public class GridObjectManager : MonoBehaviour {
         }
         return false;
     }
-        
-
     private bool ProcessGridObjectHealth(List<GridObject> objects, float delayAnimation = 0.0f)
     {
         bool returnBool = false;
@@ -621,5 +630,13 @@ public class GridObjectManager : MonoBehaviour {
         public GridObject gridObject;
         public ExecutionPhase executionPhase;
         public BehaviorType behaviorType;
+    }
+
+
+    public class PlayerData
+    {
+        public int amountAutoCannonAmmo;
+        public int amountMissileAmmo;
+        public int amountRailGunAmmo;
     }
 }

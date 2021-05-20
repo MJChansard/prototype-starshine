@@ -82,6 +82,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 1
+  HideProperty: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
     spawnRegion: 0
@@ -97,7 +98,7 @@ MonoBehaviour:
   - {fileID: 8237256412438012411}
   - {fileID: 4266837908584349192}
   - {fileID: 703821691080592845}
-  weaponSource: {fileID: 6672665383993168768}
+  weaponSource: {fileID: 0}
   speed: 2
   InputActive: 1
   IsAttackingThisTick: 0
@@ -837,6 +838,12 @@ PrefabInstance:
     - target: {fileID: 7858496990284323740, guid: 7002efe99bf17a44793c13ddd8d895b0,
         type: 3}
       propertyPath: projectilePrefab
+      value: 
+      objectReference: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
+        type: 3}
+    - target: {fileID: 7858496990284323740, guid: 7002efe99bf17a44793c13ddd8d895b0,
+        type: 3}
+      propertyPath: onGridWeaponPrefab
       value: 
       objectReference: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
         type: 3}

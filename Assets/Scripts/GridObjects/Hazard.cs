@@ -19,7 +19,7 @@ public class Hazard : GridObject
         AmmoCrate = 5,
         PlayerMissile = 11
     }
-    
+
     public bool RequiresSpawnAnimation
     {
         get

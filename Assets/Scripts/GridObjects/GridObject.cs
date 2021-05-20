@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public abstract class GridObject : MonoBehaviour
 {
@@ -12,16 +13,21 @@ public abstract class GridObject : MonoBehaviour
     [Header("Spawn Properties")]
     public GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
-    public bool IsLeavingGrid = false;
-    
+
+
+    // Animation fields
     [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int
     [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int
-    public float moveSpeed;                         // Animation movement speed?
-        
+    [HideInInspector] public float moveSpeed;                   // Animation movement speed?
     public float Distance
     {
         get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
     }
+
+    // Tick update fields
+    [HideInInspector] public bool IsLeavingGrid = false;
+    
+    
 
     // Object Modes
     public enum Mode

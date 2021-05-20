@@ -99,7 +99,7 @@ GameObject:
   - component: {fileID: 604867461825590119}
   m_Layer: 0
   m_Name: Asteroid
-  m_TagString: Untagged
+  m_TagString: Hazard
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -244,6 +244,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 2
+  HideProperty: 1
   spawnWarningObject: {fileID: 4861070605109162996}
   spawnRules:
     spawnRegion: 1

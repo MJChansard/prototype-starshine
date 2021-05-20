@@ -21,7 +21,7 @@ public class MissileLauncher : Weapon
         if (weaponAmmunition > 0)
         {
             Vector3 currentWorldLocation = new Vector3(currentGrid.location.x, currentGrid.location.y, 0);
-            GameObject missile = Instantiate(projectilePrefab, currentWorldLocation, transform.rotation);
+            GameObject missile = Instantiate(onGridWeaponPrefab, currentWorldLocation, transform.rotation);
             MovePattern movement = missile.GetComponent<MovePattern>();
 
             if (facingDirection == Vector2Int.up) movement.SetMovePatternUp();

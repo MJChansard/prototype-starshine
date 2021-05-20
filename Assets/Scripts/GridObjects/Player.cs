@@ -15,6 +15,7 @@ public class Player : GridObject
     private Weapon[] weaponInventory;
     private int indexSelectedWeapon = 0;
 
+    public int CurrentJumpFuel { get { return currentJumpFuel; } }
     private int currentJumpFuel = 0;
     private int maxFuelAmount = 10;
 
@@ -22,8 +23,8 @@ public class Player : GridObject
     #endregion
 
     #region Fields & Properties
+    // Tick update fields
     public bool InputActive = true;
-
     public bool IsAttackingThisTick = false;
 
     public Vector2Int Direction { get { return currentlyFacing; } }
@@ -33,13 +34,10 @@ public class Player : GridObject
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
 
-    public int SelectedWeaponDamage { get { return weaponInventory[indexSelectedWeapon].Damage; } }
-    public bool SelectedWeaponDoesPenetrate { get { return weaponInventory[indexSelectedWeapon].DoesPenetrate; } }
-    public bool SelectedWeaponRequiresInstance { get { return weaponInventory[indexSelectedWeapon].RequiresInstance; } }
-    //public bool SelectedWeaponDoesFunction { get { return weaponInventory[indexSelectedWeapon].weaponAmmunition > 0; } }
-    public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
+    //public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
 
     public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
+    public bool IsAlive { get { return hp.HasHP; } }
     #endregion
 
 
@@ -68,8 +66,9 @@ public class Player : GridObject
 
         ui = FindObjectOfType<PlayerHUD>();
         ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
-    }
 
+        //HideProperty = true;
+    }
     private void Update()
     {
         if (InputActive) PlayerInput();
@@ -77,7 +76,8 @@ public class Player : GridObject
         if (Input.GetKeyDown(KeyCode.T)) Debug.LogFormat("Currently facing: {0}", currentlyFacing);
     }
 
-    void PlayerInput()
+
+    private void PlayerInput()
     {
         // Weapon Selection
         if (Input.GetKeyDown(KeyCode.Q))
@@ -134,9 +134,10 @@ public class Player : GridObject
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            Debug.LogFormat("Test of SelectedWeaponRequiresInstance: {0}", SelectedWeaponRequiresInstance);
+            // Debug button
         }
     }
+
 
     private void SelectWeapon(int choice)
     {
@@ -148,31 +149,10 @@ public class Player : GridObject
             indexSelectedWeapon = newWeaponIndex;
         }
     }
-
-
-    public float OnTickUpdate()
+    public void ExecuteAttackAnimation(GridBlock gridBlock)
     {
-        if (IsAttackingThisTick)
-        {
-            //Attack();
-            return attackWaitTime;
-        }
-        else
-        {
-            Move();
-            return moveWaitTime;
-        }
-
-        //return waitWaitTime;
+        weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
     }
-
-
-    private void Move()
-    {
-        StartCoroutine(AnimateThrusterCoroutine());
-        StartCoroutine(UpdateUICoroutine());
-    }  
-    
     public void AcceptLoot(Loot.LootType type, int amount)
     {
         if (type == Loot.LootType.JumpFuel)
@@ -196,6 +176,36 @@ public class Player : GridObject
         }
     }
 
+
+    public float OnTickUpdate()
+    {
+        if (IsAttackingThisTick)
+        {
+            return attackWaitTime;
+        }
+        else
+        {
+            StartCoroutine(AnimateThrusterCoroutine());
+            StartCoroutine(UpdateUICoroutine());
+
+            return moveWaitTime;
+        }
+
+        //return waitWaitTime;
+    }
+
+    public GridObjectManager.PlayerData StoreDataForNextLevel()
+    {
+        GridObjectManager.PlayerData pData = new GridObjectManager.PlayerData();
+
+        pData.amountAutoCannonAmmo = weaponInventory[0].weaponAmmunition;
+        pData.amountMissileAmmo = weaponInventory[1].weaponAmmunition;
+        pData.amountRailGunAmmo = weaponInventory[2].weaponAmmunition;
+
+        return pData;
+    }
+        
+    // #Coroutines
     private IEnumerator AnimateThrusterCoroutine()
     {
         //thrusterCoroutineIsRunning = true;
@@ -207,7 +217,6 @@ public class Player : GridObject
 
         //thrusterCoroutineIsRunning = false;
     }
-
     public IEnumerator UpdateUICoroutine()
     {
         yield return new WaitForSeconds(1.0f);
@@ -219,10 +228,10 @@ public class Player : GridObject
             ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
         }
     }
-
-    public void ExecuteAttackAnimation(GridBlock gridBlock)
+    public IEnumerator AnimateNextLevel()
     {
-        weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-    }
+        this.gameObject.SetActive(false);
 
+        yield return new WaitForSeconds(3.0f);
+    }
 }
