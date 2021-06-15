@@ -31,7 +31,6 @@ public class RailGun : Weapon
         if (weaponAmmunition > 0)
         {
             launchedRailgunProjectile = Instantiate(railAnimationPrefab, currentWorldLocation, player.transform.rotation);
-            weaponAmmunition -= 1;
             return true;
         }
 

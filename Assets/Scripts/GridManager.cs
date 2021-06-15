@@ -30,7 +30,7 @@ public class GridManager : MonoBehaviour
             if (currentLevelData.levelHeight % 2 == 0)
                 return (currentLevelData.levelHeight / 2) - 1;
             else
-                return currentLevelData.levelWidth / 2;
+                return currentLevelData.levelHeight / 2;
         }
     }
     public int BoundaryBottomActual
@@ -101,9 +101,9 @@ public class GridManager : MonoBehaviour
     public System.Action OnUpdateBoard;
 
     private GridBlock[,] levelGrid;
-    private List<Vector2Int> eligiblePerimeterSpawns = new List<Vector2Int>();
-    private List<Vector2Int> eligibleInteriorSpawns = new List<Vector2Int>();
-    private List<Vector2Int> eligibleAllSpawns = new List<Vector2Int>();
+    private List<Vector2Int> eligiblePerimeterSpawns    = new List<Vector2Int>();
+    private List<Vector2Int> eligibleInteriorSpawns     = new List<Vector2Int>();
+    private List<Vector2Int> eligibleAllSpawns          = new List<Vector2Int>();
     private LevelData.LevelDataRow currentLevelData;
 
     public void Init()
@@ -111,11 +111,7 @@ public class GridManager : MonoBehaviour
         InitializeGrid(currentLevelData, debugGridPrefab, 0f);
     }
 
-
-    public void ReceiveLevelData(LevelData.LevelDataRow levelData)
-    {
-        currentLevelData = levelData;
-    }
+    
     private void InitializeGrid()
     {
         levelGrid = new GridBlock[currentLevelData.levelWidth, currentLevelData.levelHeight];
@@ -218,21 +214,39 @@ public class GridManager : MonoBehaviour
     }
     private void DestroyGrid()
     {
-        for (int i = 0; i < currentLevelData.levelWidth; i++)
+        for (int w = 0; w < levelGrid.GetLength(0); w++)
         {
-            for (int j = 0; j < currentLevelData.levelHeight; j++)
+            for (int h = 0; h < levelGrid.GetLength(1); h++)
             {
-                levelGrid[i, j].objectsOnBlock.Clear();
-                levelGrid[i, j] = null;
+                levelGrid[w, h].objectsOnBlock.Clear();
+                levelGrid[w, h] = null;
             }
         }
 
         levelGrid = null;
+
+        for (int i = 0; i < gridContainer.childCount; i++)
+        {
+            Destroy(gridContainer.GetChild(i).gameObject);
+        }
     }
-    public void NextLevel(LevelData.LevelDataRow nextLevelData)
+
+
+    public void ReceiveLevelData(LevelData.LevelDataRow levelData)
     {
+        currentLevelData = levelData;
+    }
+    public void NextLevel()
+    {
+        Debug.Log("Preparing for next level. Destroying current level.");
+        gridBlockLabels = false;
         DestroyGrid();
-        InitializeGrid(nextLevelData, debugGridPrefab, 0f);
+
+        Debug.Log("Creating new level.");
+        InitializeGrid(currentLevelData, debugGridPrefab, 0f);
+
+        Debug.Log("New level creation complete.");
+        gridBlockLabels = true;
     }
   
 
@@ -413,27 +427,27 @@ public class GridManager : MonoBehaviour
 
         Debug.LogFormat("Number of available spawn locations at start: {0}", availableSpawnLocations.Count);
 
-        for (int i = 0; i < currentLevelData.levelWidth; i++)
+        for (int w = 0; w < levelGrid.GetLength(0); w++)
         {
-            for (int j = 0; j < currentLevelData.levelHeight; j++)
+            for (int h = 0; h < levelGrid.GetLength(1); h++)
             {
                 if (rules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
                 {  
                     //Debug.LogFormat("Location is perimeter eligible: {0} .", EligiblePerimeterSpawns.Contains(levelGrid[i, j].location));
-                    if (EligiblePerimeterSpawns.Contains(levelGrid[i, j].location))
-                        availableSpawnLocations.Add(levelGrid[i, j].location);
+                    if (EligiblePerimeterSpawns.Contains(levelGrid[w, h].location))
+                        availableSpawnLocations.Add(levelGrid[w, h].location);
                 }
                 else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
                 {
                     //Debug.LogFormat("Location is interior eligible: {0} .", EligibleInteriorSpawns.Contains(levelGrid[i, j].location));
-                    if (EligibleInteriorSpawns.Contains(levelGrid[i, j].location))
-                        availableSpawnLocations.Add(levelGrid[i, j].location);
+                    if (EligibleInteriorSpawns.Contains(levelGrid[w, h].location))
+                        availableSpawnLocations.Add(levelGrid[w, h].location);
                 }
 
-                for (int k = 0; k < levelGrid[i, j].objectsOnBlock.Count; k++)
+                for (int k = 0; k < levelGrid[w, h].objectsOnBlock.Count; k++)
                 {
-                    Hazard currentHazard = levelGrid[i, j].objectsOnBlock[k].GetComponent<Hazard>();
-                    MovePattern currentHazardMove = levelGrid[i, j].objectsOnBlock[k].GetComponent<MovePattern>();
+                    Hazard currentHazard = levelGrid[w, h].objectsOnBlock[k].GetComponent<Hazard>();
+                    MovePattern currentHazardMove = levelGrid[w, h].objectsOnBlock[k].GetComponent<MovePattern>();
 
                     if (currentHazard != null && currentHazardMove != null)
                     {
@@ -555,8 +569,8 @@ public class GridManager : MonoBehaviour
                         }
                         else if (rules.spawnRegion == SpawnRule.SpawnRegion.Interior)
                         {
-                            if (EligibleInteriorSpawns.Contains(levelGrid[i, j].location))
-                                availableSpawnLocations.Add(levelGrid[i, j].location);
+                            if (EligibleInteriorSpawns.Contains(levelGrid[w, h].location))
+                                availableSpawnLocations.Add(levelGrid[w, h].location);
 
                             Vector2Int currentHazardGridLocation = WorldToGrid(currentHazard.currentWorldLocation);
                             ineligibleSpawnLocations.Add(currentHazardGridLocation);
@@ -619,8 +633,9 @@ public class GridManager : MonoBehaviour
     }
 
     [System.Serializable]
-    public class SpawnRule {
-        public enum SpawnRegion { Anywhere, Perimeter, Interior }
+    public class SpawnRule
+    {
+        public enum SpawnRegion { Anywhere, Perimeter, Interior, Center }
         public SpawnRegion spawnRegion = SpawnRegion.Anywhere;
         public bool avoidHazardPaths = false;
         public bool avoidAdjacentToPlayer = false;

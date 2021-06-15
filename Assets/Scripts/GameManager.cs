@@ -89,6 +89,7 @@ public class GameManager : MonoBehaviour
         this.player.targetWorldLocation = gm.GridToWorld(startLocation);
         if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
 
+        this.player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
 
         // Initialize Game Object Manager now that player exists
         gom.Init();
@@ -107,20 +108,19 @@ public class GameManager : MonoBehaviour
             player.InputActive = false;
             player.OnPlayerAdvance -= OnTick;
 
-            player.OnPlayerAddHazard += OnAddHazard;
+            //player.OnPlayerAddHazard += OnAddHazard;
             float delay = player.OnTickUpdate();
             gom.OnTickUpdate(GridObjectManager.GamePhase.Player);
-            if(CheckWinCondition())
+            yield return new WaitForSeconds(delay);
+            if (CheckWinCondition())
             {
                 currentLevel++;
                 gom.NextLevel();
-                gm.NextLevel(levelData.LevelTable[LevelDataIndex]);   // Don't adjust index
-                
-                gm.AddObjectToGrid(player, startLocation);
-                player.currentWorldLocation = gm.GridToWorld(startLocation);
-                player.targetWorldLocation = gm.GridToWorld(startLocation);
+                gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
+                gm.NextLevel();   // Don't adjust index
+                gom.ArrivePlayer();
+                player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
             }
-            yield return new WaitForSeconds(delay);
             player.OnPlayerAddHazard -= OnAddHazard;
         }
         else

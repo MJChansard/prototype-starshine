@@ -160,6 +160,27 @@ public class GridObjectManager : MonoBehaviour
         if (removeFromGrid) gm.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
         gridObjectsInPlay.Remove(objectToRemove);
     }
+    public void ArrivePlayer()
+    {
+        //#TODO
+        // Need to add something that will allow for a Player to spawn somewhere other than 0, 0
+
+        Vector2Int arriveLocation = new Vector2Int(0, 0);
+
+        if (VerboseConsole) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
+
+        if(player.spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Center)
+        {
+            // Can put some new arrival logic here    
+        }
+
+        gm.AddObjectToGrid(player.gameObject, arriveLocation);
+        player.currentWorldLocation = gm.GridToWorld(arriveLocation);
+        player.targetWorldLocation = gm.GridToWorld(arriveLocation);
+        player.transform.position = new Vector3(arriveLocation.x, arriveLocation.y, 0);
+
+        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
+    }
 
 
     private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects) {
@@ -418,14 +439,22 @@ public class GridObjectManager : MonoBehaviour
     }
     public void NextLevel()
     {
+        if (VerboseConsole)
+            Debug.Log("Preparing for next level. Removing all GridObjects in play.");
+
         for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
         {
+            //RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
             Destroy(gridObjectsInPlay[i].gameObject);
             gridObjectsInPlay.RemoveAt(i);
         }
 
+        spawnQueue.Clear();
         //gridObjectsInPlay[0].gameObject.SetActive(false);       //Disable Player 
-        StartCoroutine(player.AnimateNextLevel());
+        //StartCoroutine(player.AnimateNextLevel());
+
+        if (VerboseConsole)
+            Debug.Log("Preparations for next level complete.");
     }
 
     /*

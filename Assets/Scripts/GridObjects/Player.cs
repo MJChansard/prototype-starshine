@@ -54,6 +54,8 @@ public class Player : GridObject
     private void Start()
     {
         movePattern = GetComponent<MovePattern>();
+        movePattern.SetMovePatternUp();
+
         hp = GetComponent<Health>();
 
         weaponInventory = new Weapon[weaponObjects.Length];
@@ -176,7 +178,6 @@ public class Player : GridObject
         }
     }
 
-
     public float OnTickUpdate()
     {
         if (IsAttackingThisTick)
@@ -194,17 +195,14 @@ public class Player : GridObject
         //return waitWaitTime;
     }
 
-    public GridObjectManager.PlayerData StoreDataForNextLevel()
+  
+    public void NextLevel(int winFuelAmount)
     {
-        GridObjectManager.PlayerData pData = new GridObjectManager.PlayerData();
-
-        pData.amountAutoCannonAmmo = weaponInventory[0].weaponAmmunition;
-        pData.amountMissileAmmo = weaponInventory[1].weaponAmmunition;
-        pData.amountRailGunAmmo = weaponInventory[2].weaponAmmunition;
-
-        return pData;
+        currentJumpFuel = 0;
+        maxFuelAmount = winFuelAmount;
+        StartCoroutine(UpdateUICoroutine());
     }
-        
+
     // #Coroutines
     private IEnumerator AnimateThrusterCoroutine()
     {
@@ -234,4 +232,17 @@ public class Player : GridObject
 
         yield return new WaitForSeconds(3.0f);
     }
+
 }
+/*
+    public GridObjectManager.PlayerData StoreDataForNextLevel()
+    {
+        GridObjectManager.PlayerData pData = new GridObjectManager.PlayerData();
+
+        pData.amountAutoCannonAmmo = weaponInventory[0].weaponAmmunition;
+        pData.amountMissileAmmo = weaponInventory[1].weaponAmmunition;
+        pData.amountRailGunAmmo = weaponInventory[2].weaponAmmunition;
+
+        return pData;
+    } 
+ */

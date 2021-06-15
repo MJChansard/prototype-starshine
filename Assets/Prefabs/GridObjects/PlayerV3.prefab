@@ -82,17 +82,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 1
-  HideProperty: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
-    spawnRegion: 0
+    spawnRegion: 3
     avoidHazardPaths: 0
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
-  IsLeavingGrid: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   moveSpeed: 0
+  IsLeavingGrid: 0
   Thruster: {fileID: 8333113931294613961}
   weaponObjects:
   - {fileID: 8237256412438012411}

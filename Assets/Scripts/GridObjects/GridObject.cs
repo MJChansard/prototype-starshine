@@ -16,8 +16,8 @@ public abstract class GridObject : MonoBehaviour
 
 
     // Animation fields
-    [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int
-    [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int
+    [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int?
+    [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int?
     [HideInInspector] public float moveSpeed;                   // Animation movement speed?
     public float Distance
     {

@@ -15,11 +15,11 @@ MonoBehaviour:
   LevelTable:
   - levelWidth: 11
     levelHeight: 9
-    jumpFuelAmount: 0
+    jumpFuelAmount: 1
     numberOfPhenomenaToSpawn: 0
-  - levelWidth: 10
-    levelHeight: 8
-    jumpFuelAmount: 0
+  - levelWidth: 6
+    levelHeight: 4
+    jumpFuelAmount: 1
     numberOfPhenomenaToSpawn: 0
   - levelWidth: 10
     levelHeight: 8

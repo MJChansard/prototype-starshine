@@ -14,7 +14,7 @@ public class LevelData : ScriptableObject
         public int levelHeight;
         public int jumpFuelAmount;
         public int numberOfPhenomenaToSpawn;
-        public Vector2Int playerSpawnLocation;
+        //public Vector2Int playerSpawnLocation;
     }
 
     public LevelDataRow[] LevelTable;
@@ -23,6 +23,7 @@ public class LevelData : ScriptableObject
     public LevelData(int w, int h, int f, int p)
     {
         LevelDataRow ldr = new LevelDataRow();
+        //LevelDataRow ldr = CreateInstance<LevelDataRow>();
         ldr.levelWidth = w;
         ldr.levelHeight = h;
         ldr.jumpFuelAmount = f;
