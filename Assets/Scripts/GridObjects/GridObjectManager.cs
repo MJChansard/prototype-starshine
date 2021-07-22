@@ -35,7 +35,7 @@ public class GridObjectManager : MonoBehaviour
     private Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
     private int ticksUntilNewSpawn;
 
-    [Header("Grid Object Inventory")]
+    [Header("Grid Object Library")]
     [SerializeField] private GridObject[] gridObjectPrefabs;
     public GameObject playerPrefab;
     #endregion
@@ -43,6 +43,14 @@ public class GridObjectManager : MonoBehaviour
 
     public void Init()
     {
+        /*  SUMMARY
+         *   - Reference to GridManager
+         *   - Cache level boundaries
+         *   - Identify next tick requiring a spawn
+         *   - Handle Player
+         *   - Insert Spawn Sequence data if present
+         * 
+         */
         gm = GetComponent<GridManager>();
         
         minVector2 = new Vector2Int(gm.BoundaryLeftActual, gm.BoundaryBottomActual);
@@ -68,37 +76,81 @@ public class GridObjectManager : MonoBehaviour
         }
         else
         {
-            AddSpawnStep();
+            AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
             CreateGridObject(spawnQueue.Dequeue());
         }
     }
 
-    private void AddSpawnStep() {
+    private GridObject SelectGridObject(GridObjectType type)
+    {
+        if(type == GridObjectType.Hazard)
+        {
+            List<Hazard> availableHazards = new List<Hazard>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Hazard)
+                    availableHazards.Add(gridObjectPrefabs[i] as Hazard);
+            }
+
+            int selector = Random.Range(0, availableHazards.Count - 1);
+            if (VerboseConsole) Debug.Log("Selected a Hazard.");
+            return availableHazards[selector];
+        }
+        else if(type == GridObjectType.Phenomena)
+        {
+            List<Phenomena> availablePhenomena = new List<Phenomena>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Phenomena)
+                    availablePhenomena.Add(gridObjectPrefabs[i] as Phenomena);
+            }
+
+            int selector = Random.Range(0, availablePhenomena.Count - 1);
+            if (VerboseConsole) Debug.Log("Selected a Phenomenon.");
+            return availablePhenomena[selector];
+        }
+        else
+        {
+            return null;
+        }
+
+
+    }
+
+
+    private void AddSpawnStep(GridObject objectForSpawn)
+    {
         /*	SUMMARY
-         *	-   Randomly selects a Hazard
          *  -   Randomly selects a spawn location
-         *  -   Enqueue (new SpawnStep instance)
+         *  -   Instantiates SpawnStep ScriptableObject
+         *  -   Initializes the new SpawnStep
+         *  -   Enqueue the new SpawnStep
          */
 
-        if (VerboseConsole) Debug.Log("HazardManager.CreateSpawnStep() called.");
+        if (VerboseConsole) Debug.Log("GridObjectManager.CreateSpawnStep() called.");
 
-        int gridObjectSelector = Random.Range(0, gridObjectPrefabs.Length);
+        //int gridObjectSelector = Random.Range(0, gridObjectPrefabs.Length);
+
         Vector2Int hazardSpawnLocation = new Vector2Int();
 
         // DEBUG: Make sure spawn selection is working appropriately
-        if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
+        //if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
 
         // Identify an appropriate spawn location
-        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
+//        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
+        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(objectForSpawn.spawnRules);
+
         Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
         hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
 
         // Create the SpawnStep
         SpawnStep newSpawnStep = ScriptableObject.CreateInstance<SpawnStep>();
-        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
+//        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
+        newSpawnStep.Init(objectForSpawn, hazardSpawnLocation);
         spawnQueue.Enqueue(newSpawnStep);
     }
-    private void CreateGridObject(SpawnStep spawnStep) {
+    private void CreateGridObject(SpawnStep spawnStep)
+    {
         /*  SUMMARY
         *   - Process SpawnStep data to identify hazard to spawn and spawn location
         *   - Instantiate hazard
@@ -183,7 +235,8 @@ public class GridObjectManager : MonoBehaviour
     }
 
 
-    private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects) {
+    private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects)
+    {
         /*  PLAN
          *   - Process a list of GridObjects' data
          *   - Determine one of the following behaviors for the current tick for each object:
@@ -207,7 +260,7 @@ public class GridObjectManager : MonoBehaviour
         // Process movement data
         for (int i = 0; i < objects.Count; i++)
         {
-            MovePattern mp = objects[i].GetComponent<MovePattern>();
+            MovePattern mp = objects[i].GetComponent<MovePattern>();    //IMovable
             mp.OnTickUpdate();
             if (mp.CanMoveThisTurn)
             {
@@ -271,7 +324,6 @@ public class GridObjectManager : MonoBehaviour
 
             if (mp.CanMoveThisTurn)
             {
-                
                 if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
                 {
                     // Eligible to move
@@ -401,12 +453,16 @@ public class GridObjectManager : MonoBehaviour
             for (int i = 0; i < gridObjectsInPlay.Count; i++)
             {
                 if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager)
-                    if (gridObjectsInPlay[i].GetComponent<Health>().HasHP)
-                        objectProcessing.Add(gridObjectsInPlay[i]);
+                    if (gridObjectsInPlay[i].GetComponent<Health>() != null)
+                        if(gridObjectsInPlay[i].GetComponent<Health>().HasHP)
+                            objectProcessing.Add(gridObjectsInPlay[i]);
             }
             potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
 
             gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay, 1.0f);
+
+            // Phenomena Processing
+
 
             // Spawn stuff
             if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
@@ -417,7 +473,7 @@ public class GridObjectManager : MonoBehaviour
                 }
                 else
                 {
-                    AddSpawnStep();
+                    AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
                     CreateGridObject(spawnQueue.Dequeue());
                 }
 
@@ -437,7 +493,7 @@ public class GridObjectManager : MonoBehaviour
 
         //StartCoroutine(AnimateTick);
     }
-    public void NextLevel()
+    public void ClearLevel()
     {
         if (VerboseConsole)
             Debug.Log("Preparing for next level. Removing all GridObjects in play.");
@@ -457,34 +513,17 @@ public class GridObjectManager : MonoBehaviour
             Debug.Log("Preparations for next level complete.");
     }
 
-    /*
-        List<AnimateTickBehaviors> tickBehaviors;
-
-        IEnumerator AnimateTick() {
-
-            // ...
-
-
-            // Start of hazards moving
-            // do anything that needs to happen at this timestamp
-
-            return waitForSeconds(hazardTimeDelay * 0.5);
-
-            // do anything that needs to happen at halfway point (flybys)
-            DoAnimateTickBehavior(halfway);
-
-
-            return waitForSeconds(hazardTimeDelay * 0.5); 
-
-
-            DoAnimateTickBehavior(end);
-
+    public void NextLevel(int phenomenaRequired)
+    {
+        // For each phenomenaRequired, should randomly select one 
+        for (int i = 0; i < phenomenaRequired; i++)
+        {
+            AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));
+            CreateGridObject(spawnQueue.Dequeue());
         }
+        // Create SpawnSteps
 
-        void DoAnimateTickBehavior(Phase phase) {
-
-        }
-*/
+    }  
 
 
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
@@ -661,11 +700,39 @@ public class GridObjectManager : MonoBehaviour
         public BehaviorType behaviorType;
     }
 
-
-    public class PlayerData
-    {
-        public int amountAutoCannonAmmo;
-        public int amountMissileAmmo;
-        public int amountRailGunAmmo;
-    }
 }
+
+public enum GridObjectType
+{
+    Hazard = 1,
+    Phenomena = 2
+}
+
+/*
+        List<AnimateTickBehaviors> tickBehaviors;
+
+        IEnumerator AnimateTick() {
+
+            // ...
+
+
+            // Start of hazards moving
+            // do anything that needs to happen at this timestamp
+
+            return waitForSeconds(hazardTimeDelay * 0.5);
+
+            // do anything that needs to happen at halfway point (flybys)
+            DoAnimateTickBehavior(halfway);
+
+
+            return waitForSeconds(hazardTimeDelay * 0.5); 
+
+
+            DoAnimateTickBehavior(end);
+
+        }
+
+        void DoAnimateTickBehavior(Phase phase) {
+
+        }
+*/
