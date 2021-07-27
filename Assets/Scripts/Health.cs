@@ -35,6 +35,15 @@ public class Health : MonoBehaviour
         }
     }
 
+    public void AddHealth(int healthAmount)
+    {
+        while (currentHP < maxHP && healthAmount > 0)
+        {
+            currentHP++;
+            healthAmount--;
+        }
+    }
+
     public void ToggleInvincibility(bool toggle)
     {
         isInvincible = toggle;

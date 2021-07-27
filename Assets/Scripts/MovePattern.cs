@@ -33,19 +33,16 @@ public class MovePattern : MonoBehaviour
         delta = Vector2Int.up;
         return delta;
     }
-
     public Vector2Int SetMovePatternDown()
     {
         delta = Vector2Int.down;
         return delta;
     }
-
     public Vector2Int SetMovePatternLeft()
     {
         delta = Vector2Int.left;
         return delta;
     }
-
     public Vector2Int SetMovePatternRight()
     {
         delta = Vector2Int.right;
@@ -80,5 +77,11 @@ public class MovePattern : MonoBehaviour
     public bool CanMoveThisTurn
     {
         get { return ticksUntilNextMove == 0; }
+ 
+    }
+
+    public void ApplyMoveDelay(int delayValue)
+    {
+        ticksUntilNextMove += delayValue;
     }
 }

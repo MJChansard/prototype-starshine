@@ -9,6 +9,7 @@ TagManager:
   - Jump Fuel
   - Debug HUD
   - Game Display
+  - Phenomena
   layers:
   - Default
   - TransparentFX

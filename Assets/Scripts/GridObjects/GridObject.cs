@@ -6,6 +6,7 @@ using Sirenix.OdinInspector;
 public abstract class GridObject : MonoBehaviour
 {
     [Header("General Properties")]
+    public GridObjectType ObjectType;
     public GridObjectManager.GamePhase ProcessingPhase;
     //[SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
     //private int ticksRemainingUntilMove;
@@ -13,6 +14,7 @@ public abstract class GridObject : MonoBehaviour
     [Header("Spawn Properties")]
     public GameObject spawnWarningObject;
     public GridManager.SpawnRule spawnRules;
+    public bool RequiresSpawnObject { get { return spawnWarningObject != null; } }
 
 
     // Animation fields
@@ -92,32 +94,46 @@ public abstract class GridObject : MonoBehaviour
         }
 
         //ticksRemainingUntilMove = ticksPerMove;
-        SetGamePlayMode(Mode.Spawn);
+        if(spawnWarningObject != null) SetGamePlayMode(Mode.Spawn);
     }
 
 
     public virtual void SetGamePlayMode(Mode newMode)
     {
         MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
-        SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
-        Animator anim = spawnWarningObject.GetComponent<Animator>();
-        Health health = GetComponent<Health>();
-
+        //SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
+        //Animator anim = spawnWarningObject.GetComponent<Animator>();
+        //Health health = GetComponent<Health>();
+               
         if (newMode == Mode.Spawn)
         {
             currentMode = Mode.Spawn;
             mesh.enabled = false;
-            sprite.enabled = true;
-            anim.SetBool("InSpawnMode", true);
+            
+            if (RequiresSpawnObject)
+            {
+                if (spawnWarningObject.TryGetComponent<SpriteRenderer>(out SpriteRenderer sprite))
+                    sprite.enabled = true;
+                if (spawnWarningObject.TryGetComponent<Animator>(out Animator anim))
+                    anim.SetBool("InSpawnMode", true);
+            }
         }
         else if (newMode == Mode.Play)
         {
             currentMode = Mode.Play;
-            sprite.enabled = false;
-            anim.SetBool("InSpawnMode", false);
+
+            if(RequiresSpawnObject)
+            {
+                if (spawnWarningObject.TryGetComponent<Animator>(out Animator anim))
+                    anim.SetBool("InSpawnMode", false);
+                if (spawnWarningObject.TryGetComponent<SpriteRenderer>(out SpriteRenderer sprite))
+                    sprite.enabled = false;
+            }
+
             mesh.enabled = true;
 
-            if (health != null) health.ToggleInvincibility(false);
+            if (TryGetComponent<Health>(out Health hp))
+                hp.ToggleInvincibility(false);
         }
     }
     // Can use a Type enum here that is a master list

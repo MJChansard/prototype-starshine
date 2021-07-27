@@ -1,17 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class Rotator : MonoBehaviour
 {
     [SerializeField] GameObject objectToRotate;
     [SerializeField] bool UseDefaultValues = true;
-    [SerializeField] Vector3 RotateUpValues = new Vector3();
-    [SerializeField] Vector3 RotateDownValues = new Vector3();
-    [SerializeField] Vector3 RotateLeftValues = new Vector3();
-    [SerializeField] Vector3 RotateRightValues = new Vector3();
-
     [SerializeField] bool ApplyManualRotation = false;
+    [SerializeField] Vector3 RotateUpValues;// = new Vector3();
+    [SerializeField] Vector3 RotateDownValues;// = new Vector3();
+    [SerializeField] Vector3 RotateLeftValues;// = new Vector3();
+    [SerializeField] Vector3 RotateRightValues;// = new Vector3();
+
+    [ButtonGroup] private void ApplyMoveUp()
+    {
+        xRotationSpeed = RotateUpValues.x;
+        yRotationSpeed = RotateUpValues.y;
+        zRotationSpeed = RotateUpValues.z;
+    }
+    [ButtonGroup] private void ApplyMoveDown()
+    {
+        xRotationSpeed = RotateDownValues.x;
+        yRotationSpeed = RotateDownValues.y;
+        zRotationSpeed = RotateDownValues.z;
+    }
     
     private float xRotationSpeed;
     private float yRotationSpeed;

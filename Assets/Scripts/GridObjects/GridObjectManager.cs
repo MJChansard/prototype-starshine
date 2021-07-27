@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GridObjectManager : MonoBehaviour
 {
-    #region Grid Object Manager Data   
+    
     [SerializeField] private bool VerboseConsole = true;
 
     private GridManager gm;
@@ -17,7 +17,7 @@ public class GridObjectManager : MonoBehaviour
     private Vector2Int maxVector2;
 
     private List<GridObject> gridObjectsInPlay = new List<GridObject>();            // Object tracking
-    #endregion
+    
 
     public enum GamePhase
     {
@@ -26,7 +26,7 @@ public class GridObjectManager : MonoBehaviour
     }
     
 
-    #region Object Spawning
+    
     [Header("Spawn Management")]
     [SerializeField] private int minTicksUntilSpawn = 2;
     [SerializeField] private int maxTicksUntilSpawn = 4;
@@ -38,7 +38,22 @@ public class GridObjectManager : MonoBehaviour
     [Header("Grid Object Library")]
     [SerializeField] private GridObject[] gridObjectPrefabs;
     public GameObject playerPrefab;
-    #endregion
+    
+    private List<Phenomena> AllPhenomena
+    {
+        get
+        {
+            List<Phenomena> p = new List<Phenomena>();
+
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Phenomena)
+                    p.Add(gridObjectsInPlay[i] as Phenomena);
+            }
+
+            return p;
+        }
+    }
 
 
     public void Init()
@@ -260,23 +275,27 @@ public class GridObjectManager : MonoBehaviour
         // Process movement data
         for (int i = 0; i < objects.Count; i++)
         {
-            MovePattern mp = objects[i].GetComponent<MovePattern>();    //IMovable
-            mp.OnTickUpdate();
-            if (mp.CanMoveThisTurn)
+            //MovePattern mp = objects[i].GetComponent<MovePattern>();    //IMovable
+            if(objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
             {
-                Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
-                Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
+                mp.OnTickUpdate();
 
-                if (gm.CheckIfGridBlockInBounds(destinationLocation))
+                if (mp.CanMoveThisTurn)
                 {
-                    // Move or FlyBy
-                    allOriginGridLocations[i] = currentLocation;            // Maintain index of objects requiring additional processing
-                    allDestinationGridLocations[i] = destinationLocation;
-                }
-                else
-                {
-                    // Depart
-                    objects[i].IsLeavingGrid = true;
+                    Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
+                    Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
+
+                    if (gm.CheckIfGridBlockInBounds(destinationLocation))
+                    {
+                        // Move or FlyBy
+                        allOriginGridLocations[i] = currentLocation;            // Maintain index of objects requiring additional processing
+                        allDestinationGridLocations[i] = destinationLocation;
+                    }
+                    else
+                    {
+                        // Depart
+                        objects[i].IsLeavingGrid = true;
+                    }
                 }
             }
         }
@@ -316,37 +335,40 @@ public class GridObjectManager : MonoBehaviour
                 objects[i].SetGamePlayMode(GridObject.Mode.Play);
             }
 
-            MovePattern mp = objects[i].GetComponent<MovePattern>();
-            //mp.OnTickUpdate();
-
-            Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
-            Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
-
-            if (mp.CanMoveThisTurn)
+            if (objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
             {
-                if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
+                Vector2Int currentLocation = gm.WorldToGrid(objects[i].currentWorldLocation);
+                Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
+
+                if (mp.CanMoveThisTurn)
                 {
-                    // Eligible to move
-                    gm.RemoveObjectFromGrid(objects[i].gameObject, currentLocation);
-                    gm.AddObjectToGrid(objects[i].gameObject, destinationLocation);
-
-                    objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
-
-                    if(!IsLocationInCollisionTracker(destinationLocation, collisionTestBlocks))
+                    if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
                     {
-                        collisionTestBlocks.Add(gm.FindGridBlockByLocation(destinationLocation));
+                        // Eligible to move
+                        gm.RemoveObjectFromGrid(objects[i].gameObject, currentLocation);
+                        gm.AddObjectToGrid(objects[i].gameObject, destinationLocation);
+
+                        objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
+
+                        if (!IsLocationInCollisionTracker(destinationLocation, collisionTestBlocks))
+                        {
+                            collisionTestBlocks.Add(gm.FindGridBlockByLocation(destinationLocation));
+                        }
+
+                        StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
                     }
+                    else
+                    {   // Departing
+                        objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
 
-                    StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
-                }
-                else
-                {   // Departing
-                    objects[i].targetWorldLocation = gm.GridToWorld(destinationLocation);
-
-                    StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
-                    StartCoroutine(GridObjectDestructionCoroutine(objects[i], 1.1f));
+                        StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
+                        StartCoroutine(GridObjectDestructionCoroutine(objects[i], 1.1f));
+                    }
                 }
             }
+            //MovePattern mp = objects[i].GetComponent<MovePattern>();
+            //mp.OnTickUpdate();
+
         }
 
         return collisionTestBlocks;
@@ -447,19 +469,23 @@ public class GridObjectManager : MonoBehaviour
 
         if (phase == GamePhase.Manager)
         {
-            ProcessGridObjectHealth(gridObjectsInPlay);
+            CheckHealth(gridObjectsInPlay);
 
             // Process GridObject behavior for current Tick
             for (int i = 0; i < gridObjectsInPlay.Count; i++)
             {
                 if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager)
-                    if (gridObjectsInPlay[i].GetComponent<Health>() != null)
-                        if(gridObjectsInPlay[i].GetComponent<Health>().HasHP)
-                            objectProcessing.Add(gridObjectsInPlay[i]);
+                {
+                    Health hp = gridObjectsInPlay[i].GetComponent<Health>();
+
+                    if (hp != null & hp.HasHP)
+                        objectProcessing.Add(gridObjectsInPlay[i]);
+                }
+                            
             }
             potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
 
-            gridObjectDestroyedThisTick = ProcessGridObjectHealth(gridObjectsInPlay, 1.0f);
+            gridObjectDestroyedThisTick = CheckHealth(gridObjectsInPlay, 1.0f);
 
             // Phenomena Processing
 
@@ -485,7 +511,7 @@ public class GridObjectManager : MonoBehaviour
         }
 
         ProcessCollisionsOnGridBlock(potentialBlockCollisions);
-        ProcessGridObjectHealth(gridObjectsInPlay, 1.0f);
+        CheckHealth(gridObjectsInPlay, 1.0f);
 
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;
         if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
@@ -528,11 +554,19 @@ public class GridObjectManager : MonoBehaviour
 
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {
+        // i = GridBlock iterator
+        // j = objects on GridBlock iterator 1
+        // k = objects on GridBlock iterator 2 (j+1)
+
         for (int i = 0; i < gridBlocks.Count; i++)
         {
             if (gridBlocks[i].objectsOnBlock.Count > 1)
             {
                 Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
+
+                //  Consider this
+                //https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/local-functions
+                // Also can use gridObject.ObjectType property for processing Hazards & Phenomena
 
                 for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
                 {
@@ -541,6 +575,7 @@ public class GridObjectManager : MonoBehaviour
                     Loot loot = gameObject.GetComponent<Loot>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
+                    Phenomena phenomena = gameObject.GetComponent<Phenomena>();
 
                     for (int k = 1 + j; k < gridBlocks[i].objectsOnBlock.Count; k++)
                     {
@@ -549,6 +584,8 @@ public class GridObjectManager : MonoBehaviour
                         Loot otherLoot = otherGameObject.GetComponent<Loot>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
+                        Phenomena otherPhenomena = otherGameObject.GetComponent<Phenomena>();
+
 
                         if (gameObjectDamage != null && otherGameObjectHealth != null)
                         {
@@ -584,6 +621,22 @@ public class GridObjectManager : MonoBehaviour
                             Player p = otherGridObject as Player;
                             p.AcceptLoot(loot.Type, loot.LootAmount);
                         }
+
+                        if (phenomena != null && otherGridObject is Player)
+                        {
+                            if (phenomena.DoesRepair)
+                            {
+                                otherGameObjectHealth.AddHealth(phenomena.gameObject.GetComponent<ContactRepair>().repairAmount);
+                            }
+                        }
+
+                        if (gridObject is Player && otherPhenomena != null)
+                        {
+                            if (otherPhenomena.DoesRepair)
+                            {
+                                gameObjectHealth.AddHealth(otherPhenomena.gameObject.GetComponent<ContactRepair>().repairAmount);
+                            }
+                        }
                     }
                 }
             }
@@ -605,7 +658,7 @@ public class GridObjectManager : MonoBehaviour
         }
         return false;
     }
-    private bool ProcessGridObjectHealth(List<GridObject> objects, float delayAnimation = 0.0f)
+    private bool CheckHealth(List<GridObject> objects, float delayAnimation = 0.0f)
     {
         bool returnBool = false;
         for (int i = objects.Count - 1; i > -1; i--)

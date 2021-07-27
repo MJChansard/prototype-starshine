@@ -115,11 +115,14 @@ public class GameManager : MonoBehaviour
             if (CheckWinCondition())
             {
                 currentLevel++;
-                gom.NextLevel();
+                gom.ClearLevel();
                 gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
                 gm.NextLevel();   // Don't adjust index
+                gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn);
                 gom.ArrivePlayer();
                 player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
+                
+                
             }
             player.OnPlayerAddHazard -= OnAddHazard;
         }
