@@ -572,7 +572,7 @@ public class GridObjectManager : MonoBehaviour
                 {
                     GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
                     GridObject gridObject = gameObject.GetComponent<GridObject>();
-                    Loot loot = gameObject.GetComponent<Loot>();
+                    //Loot loot = gameObject.GetComponent<Loot>();
                     Health gameObjectHealth = gameObject.GetComponent<Health>();
                     ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
                     Phenomena phenomena = gameObject.GetComponent<Phenomena>();
@@ -581,7 +581,7 @@ public class GridObjectManager : MonoBehaviour
                     {
                         GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
                         GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
-                        Loot otherLoot = otherGameObject.GetComponent<Loot>();
+                       // Loot otherLoot = otherGameObject.GetComponent<Loot>();
                         Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
                         ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
                         Phenomena otherPhenomena = otherGameObject.GetComponent<Phenomena>();
@@ -605,21 +605,40 @@ public class GridObjectManager : MonoBehaviour
 
                         if (gridObject is Player && otherGridObject is Loot)
                         {
-                            if (VerboseConsole)
-                                Debug.LogFormat("{0} is picking up {1}", gridObject.name, otherLoot.gameObject.name);
-
                             Player p = gridObject as Player;
-                            p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
+                            Loot l = otherGridObject as Loot;
+
+                            if (VerboseConsole)
+                                Debug.LogFormat("{0} is picking up {1}", gridObject.name, l.gameObject.name);
+                            //p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
+
+                            if (l.DoesSupplyAmmo)
+                            {
+                                p.AcceptAmmo(l.AmmoType, l.AmmoAmount);
+                            }
+
+                            if (l.DoesSupplyFuel)
+                            {
+                                p.AcceptFuel(l.FuelAmount);
+                            }
 
                         }
 
                         if (otherGridObject is Player && gridObject is Loot)
                         {
-                            if (VerboseConsole)
-                                Debug.LogFormat("{0} is picking up {1}", otherGridObject.name, loot.gameObject.name);
-
                             Player p = otherGridObject as Player;
-                            p.AcceptLoot(loot.Type, loot.LootAmount);
+                            Loot l = gridObject as Loot;
+
+                            if (VerboseConsole)
+                                Debug.LogFormat("{0} is picking up {1}", otherGridObject.name, l.gameObject.name);
+
+                            //p.AcceptLoot(loot.Type, loot.LootAmount);
+
+                            if (l.DoesSupplyAmmo)
+                                p.AcceptAmmo(l.AmmoType, l.AmmoAmount);
+
+                            if (l.DoesSupplyFuel)
+                                p.AcceptFuel(l.FuelAmount);
                         }
 
                         if (phenomena != null && otherGridObject is Player)
@@ -627,6 +646,20 @@ public class GridObjectManager : MonoBehaviour
                             if (phenomena.DoesRepair)
                             {
                                 otherGameObjectHealth.AddHealth(phenomena.gameObject.GetComponent<ContactRepair>().repairAmount);
+                            }
+
+                            if (phenomena.DoesSupply)
+                            {
+                                
+                                //otherGridObject.
+                                //phenomena.gameObject.GetComponent<ContactSupply>().
+
+                                /*  NOTE
+                                 *   - Look, I'm not sure what the best way to implement this is
+                                 *   - One way to think about this is to make Loot a type of Phenomena
+                                 *   - Another way is to think of Loot as a way that supplies can move around LevelGrid
+                                 *      - Perhaps Loot needs to have a ContactSupply or ContactFuel component on it
+                                 */
                             }
                         }
 
