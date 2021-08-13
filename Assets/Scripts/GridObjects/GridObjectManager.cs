@@ -570,23 +570,136 @@ public class GridObjectManager : MonoBehaviour
 
                 for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
                 {
-                    GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
-                    GridObject gridObject = gameObject.GetComponent<GridObject>();
+                    GridObject jGridObject = gridBlocks[i].objectsOnBlock[j].GetComponent<GridObject>();
+
+                    //GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
+                    //GridObject gridObject = gameObject.GetComponent<GridObject>();
                     //Loot loot = gameObject.GetComponent<Loot>();
-                    Health gameObjectHealth = gameObject.GetComponent<Health>();
-                    ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
-                    Phenomena phenomena = gameObject.GetComponent<Phenomena>();
+                    //Health gameObjectHealth = gameObject.GetComponent<Health>();
+                    //ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
+                    //Phenomena phenomena = gameObject.GetComponent<Phenomena>();
 
                     for (int k = 1 + j; k < gridBlocks[i].objectsOnBlock.Count; k++)
                     {
-                        GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
-                        GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
-                       // Loot otherLoot = otherGameObject.GetComponent<Loot>();
-                        Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
-                        ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
-                        Phenomena otherPhenomena = otherGameObject.GetComponent<Phenomena>();
+                        GridObject kGridObject = gridBlocks[i].objectsOnBlock[k].GetComponent<GridObject>();
+
+                        bool jIsPlayer = jGridObject is Player;
+                        bool kIsPlayer = kGridObject is Player;
+
+                        bool jIsPhenomena = jGridObject is Phenomena;
+                        bool kIsPhenomena = kGridObject is Phenomena;
+
+                        bool jIsLoot = jGridObject is Loot;
+                        bool kIsLoot = kGridObject is Loot;
 
 
+                        bool jHasHP = jGridObject.gameObject.TryGetComponent<Health>(out Health jHealth);
+                        bool kHasHP = kGridObject.gameObject.TryGetComponent<Health>(out Health kHealth);
+
+                        bool jDoesDamage = jGridObject.gameObject.TryGetComponent<ContactDamage>(out ContactDamage jDamage);
+                        bool kDoesDamage = kGridObject.gameObject.TryGetComponent<ContactDamage>(out ContactDamage kDamage);
+
+                        bool jDoesRepair = jGridObject.TryGetComponent<ContactRepair>(out ContactRepair jRepair);
+                        bool kDoesRepair = kGridObject.TryGetComponent<ContactRepair>(out ContactRepair kRepair);
+
+                        bool jDoesSupply = jGridObject.TryGetComponent<ContactSupply>(out ContactSupply jSupply);
+                        bool kDoesSupply = kGridObject.TryGetComponent<ContactSupply>(out ContactSupply kSupply);
+
+                        bool jDoesFuel = jGridObject.TryGetComponent<ContactFuel>(out ContactFuel jFuel);
+                        bool kDoesFuel = kGridObject.TryGetComponent<ContactFuel>(out ContactFuel kFuel);
+
+                        if (jHasHP && kDoesDamage)
+                        {
+                            if (!jIsPlayer && !kIsPhenomena && !kDoesSupply)     //Isn't a Supply Station
+                                jHealth.SubtractHealth(kDamage.DamageAmount);
+                            else if (!jIsPlayer && !kIsPhenomena && !kDoesFuel)  //Isn't a Fuel Station
+                                jHealth.SubtractHealth(kDamage.DamageAmount);
+                        }
+
+                        if (kHasHP && jDoesDamage)
+                        {
+                            if (!kIsPlayer && !jIsPhenomena && !jDoesSupply)     //Is a Supply Station
+                                kHealth.SubtractHealth(jDamage.DamageAmount);
+                            else if (!kIsPlayer && !jIsPhenomena && !jDoesFuel)  //Is a Fuel Station
+                                kHealth.SubtractHealth(jDamage.DamageAmount);
+                        }   
+
+                        if ( (jIsPlayer && kDoesSupply) || (kIsPlayer && jDoesSupply) )
+                        {
+                            if (jIsPlayer)
+                            {
+                                Player p = jGridObject as Player;
+                                ContactSupply cs = kGridObject.GetComponent<ContactSupply>();
+
+                                if (VerboseConsole)
+                                    Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
+
+                                p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
+                                if (kIsLoot)
+                                    kHealth.SubtractHealth(kHealth.CurrentHP);
+                            }
+                            else if (kIsPlayer)
+                            {
+                                Player p = kGridObject as Player;
+                                ContactSupply cs = jGridObject.GetComponent<ContactSupply>();
+
+                                if (VerboseConsole)
+                                    Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
+
+                                p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
+                                if (jIsLoot)
+                                    jHealth.SubtractHealth(jHealth.CurrentHP);
+                            }
+                        }
+
+                        if ( (jIsPlayer && kDoesFuel) || (kIsPlayer && jDoesFuel))
+                        {
+                            if (jIsPlayer)
+                            {
+                                Player p = jGridObject as Player;
+                                p.AcceptFuel(kFuel.fuelAmount);
+                                p.UpdateUICoroutine();
+
+                                if (VerboseConsole)
+                                    Debug.LogFormat("{0} jump fuel retrieved.", kFuel.fuelAmount);
+                            }
+                            else if (kIsPlayer)
+                            {
+                                Player p = kGridObject as Player;
+                                p.AcceptFuel(jFuel.fuelAmount);
+                                p.UpdateUICoroutine();
+
+                                if (VerboseConsole)
+                                    Debug.LogFormat("{0} jump fuel retrieved.", jFuel.fuelAmount);
+                            }
+                        }
+
+                        if ( (jIsPlayer && kDoesRepair) || (kIsPlayer && jDoesRepair) )
+                        {
+                            if (jIsPlayer)
+                            {
+                                jHealth.AddHealth(kRepair.repairAmount);
+                                Player p = jGridObject as Player;
+                                p.UpdateUICoroutine();
+                            }
+                            else if (kIsPlayer)
+                            {
+                                kHealth.AddHealth(jRepair.repairAmount);
+                                Player p = kGridObject as Player;
+                                p.UpdateUICoroutine();
+                            }
+                                
+                        }
+
+                        //GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
+                        //GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
+                        //Loot otherLoot = otherGameObject.GetComponent<Loot>();
+                        //Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
+                        //ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
+                        //Phenomena otherPhenomena = otherGameObject.GetComponent<Phenomena>();
+
+                        
+/*
                         if (gameObjectDamage != null && otherGameObjectHealth != null)
                         {
                             if (VerboseConsole)
@@ -602,74 +715,8 @@ public class GridObjectManager : MonoBehaviour
 
                             gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
                         }
+*/
 
-                        if (gridObject is Player && otherGridObject is Loot)
-                        {
-                            Player p = gridObject as Player;
-                            Loot l = otherGridObject as Loot;
-
-                            if (VerboseConsole)
-                                Debug.LogFormat("{0} is picking up {1}", gridObject.name, l.gameObject.name);
-                            //p.AcceptLoot(otherLoot.Type, otherLoot.LootAmount);
-
-                            if (l.DoesSupplyAmmo)
-                            {
-                                p.AcceptAmmo(l.AmmoType, l.AmmoAmount);
-                            }
-
-                            if (l.DoesSupplyFuel)
-                            {
-                                p.AcceptFuel(l.FuelAmount);
-                            }
-
-                        }
-
-                        if (otherGridObject is Player && gridObject is Loot)
-                        {
-                            Player p = otherGridObject as Player;
-                            Loot l = gridObject as Loot;
-
-                            if (VerboseConsole)
-                                Debug.LogFormat("{0} is picking up {1}", otherGridObject.name, l.gameObject.name);
-
-                            //p.AcceptLoot(loot.Type, loot.LootAmount);
-
-                            if (l.DoesSupplyAmmo)
-                                p.AcceptAmmo(l.AmmoType, l.AmmoAmount);
-
-                            if (l.DoesSupplyFuel)
-                                p.AcceptFuel(l.FuelAmount);
-                        }
-
-                        if (phenomena != null && otherGridObject is Player)
-                        {
-                            if (phenomena.DoesRepair)
-                            {
-                                otherGameObjectHealth.AddHealth(phenomena.gameObject.GetComponent<ContactRepair>().repairAmount);
-                            }
-
-                            if (phenomena.DoesSupply)
-                            {
-                                
-                                //otherGridObject.
-                                //phenomena.gameObject.GetComponent<ContactSupply>().
-
-                                /*  NOTE
-                                 *   - Look, I'm not sure what the best way to implement this is
-                                 *   - One way to think about this is to make Loot a type of Phenomena
-                                 *   - Another way is to think of Loot as a way that supplies can move around LevelGrid
-                                 *      - Perhaps Loot needs to have a ContactSupply or ContactFuel component on it
-                                 */
-                            }
-                        }
-
-                        if (gridObject is Player && otherPhenomena != null)
-                        {
-                            if (otherPhenomena.DoesRepair)
-                            {
-                                gameObjectHealth.AddHealth(otherPhenomena.gameObject.GetComponent<ContactRepair>().repairAmount);
-                            }
-                        }
                     }
                 }
             }
@@ -691,6 +738,7 @@ public class GridObjectManager : MonoBehaviour
         }
         return false;
     }
+
     private bool CheckHealth(List<GridObject> objects, float delayAnimation = 0.0f)
     {
         bool returnBool = false;
@@ -723,7 +771,6 @@ public class GridObjectManager : MonoBehaviour
         return gridBlockPath;
     }
 
-
     private IEnumerator GridObjectMovementCoroutine(GridObject objectToMove, float travelLength = 1.0f)
     {
         float startTime = Time.time;
@@ -741,6 +788,7 @@ public class GridObjectManager : MonoBehaviour
         objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
         //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
     }
+
     private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f) 
     {
         if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");
