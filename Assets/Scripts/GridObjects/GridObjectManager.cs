@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class GridObjectManager : MonoBehaviour
 {
-    
     [SerializeField] private bool VerboseConsole = true;
 
     private GridManager gm;
@@ -76,7 +75,10 @@ public class GridObjectManager : MonoBehaviour
 
         gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
         player = gridObjectsInPlay[0].GetComponent<Player>();
+    }
 
+    public void InsertManualSpawnSequence()
+    {
         if (insertSpawnSequences.Count > 0)
         {
             for (int i = 0; i < insertSpawnSequences.Count; i++)
@@ -98,7 +100,7 @@ public class GridObjectManager : MonoBehaviour
 
     private GridObject SelectGridObject(GridObjectType type)
     {
-        if(type == GridObjectType.Hazard)
+        if (type == GridObjectType.Hazard)
         {
             List<Hazard> availableHazards = new List<Hazard>();
             for (int i = 0; i < gridObjectPrefabs.Length; i++)
@@ -111,7 +113,20 @@ public class GridObjectManager : MonoBehaviour
             if (VerboseConsole) Debug.Log("Selected a Hazard.");
             return availableHazards[selector];
         }
-        else if(type == GridObjectType.Phenomena)
+        else if (type == GridObjectType.Station)
+        {
+            List<Station> availableStations = new List<Station>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Station)
+                    availableStations.Add(gridObjectPrefabs[i] as Station);
+            }
+
+            int selector = Random.Range(0, availableStations.Count - 1);
+            if (VerboseConsole) Debug.Log("Selected a Station.");
+            return availableStations[selector];
+        }
+        else if (type == GridObjectType.Phenomena)
         {
             List<Phenomena> availablePhenomena = new List<Phenomena>();
             for (int i = 0; i < gridObjectPrefabs.Length; i++)
@@ -120,7 +135,7 @@ public class GridObjectManager : MonoBehaviour
                     availablePhenomena.Add(gridObjectPrefabs[i] as Phenomena);
             }
 
-            int selector = Random.Range(0, availablePhenomena.Count - 1);
+            int selector = Random.Range(0, availablePhenomena.Count);
             if (VerboseConsole) Debug.Log("Selected a Phenomenon.");
             return availablePhenomena[selector];
         }
@@ -478,7 +493,7 @@ public class GridObjectManager : MonoBehaviour
                 {
                     Health hp = gridObjectsInPlay[i].GetComponent<Health>();
 
-                    if (hp != null & hp.HasHP)
+                    if (hp != null && hp.HasHP)
                         objectProcessing.Add(gridObjectsInPlay[i]);
                 }
                             
@@ -539,7 +554,7 @@ public class GridObjectManager : MonoBehaviour
             Debug.Log("Preparations for next level complete.");
     }
 
-    public void NextLevel(int phenomenaRequired)
+    public void NextLevel(int phenomenaRequired, int stationsRequired)
     {
         // For each phenomenaRequired, should randomly select one 
         for (int i = 0; i < phenomenaRequired; i++)
@@ -547,6 +562,14 @@ public class GridObjectManager : MonoBehaviour
             AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));
             CreateGridObject(spawnQueue.Dequeue());
         }
+
+        for (int i = 0; i < stationsRequired; i++)
+        {
+            AddSpawnStep(SelectGridObject(GridObjectType.Station));
+            CreateGridObject(spawnQueue.Dequeue());
+        }
+
+        // For each stationRequired, should randomly select one
         // Create SpawnSteps
 
     }  
@@ -564,20 +587,9 @@ public class GridObjectManager : MonoBehaviour
             {
                 Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
 
-                //  Consider this
-                //https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/local-functions
-                // Also can use gridObject.ObjectType property for processing Hazards & Phenomena
-
                 for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
                 {
                     GridObject jGridObject = gridBlocks[i].objectsOnBlock[j].GetComponent<GridObject>();
-
-                    //GameObject gameObject = gridBlocks[i].objectsOnBlock[j];
-                    //GridObject gridObject = gameObject.GetComponent<GridObject>();
-                    //Loot loot = gameObject.GetComponent<Loot>();
-                    //Health gameObjectHealth = gameObject.GetComponent<Health>();
-                    //ContactDamage gameObjectDamage = gameObject.GetComponent<ContactDamage>();
-                    //Phenomena phenomena = gameObject.GetComponent<Phenomena>();
 
                     for (int k = 1 + j; k < gridBlocks[i].objectsOnBlock.Count; k++)
                     {
@@ -589,9 +601,11 @@ public class GridObjectManager : MonoBehaviour
                         bool jIsPhenomena = jGridObject is Phenomena;
                         bool kIsPhenomena = kGridObject is Phenomena;
 
+                        bool jIsStation = jGridObject is Station;
+                        bool kIsStation = kGridObject is Station;
+
                         bool jIsLoot = jGridObject is Loot;
                         bool kIsLoot = kGridObject is Loot;
-
 
                         bool jHasHP = jGridObject.gameObject.TryGetComponent<Health>(out Health jHealth);
                         bool kHasHP = kGridObject.gameObject.TryGetComponent<Health>(out Health kHealth);
@@ -610,17 +624,13 @@ public class GridObjectManager : MonoBehaviour
 
                         if (jHasHP && kDoesDamage)
                         {
-                            if (!jIsPlayer && !kIsPhenomena && !kDoesSupply)     //Isn't a Supply Station
-                                jHealth.SubtractHealth(kDamage.DamageAmount);
-                            else if (!jIsPlayer && !kIsPhenomena && !kDoesFuel)  //Isn't a Fuel Station
+                            if (!jIsStation)
                                 jHealth.SubtractHealth(kDamage.DamageAmount);
                         }
 
                         if (kHasHP && jDoesDamage)
                         {
-                            if (!kIsPlayer && !jIsPhenomena && !jDoesSupply)     //Is a Supply Station
-                                kHealth.SubtractHealth(jDamage.DamageAmount);
-                            else if (!kIsPlayer && !jIsPhenomena && !jDoesFuel)  //Is a Fuel Station
+                            if (!kIsStation)
                                 kHealth.SubtractHealth(jDamage.DamageAmount);
                         }   
 
@@ -690,33 +700,6 @@ public class GridObjectManager : MonoBehaviour
                             }
                                 
                         }
-
-                        //GameObject otherGameObject = gridBlocks[i].objectsOnBlock[k];
-                        //GridObject otherGridObject = otherGameObject.GetComponent<GridObject>();
-                        //Loot otherLoot = otherGameObject.GetComponent<Loot>();
-                        //Health otherGameObjectHealth = otherGameObject.GetComponent<Health>();
-                        //ContactDamage otherGameObjectDamage = otherGameObject.GetComponent<ContactDamage>();
-                        //Phenomena otherPhenomena = otherGameObject.GetComponent<Phenomena>();
-
-                        
-/*
-                        if (gameObjectDamage != null && otherGameObjectHealth != null)
-                        {
-                            if (VerboseConsole)
-                                Debug.Log("Subtracting " + gameObjectDamage.DamageAmount.ToString() + " from " + otherGameObject.name);
-
-                            otherGameObjectHealth.SubtractHealth(gameObjectDamage.DamageAmount);
-                        }
-
-                        if (gameObjectHealth != null && otherGameObjectDamage != null)
-                        {
-                            if (VerboseConsole)
-                                Debug.Log("Subtracting " + otherGameObjectDamage.DamageAmount.ToString() + " from " + gameObject.name);
-
-                            gameObjectHealth.SubtractHealth(otherGameObjectDamage.DamageAmount);
-                        }
-*/
-
                     }
                 }
             }
@@ -839,7 +822,8 @@ public class GridObjectManager : MonoBehaviour
 public enum GridObjectType
 {
     Hazard = 1,
-    Phenomena = 2
+    Phenomena = 2,
+    Station = 3
 }
 
 /*
