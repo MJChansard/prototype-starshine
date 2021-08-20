@@ -1,19 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class ContactSupply : MonoBehaviour
 {
     public WeaponType weaponType;
     public int supplyAmount;
-
-    
-    public void RequestSupply()
-    {
-        weaponType = (WeaponType)Random.Range(1, 3);
-        supplyAmount = SupplyData[weaponType];
-    }
-
+    public bool randomizeSupply;
+    public bool randomizeNumberResupplyRemaining;
+    [ShowIf("@!randomizeNumberResupplyRemaining")]
+    public int numberResupplyRemaining;
+      
+   
     private Dictionary<WeaponType, int> SupplyData = new Dictionary<WeaponType, int>()
     {
         { WeaponType.AutoCannon, 10 },
@@ -21,8 +20,16 @@ public class ContactSupply : MonoBehaviour
         {WeaponType.RailGun, 2 }
     };
 
+
     private void Start()
     {
-        RequestSupply();
+        if (randomizeSupply)
+            RequestSupply();
+    }
+
+    public void RequestSupply()
+    {
+        weaponType = (WeaponType)Random.Range(1, 3);
+        supplyAmount = SupplyData[weaponType];
     }
 }
