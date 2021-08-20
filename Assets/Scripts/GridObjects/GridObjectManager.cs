@@ -645,8 +645,10 @@ public class GridObjectManager : MonoBehaviour
                                     Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
 
                                 p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
+                                cs.ConsumeSupply();
                                 if (kIsLoot)
                                     kHealth.SubtractHealth(kHealth.CurrentHP);
+                                
                             }
                             else if (kIsPlayer)
                             {
@@ -657,6 +659,7 @@ public class GridObjectManager : MonoBehaviour
                                     Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
 
                                 p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
+                                cs.ConsumeSupply();
                                 if (jIsLoot)
                                     jHealth.SubtractHealth(jHealth.CurrentHP);
                             }
@@ -691,12 +694,14 @@ public class GridObjectManager : MonoBehaviour
                                 jHealth.AddHealth(kRepair.repairAmount);
                                 Player p = jGridObject as Player;
                                 p.UpdateUICoroutine();
+                                kRepair.ConsumeRepair();
                             }
                             else if (kIsPlayer)
                             {
                                 kHealth.AddHealth(jRepair.repairAmount);
                                 Player p = kGridObject as Player;
                                 p.UpdateUICoroutine();
+                                jRepair.ConsumeRepair();
                             }
                                 
                         }
