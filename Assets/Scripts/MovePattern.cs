@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class MovePattern : MonoBehaviour
 {
-    
-    [SerializeField] private bool AlwaysMoveOnSpawn = true;
 
+    [SerializeField] private bool AlwaysMoveOnSpawn = true;
     [SerializeField] private int waitTicksPerMove;
     public int ticksUntilNextMove;
 
@@ -63,6 +62,7 @@ public class MovePattern : MonoBehaviour
         if(ticksUntilNextMove == 0)
         {
             ticksUntilNextMove = waitTicksPerMove;
+            delayApplied = false;
         }
         ticksUntilNextMove -= 1;
     }
@@ -77,11 +77,14 @@ public class MovePattern : MonoBehaviour
     public bool CanMoveThisTurn
     {
         get { return ticksUntilNextMove == 0; }
- 
     }
 
     public void ApplyMoveDelay(int delayValue)
     {
         ticksUntilNextMove += delayValue;
+        delayApplied = true;
     }
+
+    private bool delayApplied = false;
+    public bool DelayApplied { get { return delayApplied; } }
 }
