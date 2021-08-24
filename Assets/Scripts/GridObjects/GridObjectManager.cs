@@ -622,6 +622,9 @@ public class GridObjectManager : MonoBehaviour
                         bool jDoesFuel = jGridObject.TryGetComponent<ContactFuel>(out ContactFuel jFuel);
                         bool kDoesFuel = kGridObject.TryGetComponent<ContactFuel>(out ContactFuel kFuel);
 
+                        bool jDoesSlow = jGridObject.TryGetComponent<ContactSlow>(out ContactSlow jSlow);
+                        bool kDoesSlow = kGridObject.TryGetComponent<ContactSlow>(out ContactSlow kSlow);
+
                         if (jHasHP && kDoesDamage)
                         {
                             if (!jIsStation)
@@ -704,6 +707,15 @@ public class GridObjectManager : MonoBehaviour
                                 jRepair.ConsumeRepair();
                             }
                                 
+                        }
+
+                        if (jDoesSlow || kDoesSlow)
+                        {
+                            if (jDoesSlow && kGridObject.TryGetComponent<MovePattern>(out MovePattern kMove))
+                                kMove.ReceiveMoveDelay(jSlow.tickDelayAmount);
+
+                            if (kDoesSlow && jGridObject.TryGetComponent<MovePattern>(out MovePattern jMove))
+                                jMove.ReceiveMoveDelay(kSlow.tickDelayAmount);
                         }
                     }
                 }
