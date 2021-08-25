@@ -62,9 +62,19 @@ public class MovePattern : MonoBehaviour
         if(ticksUntilNextMove == 0)
         {
             ticksUntilNextMove = waitTicksPerMove;
-            delayApplied = false;
+            
         }
         ticksUntilNextMove -= 1;
+
+        if (slowTicksRemaining > 0)
+        {
+            slowTicksRemaining--;
+        }
+        else
+        {
+            slowTicksRemaining = 0;
+            eligibleSlow = true;
+        }
     }
 
     /*
@@ -76,15 +86,22 @@ public class MovePattern : MonoBehaviour
 
     public bool CanMoveThisTurn
     {
-        get { return ticksUntilNextMove == 0; }
+        get { return ticksUntilNextMove == 0 && slowTicksRemaining == 0; }
     }
 
-    public void ApplyMoveDelay(int delayValue)
+    public void ApplySlow(int slowTickDuration)
     {
-        ticksUntilNextMove += delayValue;
-        delayApplied = true;
+        Debug.LogFormat("Delaying Movement of {0} by {1} turns.", this.gameObject.name, slowTickDuration.ToString());
+
+        if (ticksUntilNextMove > 0)
+            slowTicksRemaining = ticksUntilNextMove + slowTickDuration;
+        else
+            slowTicksRemaining = waitTicksPerMove + slowTickDuration;
+
+        eligibleSlow = false;
     }
 
-    private bool delayApplied = false;
-    public bool DelayApplied { get { return delayApplied; } }
+    private bool eligibleSlow = true;
+    private int slowTicksRemaining;
+    public bool EligibleToSlow { get { return eligibleSlow; } }
 }

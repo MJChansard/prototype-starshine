@@ -711,11 +711,11 @@ public class GridObjectManager : MonoBehaviour
 
                         if (jDoesSlow || kDoesSlow)
                         {
-                            if (jDoesSlow && kGridObject.TryGetComponent<MovePattern>(out MovePattern kMove))
-                                kMove.ReceiveMoveDelay(jSlow.tickDelayAmount);
+                            if (jDoesSlow && kGridObject.TryGetComponent<MovePattern>(out MovePattern kMove) && kMove.EligibleToSlow)
+                                kMove.ApplySlow(jSlow.tickDelayAmount);
 
-                            if (kDoesSlow && jGridObject.TryGetComponent<MovePattern>(out MovePattern jMove))
-                                jMove.ReceiveMoveDelay(kSlow.tickDelayAmount);
+                            if (kDoesSlow && jGridObject.TryGetComponent<MovePattern>(out MovePattern jMove) && jMove.EligibleToSlow)
+                                jMove.ApplySlow(kSlow.tickDelayAmount);
                         }
                     }
                 }
