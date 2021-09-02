@@ -60,6 +60,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -84,6 +85,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &2373175359141015207
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -110,18 +112,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectType: 0
   ProcessingPhase: 1
-  ticksPerMove: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
     spawnRegion: 0
     avoidHazardPaths: 0
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
-  IsLeavingGrid: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   moveSpeed: 1
+  IsLeavingGrid: 0
   hazardType: 11
 --- !u!114 &868535179729277578
 MonoBehaviour:
@@ -135,7 +137,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d404c645065e0d34c95be8de3cd84507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageAmount: 200
+  damageAmount: 60
 --- !u!114 &7754017057097935033
 MonoBehaviour:
   m_ObjectHideFlags: 0

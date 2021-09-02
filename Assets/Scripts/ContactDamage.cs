@@ -6,8 +6,6 @@ public class ContactDamage : MonoBehaviour
 {
     [SerializeField] private int damageAmount;
 
-    public int DamageAmount
-    {
-        get { return damageAmount; }
+    public int DamageAmount { get { return damageAmount; }
     }
 }

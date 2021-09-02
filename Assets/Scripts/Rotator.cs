@@ -45,10 +45,20 @@ public class Rotator : MonoBehaviour
     {
         if(ApplyManualRotation)
         {
-            Vector3 values = DefaultRotations["Up"];
-            xRotationSpeed = values.x;
-            yRotationSpeed = values.y;
-            zRotationSpeed = values.z;
+            if (UseDefaultValues)
+            {
+                Vector3 values = DefaultRotations["Up"];
+                xRotationSpeed = values.x;
+                yRotationSpeed = values.y;
+                zRotationSpeed = values.z;
+            }
+            else
+            {
+                xRotationSpeed = RotateUpValues.x;
+                yRotationSpeed = RotateUpValues.y;
+                zRotationSpeed = RotateUpValues.z;
+            }
+            
         }
     }
 

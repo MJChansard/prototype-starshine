@@ -16,12 +16,15 @@ MonoBehaviour:
   - levelWidth: 11
     levelHeight: 9
     jumpFuelAmount: 1
-    numberOfPhenomenaToSpawn: 2
+    numberOfPhenomenaToSpawn: 5
+    numberOfStationsToSpawn: 1
   - levelWidth: 11
     levelHeight: 9
-    jumpFuelAmount: 1
-    numberOfPhenomenaToSpawn: 2
+    jumpFuelAmount: 2
+    numberOfPhenomenaToSpawn: 15
+    numberOfStationsToSpawn: 1
   - levelWidth: 10
     levelHeight: 8
     jumpFuelAmount: 0
     numberOfPhenomenaToSpawn: 0
+    numberOfStationsToSpawn: 0

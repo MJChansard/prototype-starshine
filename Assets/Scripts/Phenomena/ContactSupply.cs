@@ -5,9 +5,12 @@ using Sirenix.OdinInspector;
 
 public class ContactSupply : MonoBehaviour
 {
-    public WeaponType weaponType;
-    public int supplyAmount;
     public bool randomizeSupply;
+    [ShowIf("@!randomizeSupply")]
+    public WeaponType weaponType;
+    [ShowIf("@!randomizeSupply")]
+    public int supplyAmount;
+    
     public bool randomizeNumberResupplyRemaining;
     [ShowIf("@!randomizeNumberResupplyRemaining")]
     public int numberResupplyRemaining;
@@ -17,7 +20,7 @@ public class ContactSupply : MonoBehaviour
     {
         { WeaponType.AutoCannon, 10 },
         { WeaponType.MissileLauncher, 6 },
-        {WeaponType.RailGun, 2 }
+        { WeaponType.RailGun, 2 }
     };
 
 
@@ -31,5 +34,10 @@ public class ContactSupply : MonoBehaviour
     {
         weaponType = (WeaponType)Random.Range(1, 3);
         supplyAmount = SupplyData[weaponType];
+    }
+
+    public void ConsumeSupply()
+    {
+        numberResupplyRemaining--;
     }
 }

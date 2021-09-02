@@ -48,7 +48,12 @@ public class GameManager : MonoBehaviour
         if (currentLevel == 0) currentLevel = 1;
         if (overrideLevelData)
         {
-            LevelData newLevelData = new LevelData(inspectorGridWidth, inspectorGridHeight, 4, 0);
+            //LevelData newLevelData = new LevelData(inspectorGridWidth, inspectorGridHeight, 4, 0);
+            //LevelData newLevelData = CreateInstance<LevelData>();
+            LevelData newLevelData = LevelData.CreateInstance<LevelData>();
+            newLevelData.AddRowData(inspectorGridWidth, inspectorGridHeight, 4, 10, 1);
+            
+
             gm.ReceiveLevelData(newLevelData.LevelTable[0]);
         }
         else
@@ -93,6 +98,8 @@ public class GameManager : MonoBehaviour
 
         // Initialize Game Object Manager now that player exists
         gom.Init();
+        gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
+        gom.InsertManualSpawnSequence();
 
         this.player.OnPlayerAdvance += OnTick;
     }
@@ -118,11 +125,9 @@ public class GameManager : MonoBehaviour
                 gom.ClearLevel();
                 gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
                 gm.NextLevel();   // Don't adjust index
-                gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn);
+                gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
                 gom.ArrivePlayer();
                 player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
-                
-                
             }
             player.OnPlayerAddHazard -= OnAddHazard;
         }

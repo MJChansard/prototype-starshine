@@ -242,27 +242,7 @@ public class GridObjectManager : MonoBehaviour
         if (removeFromGrid) gm.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
         gridObjectsInPlay.Remove(objectToRemove);
     }
-    public void ArrivePlayer()
-    {
-        //#TODO
-        // Need to add something that will allow for a Player to spawn somewhere other than 0, 0
-
-        Vector2Int arriveLocation = new Vector2Int(0, 0);
-
-        if (VerboseConsole) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
-
-        if(player.spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Center)
-        {
-            // Can put some new arrival logic here    
-        }
-
-        gm.AddObjectToGrid(player.gameObject, arriveLocation);
-        player.currentWorldLocation = gm.GridToWorld(arriveLocation);
-        player.targetWorldLocation = gm.GridToWorld(arriveLocation);
-        player.transform.position = new Vector3(arriveLocation.x, arriveLocation.y, 0);
-
-        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
-    }
+    
 
 
     private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects)
@@ -314,9 +294,8 @@ public class GridObjectManager : MonoBehaviour
                 }
             }
         }
-
+        
         if (VerboseConsole) Debug.Log("Fly-By detection starting.");
-
         for (int i = 0; i < allOriginGridLocations.Length; i++)
         {
             for (int j = 0; j < allDestinationGridLocations.Length; j++)
@@ -534,47 +513,6 @@ public class GridObjectManager : MonoBehaviour
 
         //StartCoroutine(AnimateTick);
     }
-    public void ClearLevel()
-    {
-        if (VerboseConsole)
-            Debug.Log("Preparing for next level. Removing all GridObjects in play.");
-
-        for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
-        {
-            //RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-            Destroy(gridObjectsInPlay[i].gameObject);
-            gridObjectsInPlay.RemoveAt(i);
-        }
-
-        spawnQueue.Clear();
-        //gridObjectsInPlay[0].gameObject.SetActive(false);       //Disable Player 
-        //StartCoroutine(player.AnimateNextLevel());
-
-        if (VerboseConsole)
-            Debug.Log("Preparations for next level complete.");
-    }
-
-    public void NextLevel(int phenomenaRequired, int stationsRequired)
-    {
-        // For each phenomenaRequired, should randomly select one 
-        for (int i = 0; i < phenomenaRequired; i++)
-        {
-            AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));
-            CreateGridObject(spawnQueue.Dequeue());
-        }
-
-        for (int i = 0; i < stationsRequired; i++)
-        {
-            AddSpawnStep(SelectGridObject(GridObjectType.Station));
-            CreateGridObject(spawnQueue.Dequeue());
-        }
-
-        // For each stationRequired, should randomly select one
-        // Create SpawnSteps
-
-    }  
-
-
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {
         // i = GridBlock iterator
@@ -635,9 +573,9 @@ public class GridObjectManager : MonoBehaviour
                         {
                             if (!kIsStation)
                                 kHealth.SubtractHealth(jDamage.DamageAmount);
-                        }   
+                        }
 
-                        if ( (jIsPlayer && kDoesSupply) || (kIsPlayer && jDoesSupply) )
+                        if ((jIsPlayer && kDoesSupply) || (kIsPlayer && jDoesSupply))
                         {
                             if (jIsPlayer)
                             {
@@ -651,7 +589,7 @@ public class GridObjectManager : MonoBehaviour
                                 cs.ConsumeSupply();
                                 if (kIsLoot)
                                     kHealth.SubtractHealth(kHealth.CurrentHP);
-                                
+
                             }
                             else if (kIsPlayer)
                             {
@@ -668,7 +606,7 @@ public class GridObjectManager : MonoBehaviour
                             }
                         }
 
-                        if ( (jIsPlayer && kDoesFuel) || (kIsPlayer && jDoesFuel))
+                        if ((jIsPlayer && kDoesFuel) || (kIsPlayer && jDoesFuel))
                         {
                             if (jIsPlayer)
                             {
@@ -690,7 +628,7 @@ public class GridObjectManager : MonoBehaviour
                             }
                         }
 
-                        if ( (jIsPlayer && kDoesRepair) || (kIsPlayer && jDoesRepair) )
+                        if ((jIsPlayer && kDoesRepair) || (kIsPlayer && jDoesRepair))
                         {
                             if (jIsPlayer)
                             {
@@ -706,7 +644,7 @@ public class GridObjectManager : MonoBehaviour
                                 p.UpdateUICoroutine();
                                 jRepair.ConsumeRepair();
                             }
-                                
+
                         }
 
                         if (jDoesSlow || kDoesSlow)
@@ -739,6 +677,70 @@ public class GridObjectManager : MonoBehaviour
         return false;
     }
 
+
+    // LEVEL
+    public void ClearLevel()
+    {
+        if (VerboseConsole)
+            Debug.Log("Preparing for next level. Removing all GridObjects in play.");
+
+        for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
+        {
+            //RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
+            Destroy(gridObjectsInPlay[i].gameObject);
+            gridObjectsInPlay.RemoveAt(i);
+        }
+
+        spawnQueue.Clear();
+        //gridObjectsInPlay[0].gameObject.SetActive(false);       //Disable Player 
+        //StartCoroutine(player.AnimateNextLevel());
+
+        if (VerboseConsole)
+            Debug.Log("Preparations for next level complete.");
+    }
+    public void NextLevel(int phenomenaRequired, int stationsRequired)
+    {
+        // For each phenomenaRequired, should randomly select one 
+        for (int i = 0; i < phenomenaRequired; i++)
+        {
+            AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));
+            CreateGridObject(spawnQueue.Dequeue());
+        }
+
+        for (int i = 0; i < stationsRequired; i++)
+        {
+            AddSpawnStep(SelectGridObject(GridObjectType.Station));
+            CreateGridObject(spawnQueue.Dequeue());
+        }
+
+        // For each stationRequired, should randomly select one
+        // Create SpawnSteps
+
+    }
+    public void ArrivePlayer()
+    {
+        //#TODO
+        // Need to add something that will allow for a Player to spawn somewhere other than 0, 0
+
+        Vector2Int arriveLocation = new Vector2Int(0, 0);
+
+        if (VerboseConsole) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
+
+        if (player.spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Center)
+        {
+            // Can put some new arrival logic here    
+        }
+
+        gm.AddObjectToGrid(player.gameObject, arriveLocation);
+        player.currentWorldLocation = gm.GridToWorld(arriveLocation);
+        player.targetWorldLocation = gm.GridToWorld(arriveLocation);
+        player.transform.position = new Vector3(arriveLocation.x, arriveLocation.y, 0);
+
+        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
+    }
+
+
+    // UTILITY METHODS
     private bool CheckHealth(List<GridObject> objects, float delayAnimation = 0.0f)
     {
         bool returnBool = false;
@@ -756,8 +758,6 @@ public class GridObjectManager : MonoBehaviour
 
         return returnBool;
     }
-
-
     private List<GridBlock> GetGridBlocksInPath(Vector2Int origin, Vector2Int direction)
     {
         List<GridBlock> gridBlockPath = new List<GridBlock>();
@@ -771,6 +771,8 @@ public class GridObjectManager : MonoBehaviour
         return gridBlockPath;
     }
 
+
+    // ANIMATION & MOVEMENT COROUTINES
     private IEnumerator GridObjectMovementCoroutine(GridObject objectToMove, float travelLength = 1.0f)
     {
         float startTime = Time.time;
@@ -788,7 +790,6 @@ public class GridObjectManager : MonoBehaviour
         objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
         //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
     }
-
     private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f) 
     {
         if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");

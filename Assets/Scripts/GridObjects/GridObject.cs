@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 public abstract class GridObject : MonoBehaviour
 {
     [Header("General Properties")]
-    public GridObjectType ObjectType;
+    //public GridObjectType ObjectType;
     public GridObjectManager.GamePhase ProcessingPhase;
     //[SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
     //private int ticksRemainingUntilMove;

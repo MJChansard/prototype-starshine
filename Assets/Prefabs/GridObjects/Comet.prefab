@@ -9852,8 +9852,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectType: 0
   ProcessingPhase: 2
-  HideProperty: 1
   spawnWarningObject: {fileID: 5736782390652883209}
   spawnRules:
     spawnRegion: 1
@@ -9879,11 +9879,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectToRotate: {fileID: 5736782390709137545}
   UseDefaultValues: 0
+  ApplyManualRotation: 0
   RotateUpValues: {x: 0, y: 20, z: 0}
   RotateDownValues: {x: 0, y: 20, z: 0}
   RotateLeftValues: {x: 0, y: 20, z: 0}
   RotateRightValues: {x: 0, y: 20, z: 0}
-  ApplyManualRotation: 0
 --- !u!114 &7215729519047811940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9925,7 +9925,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 200
+  maxHP: 20
   currentHP: 0
 --- !u!114 &5230599049785632025
 MonoBehaviour:

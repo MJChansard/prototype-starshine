@@ -63,9 +63,4 @@ public class GridBlock
         this.objectsOnBlock = new List<GameObject>();
         this.canSpawn = false;
     }
-
-    #region Methods
-
-    #endregion
-
 }

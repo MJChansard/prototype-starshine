@@ -7,7 +7,6 @@ public class Hazard : GridObject
     [Header("Hazard Properties")]
     [SerializeField] private Type hazardType;
     public Type HazardType { get { return hazardType; } }
-
     public string HazardName { get { return hazardType.ToString("G"); } }
 
     public enum Type

@@ -150,11 +150,12 @@ public class GridManager : MonoBehaviour
          *  - Update levelGrid[x, y].canSpawn
          */
 
-        Debug.LogFormat("Initializing Grid\nWidth: {0}\nHeight: {1}\nFuel Required: {2}\nPhenomena: {3}",
+        Debug.LogFormat("Initializing Grid\nWidth: {0}\nHeight: {1}\nFuel Required: {2}\nPhenomena: {3}\nStations: {4}",
             initLevelData.levelWidth,
             initLevelData.levelHeight,
             initLevelData.jumpFuelAmount,
-            initLevelData.numberOfPhenomenaToSpawn);
+            initLevelData.numberOfPhenomenaToSpawn,
+            initLevelData.numberOfStationsToSpawn);
 
         // Pad width and height by 1 for spawn ring
         //int _width = initLevelData.levelWidth + 1;
@@ -180,7 +181,7 @@ public class GridManager : MonoBehaviour
                 {
                     eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
                 }
-                else
+                else if ((locationX > BoundaryLeftActual && locationX < BoundaryRightActual && locationY < BoundaryTopActual && locationY > BoundaryBottomActual))
                 {
                     eligibleInteriorSpawns.Add(levelGrid[i, j].location);
                 }
@@ -477,11 +478,11 @@ public class GridManager : MonoBehaviour
                                     else if (boundaryLocationToRemove.x == BoundaryRightPlay)
                                     {
                                         Vector2Int locationToRemove = WorldToGrid(currentHazard.currentWorldLocation) + Vector2Int.right;
-                                        Debug.LogFormat("Adding {0}sms to the ineligible spawn list.", locationToRemove.ToString());
+                                        Debug.LogFormat("Adding {0} to the ineligible spawn list.", locationToRemove.ToString());
                                         ineligibleSpawnLocations.Add(locationToRemove);
 
                                         locationToRemove += Vector2Int.up;
-                                        Debug.LogFormat("Adding {0] to the ineligible spawn list.", locationToRemove.ToString());
+                                        Debug.LogFormat("Adding {0} to the ineligible spawn list.", locationToRemove.ToString());
                                         ineligibleSpawnLocations.Add(locationToRemove);
                                     }
                                 }
@@ -586,6 +587,12 @@ public class GridManager : MonoBehaviour
 
                             }
                         }
+                    }// end if(hazard)
+
+                    if (levelGrid[w, h].objectsOnBlock.Count > 0)
+                    {
+                        if (rules.avoidShareSpawnLocation)
+                            ineligibleSpawnLocations.Add(levelGrid[w, h].location);
                     }
                 }
             }
@@ -640,6 +647,7 @@ public class GridManager : MonoBehaviour
         public bool avoidHazardPaths = false;
         public bool avoidAdjacentToPlayer = false;
         public bool requiresOrientation = false;
+        public bool avoidShareSpawnLocation = false;
     }
 
 }

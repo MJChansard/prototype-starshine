@@ -7,9 +7,10 @@ public class Health : MonoBehaviour
     [SerializeField] private int maxHP;    
     [SerializeField] private int currentHP;
 
+    public int MaxHP { get { return maxHP; } }
     public int CurrentHP { get { return currentHP; } }
-        
     public bool HasHP { get { return currentHP > 0; } }
+    
         
 
     public bool IsInvincible
@@ -26,7 +27,6 @@ public class Health : MonoBehaviour
     }
 
 
-
     public void SubtractHealth(int damageAmount)
     {
         if (isInvincible == false && damageAmount > 0)
@@ -34,7 +34,6 @@ public class Health : MonoBehaviour
             currentHP -= damageAmount;
         }
     }
-
     public void AddHealth(int healthAmount)
     {
         while (currentHP < maxHP && healthAmount > 0)

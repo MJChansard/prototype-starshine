@@ -14,15 +14,8 @@ public class Loot : GridObject
     //[SerializeField]
     private ContactFuel fuel;
     
-    public WeaponType AmmoType
-    {
-        get { return supply.weaponType; }
-    }
-
-    public int AmmoAmount
-    {
-        get { return supply.supplyAmount; }
-    }
+    public WeaponType AmmoType { get { return supply.weaponType; } }
+    public int AmmoAmount { get { return supply.supplyAmount; } }
 
     public int FuelAmount
     {
@@ -52,6 +45,7 @@ public class Loot : GridObject
         }
     }
 
+    
     private void Start()
     {
         if(TryGetComponent<ContactSupply>(out ContactSupply cs))
@@ -60,6 +54,7 @@ public class Loot : GridObject
         if (TryGetComponent<ContactFuel>(out ContactFuel cf))
             fuel = cf;
     }
+
     /*
         public enum LootType
         {

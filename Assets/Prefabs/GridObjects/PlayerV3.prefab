@@ -67,7 +67,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6dc3b788364f2e4ca56e3771c14ad07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 100
+  maxHP: 40
   currentHP: 0
 --- !u!114 &6925512560437902226
 MonoBehaviour:
@@ -81,6 +81,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99d23950cf041d1498dd4e66dc58e50a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectType: 0
   ProcessingPhase: 1
   spawnWarningObject: {fileID: 0}
   spawnRules:
@@ -570,6 +571,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerThruster
       objectReference: {fileID: 0}
+    - target: {fileID: 8909159618267297029, guid: 8ba02def0fa315844b7fd8eed8d0d02c,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8ba02def0fa315844b7fd8eed8d0d02c, type: 3}
 --- !u!1 &8333113931294613961 stripped
@@ -591,6 +597,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5031352432676404082}
     m_Modifications:
+    - target: {fileID: 114315845813851138, guid: 9ab49f8076cd02c40a29a71d2acd39f1,
+        type: 3}
+      propertyPath: weaponType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8811313596657191757, guid: 9ab49f8076cd02c40a29a71d2acd39f1,
         type: 3}
       propertyPath: m_RootOrder
@@ -651,6 +662,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaponAutoCannonPrefab
       objectReference: {fileID: 0}
+    - target: {fileID: 8811313596657191759, guid: 9ab49f8076cd02c40a29a71d2acd39f1,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ab49f8076cd02c40a29a71d2acd39f1, type: 3}
 --- !u!1 &8237256412438012411 stripped
@@ -676,6 +692,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2093744548760199081, guid: d2239fa9d3c5ad94f9218addefe00f41,
+        type: 3}
+      propertyPath: weaponType
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2093744548760199081, guid: d2239fa9d3c5ad94f9218addefe00f41,
         type: 3}
@@ -828,6 +849,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: WeaponMissileLauncherPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 7858496990284323740, guid: 7002efe99bf17a44793c13ddd8d895b0,
+        type: 3}
+      propertyPath: weaponType
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7858496990284323740, guid: 7002efe99bf17a44793c13ddd8d895b0,
         type: 3}

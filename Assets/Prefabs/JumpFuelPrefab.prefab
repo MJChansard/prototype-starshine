@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4481747901227846424}
   - component: {fileID: -4039114817467038121}
   - component: {fileID: 8095741644619937773}
+  - component: {fileID: 5496093553973511339}
   m_Layer: 0
   m_Name: JumpFuelPrefab
   m_TagString: Jump Fuel
@@ -62,11 +63,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectToRotate: {fileID: 6511203687783102388}
   UseDefaultValues: 1
+  ApplyManualRotation: 0
   RotateUpValues: {x: 0, y: 0, z: 0}
   RotateDownValues: {x: 0, y: 0, z: 0}
   RotateLeftValues: {x: 0, y: 0, z: 0}
   RotateRightValues: {x: 0, y: 0, z: 0}
-  ApplyManualRotation: 0
 --- !u!114 &-4039114817467038121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -93,6 +94,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66c880742d93367499fa03083dabb7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectType: 0
   ProcessingPhase: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
@@ -100,12 +102,23 @@ MonoBehaviour:
     avoidHazardPaths: 0
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
-  IsLeavingGrid: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
   moveSpeed: 0
-  lootType: 1
-  lootAmount: 1
+  IsLeavingGrid: 0
+--- !u!114 &5496093553973511339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1246751348488905671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0616fd2501c6e164eab24025244101bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fuelAmount: 1
 --- !u!1 &6511203687783102388
 GameObject:
   m_ObjectHideFlags: 0

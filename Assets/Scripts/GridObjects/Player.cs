@@ -1,10 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class Player : GridObject
 {
-    #region Player Attributes
+    private PlayerHUD ui;
+    private MovePattern movePattern;
+    private Health hp;
+
     [Header("Player Components")]
     [SerializeField] private GameObject Thruster;
     
@@ -20,9 +24,17 @@ public class Player : GridObject
     private int maxFuelAmount = 10;
 
     [SerializeField] private float speed = 2.0f;
-    #endregion
+    
+    [Title("BUTTONS")]
+    [Button]
+    //[TitleGroup("BUTTONS")]
+    //[ButtonGroup("BUTTONS")]
+    private void InflictDamage()
+    {
+        hp.SubtractHealth(10);
+        ui.UpdateHUDHP(hp.CurrentHP, 40);
+    }
 
-    #region Fields & Properties
     // Tick update fields
     public bool InputActive = true;
     public bool IsAttackingThisTick = false;
@@ -38,14 +50,7 @@ public class Player : GridObject
 
     public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
     public bool IsAlive { get { return hp.HasHP; } }
-    #endregion
-
-
-    #region References
-    private PlayerHUD ui;
-    private MovePattern movePattern;
-    private Health hp;
-    #endregion
+    
 
     public System.Action OnPlayerAdvance;
     public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
@@ -155,6 +160,7 @@ public class Player : GridObject
     {
         weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
     }
+/*
     public void AcceptLoot(Loot.LootType type, int amount)
     {
         if (type == Loot.LootType.JumpFuel)
@@ -177,7 +183,28 @@ public class Player : GridObject
             }
         }
     }
+*/
+    public void AcceptAmmo(WeaponType type, int amount)
+    {
+        for (int j = 0; j < weaponInventory.Length; j++)
+        {
+            //if (weaponInventory[j].Name == "Missile Launcher")
+            if (weaponInventory[j].weaponType == type)
+            {
+                weaponInventory[j].weaponAmmunition += amount;
+                ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+                break;
+            }
+        }
+    }
 
+    public void AcceptFuel(int amount)
+    {
+        Debug.Log("Jump Fuel found.");
+        currentJumpFuel += amount;
+
+        //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
+    }
 
     public float OnTickUpdate()
     {
@@ -221,11 +248,12 @@ public class Player : GridObject
         yield return new WaitForSeconds(1.0f);
 
         ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
-
+        ui.UpdateHUDHP(hp.CurrentHP, hp.MaxHP);
         for (int j = 0; j < weaponInventory.Length; j++)
         {
             ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
         }
+
     }
     public IEnumerator AnimateNextLevel()
     {

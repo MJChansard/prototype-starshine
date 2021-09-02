@@ -3,9 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
+public enum WeaponType
+{
+    AutoCannon = 1,
+    MissileLauncher = 2,
+    RailGun = 3
+};
+
+
 public abstract class Weapon : MonoBehaviour
 {
     virtual public string Name { get { return weaponName; } }
+    [BoxGroup("General Weapon Properties")] public WeaponType weaponType;
     [BoxGroup("General Weapon Properties")] protected string weaponName; 
     
     virtual public int Damage { get { return weaponDamage; } }
@@ -24,11 +33,16 @@ public abstract class Weapon : MonoBehaviour
     [BoxGroup("Weapon Assets")] public Sprite weaponIcon;  
 
 
-    // Methods
+    // METHODS
     public void SubtractAmmo()
     {
         weaponAmmunition--;
-    }    
+    }  
+    
+    public void SupplyAmmo(int ammoAmount)
+    {
+        weaponAmmunition += ammoAmount;
+    }
 
 
     // Animation & Coroutines

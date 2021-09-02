@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 6570479300321256573}
   - component: {fileID: 6570479300321256572}
   - component: {fileID: 2828962143577590738}
-  - component: {fileID: 8324952338442174843}
+  - component: {fileID: 8217345382221484280}
+  - component: {fileID: 6974580819021064867}
   m_Layer: 0
   m_Name: AmmoCrate
   m_TagString: Untagged
@@ -65,11 +66,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectToRotate: {fileID: 6570479301234427770}
   UseDefaultValues: 1
+  ApplyManualRotation: 0
   RotateUpValues: {x: 0, y: 0, z: 0}
   RotateDownValues: {x: 0, y: 0, z: 0}
   RotateLeftValues: {x: 0, y: 0, z: 0}
   RotateRightValues: {x: 0, y: 0, z: 0}
-  ApplyManualRotation: 0
 --- !u!114 &2828962143577590738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,7 +85,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   currentHP: 0
---- !u!114 &8324952338442174843
+--- !u!114 &8217345382221484280
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -93,20 +94,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 6570479300321256574}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f88e4212b71a0434d9c2dc0c4e852461, type: 3}
+  m_Script: {fileID: 11500000, guid: 66c880742d93367499fa03083dabb7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ObjectType: 1
   ProcessingPhase: 2
-  spawnWarningObject: {fileID: 6570479301102139920}
+  spawnWarningObject: {fileID: 0}
   spawnRules:
-    spawnRegion: 1
-    avoidHazardPaths: 1
+    spawnRegion: 0
+    avoidHazardPaths: 0
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
-  IsLeavingGrid: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 1
+  moveSpeed: 0
+  IsLeavingGrid: 0
+  supply: {fileID: 0}
+  fuel: {fileID: 0}
+--- !u!114 &6974580819021064867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6570479300321256574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f4a599408fdf0140bcf82c2314897f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponType: 0
+  supplyAmount: 0
 --- !u!1 &6570479301102139920
 GameObject:
   m_ObjectHideFlags: 0

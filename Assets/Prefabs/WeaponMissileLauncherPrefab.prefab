@@ -43,9 +43,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405219faf7726354a85874d8e9eac9f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDamage: 200
-  doesPenetrate: 0
+  weaponDamage: 60
   weaponAmmunition: 5
+  doesPenetrate: 0
+  onGridWeaponPrefab: {fileID: 0}
   weaponIcon: {fileID: 21300000, guid: d86d5e56d3476d74da992c4b0f90b9db, type: 3}
-  projectilePrefab: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
-    type: 3}
