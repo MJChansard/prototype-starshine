@@ -317,15 +317,8 @@ public class GridManager : MonoBehaviour
         ) return true;
 
         else return false;
-    }
-    
-    public bool CheckIfGridBlockIsAvailable(Vector2Int gridLocation)
-    {
-        GridBlock block = FindGridBlockByLocation(gridLocation);
-        if (block == null) return false;
-        return block.IsAvailableForPlayer;
-    }
-    
+    }    
+  
 
     public void AddObjectToGrid(GameObject gameObject, Vector2Int gridLocation)
     {
@@ -401,24 +394,6 @@ public class GridManager : MonoBehaviour
         }
 
         return gridBlockPath;
-    }
-    public List<GridBlock> GetAvailableGridBlockForMovement(Vector2Int origin, Vector2Int direction)
-    {
-        List<GridBlock> possibleDestinations = new List<GridBlock>();
-
-        if(origin.x + Vector2Int.left.x >= BoundaryLeftPlay)
-            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.left));
-
-        if(origin.x + Vector2Int.right.x <= BoundaryRightPlay)
-            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.right));
-
-        if (origin.y + Vector2Int.up.y <= BoundaryTopPlay)
-            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.up));
-
-        if (origin.y + Vector2Int.down.y >= BoundaryBottomPlay)
-            possibleDestinations.Add(FindGridBlockByLocation(origin + Vector2Int.down));
-
-        return possibleDestinations;
     }
     public List<Vector2Int> GetSpawnLocations(SpawnRule rules)
     {
