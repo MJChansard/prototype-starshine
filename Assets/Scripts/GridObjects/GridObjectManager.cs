@@ -5,27 +5,15 @@ using UnityEngine;
 
 public class GridObjectManager : MonoBehaviour
 {
-    [SerializeField] private bool VerboseConsole = true;
-
-    private GridManager gm;
-    private Player player;
-
-    private int currentTick = 0;
-
-    private Vector2Int minVector2;
-    private Vector2Int maxVector2;
-
-    private List<GridObject> gridObjectsInPlay = new List<GridObject>();            // Object tracking
-    
-
     public enum GamePhase
     {
         Player = 1,
         Manager = 2
     }
+
+    [SerializeField] private bool VerboseConsole = true;
     
 
-    
     [Header("Spawn Management")]
     [SerializeField] private int minTicksUntilSpawn = 2;
     [SerializeField] private int maxTicksUntilSpawn = 4;
@@ -34,27 +22,24 @@ public class GridObjectManager : MonoBehaviour
     private Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
     private int ticksUntilNewSpawn;
 
+
     [Header("Grid Object Library")]
     [SerializeField] private GridObject[] gridObjectPrefabs;
     public GameObject playerPrefab;
-    
-    private List<Phenomena> AllPhenomena
-    {
-        get
-        {
-            List<Phenomena> p = new List<Phenomena>();
-
-            for (int i = 0; i < gridObjectPrefabs.Length; i++)
-            {
-                if (gridObjectPrefabs[i] is Phenomena)
-                    p.Add(gridObjectsInPlay[i] as Phenomena);
-            }
-
-            return p;
-        }
-    }
 
 
+    private GridManager gm;
+    private Player player;
+
+    private int currentTick = 0;
+    private Vector2Int minVector2;
+    private Vector2Int maxVector2;
+
+
+    private List<GridObject> gridObjectsInPlay = new List<GridObject>();            // Object tracking 
+
+
+    // INITIALIZATION
     public void Init()
     {
         /*  SUMMARY
@@ -76,7 +61,6 @@ public class GridObjectManager : MonoBehaviour
         gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
         player = gridObjectsInPlay[0].GetComponent<Player>();
     }
-
     public void InsertManualSpawnSequence()
     {
         if (insertSpawnSequences.Count > 0)
@@ -98,6 +82,39 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 
+
+    // SPAWNING
+    private void AddSpawnStep(GridObject objectForSpawn)
+    {
+        /*	SUMMARY
+         *  -   Randomly selects a spawn location
+         *  -   Instantiates SpawnStep ScriptableObject
+         *  -   Initializes the new SpawnStep
+         *  -   Enqueue the new SpawnStep
+         */
+
+        if (VerboseConsole) Debug.Log("GridObjectManager.CreateSpawnStep() called.");
+
+        //int gridObjectSelector = Random.Range(0, gridObjectPrefabs.Length);
+
+        Vector2Int hazardSpawnLocation = new Vector2Int();
+
+        // DEBUG: Make sure spawn selection is working appropriately
+        //if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
+
+        // Identify an appropriate spawn location
+//        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
+        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(objectForSpawn.spawnRules);
+
+        Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
+        hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
+
+        // Create the SpawnStep
+        SpawnStep newSpawnStep = ScriptableObject.CreateInstance<SpawnStep>();
+//        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
+        newSpawnStep.Init(objectForSpawn, hazardSpawnLocation);
+        spawnQueue.Enqueue(newSpawnStep);
+    }
     private GridObject SelectGridObject(GridObjectType type)
     {
         if (type == GridObjectType.Hazard)
@@ -143,41 +160,6 @@ public class GridObjectManager : MonoBehaviour
         {
             return null;
         }
-
-
-    }
-
-
-    private void AddSpawnStep(GridObject objectForSpawn)
-    {
-        /*	SUMMARY
-         *  -   Randomly selects a spawn location
-         *  -   Instantiates SpawnStep ScriptableObject
-         *  -   Initializes the new SpawnStep
-         *  -   Enqueue the new SpawnStep
-         */
-
-        if (VerboseConsole) Debug.Log("GridObjectManager.CreateSpawnStep() called.");
-
-        //int gridObjectSelector = Random.Range(0, gridObjectPrefabs.Length);
-
-        Vector2Int hazardSpawnLocation = new Vector2Int();
-
-        // DEBUG: Make sure spawn selection is working appropriately
-        //if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
-
-        // Identify an appropriate spawn location
-//        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
-        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(objectForSpawn.spawnRules);
-
-        Vector2Int targetLocation = availableSpawns[Random.Range(0, availableSpawns.Count)];
-        hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
-
-        // Create the SpawnStep
-        SpawnStep newSpawnStep = ScriptableObject.CreateInstance<SpawnStep>();
-//        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
-        newSpawnStep.Init(objectForSpawn, hazardSpawnLocation);
-        spawnQueue.Enqueue(newSpawnStep);
     }
     private void CreateGridObject(SpawnStep spawnStep)
     {
@@ -244,7 +226,7 @@ public class GridObjectManager : MonoBehaviour
     }
     
 
-
+    // CORE FUNCTIONALITY
     private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects)
     {
         /*  PLAN
@@ -678,7 +660,7 @@ public class GridObjectManager : MonoBehaviour
     }
 
 
-    // LEVEL
+    // CHANGING LEVELS
     public void ClearLevel()
     {
         if (VerboseConsole)
@@ -825,16 +807,6 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 
-    public class AnimateTickBehavior
-    {
-        public enum ExecutionPhase { StartOfHazardPhase, HalfwayHazardPhase, EndOfHazardPhase}
-        public enum BehaviorType { Destroy, DropLoot }
-
-        public GridObject gridObject;
-        public ExecutionPhase executionPhase;
-        public BehaviorType behaviorType;
-    }
-
 }
 
 public enum GridObjectType
@@ -871,4 +843,14 @@ public enum GridObjectType
         void DoAnimateTickBehavior(Phase phase) {
 
         }
+
+    public class AnimateTickBehavior
+    {
+        public enum ExecutionPhase { StartOfHazardPhase, HalfwayHazardPhase, EndOfHazardPhase}
+        public enum BehaviorType { Destroy, DropLoot }
+
+        public GridObject gridObject;
+        public ExecutionPhase executionPhase;
+        public BehaviorType behaviorType;
+    }
 */
