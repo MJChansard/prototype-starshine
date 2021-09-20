@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
-public class GridBlock 
+public class GridBlock : MonoBehaviour
 {
-    public Vector2Int location;
-    public List<GameObject> objectsOnBlock;
-    public bool canSpawn;
+    [ReadOnly] public Vector2Int location;
+    [ReadOnly] public List<GameObject> objectsOnBlock;
+    [ReadOnly] public bool canSpawn;
 
     private GameObject debugRenderPoint;
     public GameObject DebugRenderPoint
@@ -56,7 +57,7 @@ public class GridBlock
         return countOfObjects > 0;
     }
 
-    // Constructor
+    // CONSTRUCTOR
     public GridBlock(int x, int y)
     {
         this.location = new Vector2Int(x, y);
