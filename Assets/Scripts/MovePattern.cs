@@ -13,13 +13,12 @@ public class MovePattern : MonoBehaviour
     {
         get { return new Vector3(delta.x, delta.y, 0.0f); }
     }
-
     public Vector2Int DirectionOnGrid
     {
         get { return delta; }
     }
-
     private Vector2Int delta;
+
 
     private void Awake()
     {
@@ -47,6 +46,7 @@ public class MovePattern : MonoBehaviour
         delta = Vector2Int.right;
         return delta;
     }
+
 
     public void SetMovePattern(Vector2Int directionToMove)
     {
