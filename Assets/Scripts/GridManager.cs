@@ -318,13 +318,14 @@ public class GridManager : MonoBehaviour
 
         else return false;
     }
+    
     public bool CheckIfGridBlockIsAvailable(Vector2Int gridLocation)
     {
         GridBlock block = FindGridBlockByLocation(gridLocation);
         if (block == null) return false;
         return block.IsAvailableForPlayer;
     }
-
+    
 
     public void AddObjectToGrid(GameObject gameObject, Vector2Int gridLocation)
     {
