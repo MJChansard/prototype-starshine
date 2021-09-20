@@ -16,29 +16,11 @@ public class MissileLauncher : Weapon
     private Hazard launchedMissile;
 
     // #DEPRECATED
-    public Hazard LaunchMissile(GridBlock currentGrid, Vector2Int facingDirection)
-    {
-        if (weaponAmmunition > 0)
-        {
-            Vector3 currentWorldLocation = new Vector3(currentGrid.location.x, currentGrid.location.y, 0);
-            GameObject missile = Instantiate(onGridWeaponPrefab, currentWorldLocation, transform.rotation);
-            MovePattern movement = missile.GetComponent<MovePattern>();
-
-            if (facingDirection == Vector2Int.up) movement.SetMovePatternUp();
-            else if (facingDirection == Vector2Int.down) movement.SetMovePatternDown();
-            else if (facingDirection == Vector2Int.left) movement.SetMovePatternLeft();
-            else if (facingDirection == Vector2Int.right) movement.SetMovePatternRight();
-
-            weaponAmmunition -= 1;
-            
-            launchedMissile = missile.GetComponent<Hazard>();
-            return launchedMissile;
-        }
-        else return null;
-    }
-
+    
     override protected IEnumerator AnimationCoroutine(GridBlock targetGrid)
     {
+        //#ToDo: Need to rework this animation
+        //          - activate a Particle System so missile looks like it is being fired
         if (launchedMissile != null)
         {
             // D = s * t
