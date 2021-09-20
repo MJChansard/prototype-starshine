@@ -9,7 +9,7 @@ public class GridBlock : MonoBehaviour
     [ReadOnly] public List<GameObject> objectsOnBlock;
     [ReadOnly] public bool canSpawn;
 
-    private GameObject debugRenderPoint;
+    
     public GameObject DebugRenderPoint
     {
         get
@@ -21,6 +21,7 @@ public class GridBlock : MonoBehaviour
             debugRenderPoint = value;
         }
     }
+    private GameObject debugRenderPoint;
 
     public bool IsAvailableForPlayer
     {
