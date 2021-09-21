@@ -156,6 +156,19 @@ public class GridObjectManager : MonoBehaviour
             if (VerboseConsole) Debug.Log("Selected a Phenomenon.");
             return availablePhenomena[selector];
         }
+        else if (type == GridObjectType.Loot)
+        {
+            List<Loot> availableLoot = new List<Loot>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Loot)
+                    availableLoot.Add(gridObjectPrefabs[i] as Loot);
+            }
+
+            int selector = Random.Range(0, availableLoot.Count);
+            if (VerboseConsole) Debug.Log("Selected a Loot.");
+            return availableLoot[selector];
+        }
         else
         {
             return null;
@@ -360,7 +373,7 @@ public class GridObjectManager : MonoBehaviour
          *  5) Collisions on a GridBlock
          */
 
-        #region Tick Duration
+        // TICK DURATION
         bool moveOccurredThisTick = true;
         float moveDurationSeconds = 1.0f;
 
@@ -368,11 +381,12 @@ public class GridObjectManager : MonoBehaviour
         float destroyDurationSeconds = 2.0f;
 
         float delayTime = 0.0f;
-        #endregion
-
+        
+        
         List<GridObject> objectProcessing = new List<GridObject>();
         List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
 
+        
         if (phase == GamePhase.Player)
         {
             if (!player.IsAttackingThisTick)
@@ -382,7 +396,6 @@ public class GridObjectManager : MonoBehaviour
                     if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player)
                         objectProcessing.Add(gridObjectsInPlay[i]);
                 }
-                //potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
             }
             else
             {
@@ -399,8 +412,7 @@ public class GridObjectManager : MonoBehaviour
                     List<GridBlock> targetBlocks = GetGridBlocksInPath(gm.WorldToGrid(player.currentWorldLocation), player.Direction);
 
                     if (playerWeapon.RequiresGridPlacement)
-                    {
-                        //GameObject weaponInstance = Instantiate(player.SelectedWeaponProjectile, player.currentWorldLocation, player.transform.rotation);
+                    {                        
                         GameObject weaponInstance = Instantiate(playerWeapon.WeaponPrefab, player.currentWorldLocation, player.transform.rotation);
                         weaponInstance.GetComponent<MovePattern>().SetMovePattern(player.Direction);
 
@@ -439,7 +451,6 @@ public class GridObjectManager : MonoBehaviour
             }
 
             potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
-            //ProcessCollisionsOnGridBlock(potentialBlockCollisions);
             player.IsAttackingThisTick = false;
         }
 
@@ -463,10 +474,8 @@ public class GridObjectManager : MonoBehaviour
 
             gridObjectDestroyedThisTick = CheckHealth(gridObjectsInPlay, 1.0f);
 
-            // Phenomena Processing
-
-
-            // Spawn stuff
+            
+            // SPAWNING
             if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
             {
                 if (spawnQueue.Count > 0)
@@ -475,8 +484,16 @@ public class GridObjectManager : MonoBehaviour
                 }
                 else
                 {
-                    AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
-                    CreateGridObject(spawnQueue.Dequeue());
+                    if (Random.Range(0, 10) > 6.0)
+                    {
+                        AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
+                        CreateGridObject(spawnQueue.Dequeue());
+                    }
+                    else
+                    {
+                        AddSpawnStep(SelectGridObject(GridObjectType.Loot));
+                        CreateGridObject(spawnQueue.Dequeue());
+                    }
                 }
 
                 ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
@@ -492,8 +509,6 @@ public class GridObjectManager : MonoBehaviour
         if (moveOccurredThisTick) delayTime += moveDurationSeconds;
         if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
         return delayTime;
-
-        //StartCoroutine(AnimateTick);
     }
     private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
     {
@@ -813,7 +828,8 @@ public enum GridObjectType
 {
     Hazard = 1,
     Phenomena = 2,
-    Station = 3
+    Station = 3,
+    Loot = 4
 }
 
 /*
