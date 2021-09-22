@@ -6,17 +6,6 @@ using Sirenix.OdinInspector;
 public class GameManager : MonoBehaviour
 {
     [HideInInspector] public int CurrentTick = 1;
-    
-    public int CurrentLevel
-    {
-        get {return currentLevel; }
-    }
-    private int currentLevel = 0;
-    [HideInInspector] public int LevelDataIndex
-    {
-        get { return currentLevel - 1; }
-    }
-    
     public bool VerboseConsole = true;
 
     [TitleGroup("CUSTOM SPAWN SEQUENCES")]
@@ -28,18 +17,26 @@ public class GameManager : MonoBehaviour
     [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridWidth;
     [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridHeight;
 
-    //LevelData.LevelDataRow currentLevelData;
+    public int CurrentLevel
+    {
+        get { return currentLevel; }
+    }
+    private int currentLevel = 0;
+    private int LevelDataIndex
+    {
+        get { return currentLevel - 1; }
+    }
 
-    #region References
+
+    // REFERENCES
     GameDisplay display;
     GridManager gm;
     GridObjectManager gom;
     Player player;
-
     DebugHUD debugHUD;
-    #endregion
-
     
+
+    // METHODS
     private void Start()
     {
         gm = GetComponent<GridManager>();
@@ -103,7 +100,7 @@ public class GameManager : MonoBehaviour
 
         this.player.OnPlayerAdvance += OnTick;
     }
-
+   
     private void OnTick()
     {
         StartCoroutine(OnTickCoroutine());
@@ -158,14 +155,12 @@ public class GameManager : MonoBehaviour
         }
         yield return null;
     }
-
     private void OnAddHazard(GridObject gridObjectToAdd, Vector2Int position, bool placeOnGrid = true)
     {
         Debug.Log("GameManager.OnAddHazard() called.");
         gom.AddObjectToGrid(gridObjectToAdd, position, placeOnGrid);
     }
-
-    
+        
     private bool CheckWinCondition()
     {
         if (player.CurrentJumpFuel >= levelData.LevelTable[LevelDataIndex].jumpFuelAmount)
