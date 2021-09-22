@@ -5,17 +5,17 @@ using Sirenix.OdinInspector;
 
 public class GameManager : MonoBehaviour
 {
-    public int CurrentTick = 1;
+    [HideInInspector] public int CurrentTick = 1;
+    
     public int CurrentLevel
     {
         get {return currentLevel; }
     }
-    public int LevelDataIndex
+    private int currentLevel = 0;
+    [HideInInspector] public int LevelDataIndex
     {
         get { return currentLevel - 1; }
     }
-
-    private int currentLevel = 0;
     
     public bool VerboseConsole = true;
 
