@@ -484,14 +484,14 @@ public class GridObjectManager : MonoBehaviour
                 }
                 else
                 {
-                    if (Random.Range(0, 10) > 6.0)
+                    if (Random.Range(0, 10) > 7)    // 20% chance
                     {
-                        AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
+                        AddSpawnStep(SelectGridObject(GridObjectType.Loot));
                         CreateGridObject(spawnQueue.Dequeue());
                     }
                     else
                     {
-                        AddSpawnStep(SelectGridObject(GridObjectType.Loot));
+                        AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
                         CreateGridObject(spawnQueue.Dequeue());
                     }
                 }
