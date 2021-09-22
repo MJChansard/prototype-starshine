@@ -11,11 +11,13 @@ public class SpawnStep : ScriptableObject
     public Vector2Int SpawnLocation;
 
     // CONSTRUCTORS
+    /*
     public SpawnStep (GridObject newGridObject, Vector2Int spawnLocation)
     {
         this.gridObject = newGridObject;
         this.SpawnLocation = spawnLocation;
     }
+    */
 
     // Add a constructor here that accepts required parameters to create a SpawnStep
     // Override the constructor with a SpawnStep parameter
