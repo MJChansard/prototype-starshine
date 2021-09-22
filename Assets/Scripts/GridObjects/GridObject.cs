@@ -6,10 +6,8 @@ using Sirenix.OdinInspector;
 public abstract class GridObject : MonoBehaviour
 {
     [Header("General Properties")]
-    //public GridObjectType ObjectType;
     public GridObjectManager.GamePhase ProcessingPhase;
-    //[SerializeField] private int ticksPerMove;      // Number of ticks required before a move is requested
-    //private int ticksRemainingUntilMove;
+
 
     [Header("Spawn Properties")]
     public GameObject spawnWarningObject;
@@ -17,21 +15,21 @@ public abstract class GridObject : MonoBehaviour
     public bool RequiresSpawnObject { get { return spawnWarningObject != null; } }
 
 
-    // Animation fields
-    [HideInInspector] public Vector3 currentWorldLocation;      // convert this to Vector2Int?
-    [HideInInspector] public Vector3 targetWorldLocation;       // convert this to Vector2Int?
-    [HideInInspector] public float moveSpeed;                   // Animation movement speed?
+    // ANIMATION FIELDS
+    [HideInInspector] public Vector3 currentWorldLocation;      
+    [HideInInspector] public Vector3 targetWorldLocation;       
+    [HideInInspector] public float animateMoveSpeed;
     public float Distance
     {
         get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
     }
 
-    // Tick update fields
+
+    // TICK UPDATE FIELDS
     [HideInInspector] public bool IsLeavingGrid = false;
     
     
-
-    // Object Modes
+    // OBJECT MODES
     public enum Mode
     {
         Spawn = 1,
@@ -97,7 +95,6 @@ public abstract class GridObject : MonoBehaviour
         if(spawnWarningObject != null) SetGamePlayMode(Mode.Spawn);
     }
 
-
     public virtual void SetGamePlayMode(Mode newMode)
     {
         MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
@@ -136,17 +133,4 @@ public abstract class GridObject : MonoBehaviour
                 hp.ToggleInvincibility(false);
         }
     }
-    // Can use a Type enum here that is a master list
 }
-
-/*
-public enum Type
-{
-    Hazard = 1,
-    Phenomenon = 2,
-    Enemy = 3,
-    SupplyCrate = 4
-}
-
-//private Type type; 
-*/
