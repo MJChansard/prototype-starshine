@@ -19,23 +19,69 @@ public class Hazard : GridObject
         PlayerMissile = 11
     }
 
-    public bool RequiresSpawnAnimation
+    [HideInInspector] public string spawnBorder;
+    private GameObject meshObject;
+
+    public override void Init()
     {
-        get
+        base.Init();
+
+        for (int i = 0; i < transform.childCount; i++)
         {
-            return spawnWarningObject != null;
+            if (transform.GetChild(i).TryGetComponent<MeshRenderer>(out MeshRenderer renderer))
+            {
+                meshObject = renderer.gameObject;
+                break;
+            }
         }
-    }
 
-    public override void Init(string spawnBorder)
-    {
-        base.Init(spawnBorder);
+        Health hp = GetComponent<Health>();
+        if (hp != null) hp.ToggleInvincibility(true);
 
+        MovePattern movement = GetComponent<MovePattern>();
+        if (movement != null)
+        {
+            switch (spawnBorder)
+            {
+                case "Bottom":
+                    movement.SetMovePatternUp();
+                    break;
+
+                case "Top":
+                    if (spawnRules.requiresOrientation)
+                        meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
+
+                    movement.SetMovePatternDown();
+                    break;
+
+                case "Right":
+                    if (spawnRules.requiresOrientation)
+                        meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
+                        
+                    movement.SetMovePatternLeft();
+                    break;
+
+                case "Left":
+                    if (spawnRules.requiresOrientation)
+                        meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
+                    movement.SetMovePatternRight();
+                    break;
+            }
+
+            Rotator r = GetComponent<Rotator>();
+            if (r != null)
+            {
+                if (!r.enabled) r.enabled = true;
+                r.ApplyRotation(spawnBorder);
+            }
+        }
     }
 
     public override void SetGamePlayMode(Mode mode)
     {
-        if (RequiresSpawnAnimation)
+        //if (RequiresSpawnAnimation)
+        //if (RequiresSpawnObject)
+        if (RequiresSpawnWarning)
         { 
             MeshRenderer mesh = GetComponentInChildren<MeshRenderer>();
             SpriteRenderer sprite = spawnWarningObject.GetComponent<SpriteRenderer>();
