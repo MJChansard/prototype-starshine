@@ -14,26 +14,32 @@ public class PlayerHUD : MonoBehaviour
 
     private PlayerHUDEntry[] PlayerHUDEntries;
     public PlayerHUDEntry playerEntryPrefab;
-        
+
     private void Start()
     {
         if (weaponGroupObject.transform.childCount > 0)
         {
-            for (int i = weaponGroupObject.transform.childCount - 1; i >= 0 ; i--)
+            for (int i = weaponGroupObject.transform.childCount - 1; i >= 0; i--)
             {
                 Destroy(weaponGroupObject.transform.GetChild(i).gameObject);
             }
         }
+
+        FindObjectOfType<Player>().OnPlayerFireWeapon += UpdateWeaponHUD;
     }
 
-    
+    private void UpdateWeaponHUD(int weaponIndex, int amount)
+    {
+        PlayerHUDEntries[weaponIndex].UpdateText(amount);
+    }
+        
     public void Init(Weapon[] weaponsForUI, int maxFuelAmount, int maxPlayerHP)
     {
         PlayerHUDEntries = new PlayerHUDEntry[weaponsForUI.Length];
         for (int i = 0; i < PlayerHUDEntries.Length; i++)
         {
             PlayerHUDEntries[i] = Instantiate(playerEntryPrefab, weaponGroupObject.transform);
-            PlayerHUDEntries[i].Init(weaponsForUI[i].weaponIcon, weaponsForUI[i].weaponAmmunition);
+            PlayerHUDEntries[i].Init(weaponsForUI[i].weaponIcon, weaponsForUI[i].currentAmmunition);
 
             if (i > 0)
             {
@@ -53,7 +59,7 @@ public class PlayerHUD : MonoBehaviour
 
     public void UpdateHUDWeapons(int indexOfWeaponRequiringUpdate, int newAmount)
     {
-        PlayerHUDEntries[indexOfWeaponRequiringUpdate].UpdateText(newAmount);
+        //PlayerHUDEntries[indexOfWeaponRequiringUpdate].UpdateText(newAmount);
     }
 
     public void UpdateHUDFuel(int currentFuelAmount, int maxFuelAmount)
