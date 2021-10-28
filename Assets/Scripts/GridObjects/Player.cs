@@ -55,6 +55,8 @@ public class Player : GridObject
     public System.Action OnPlayerAdvance;
     public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
 
+    public System.Action<int, int> OnPlayerFireWeapon;
+
 
     private void Start()
     {
@@ -72,7 +74,9 @@ public class Player : GridObject
         }
 
         ui = FindObjectOfType<PlayerHUD>();
-        ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
+        //ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
+
+        FindObjectOfType<PlayerHUD>().Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
 
         //HideProperty = true;
     }
@@ -130,7 +134,15 @@ public class Player : GridObject
         
         if (Input.GetKeyDown(KeyCode.F))
         {
-            IsAttackingThisTick = true;
+            Weapon w = weaponInventory[indexSelectedWeapon];
+
+            if (w.currentAmmunition > 0)
+            {
+                IsAttackingThisTick = true;
+                w.SubtractAmmo();
+                OnPlayerFireWeapon?.Invoke(indexSelectedWeapon, w.currentAmmunition);
+            }
+            
             if (OnPlayerAdvance != null) OnPlayerAdvance();
         }
 
@@ -191,8 +203,9 @@ public class Player : GridObject
             //if (weaponInventory[j].Name == "Missile Launcher")
             if (weaponInventory[j].weaponType == type)
             {
-                weaponInventory[j].weaponAmmunition += amount;
-                ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+                //weaponInventory[j].weaponAmmunition += amount;
+                weaponInventory[j].SupplyAmmo(amount);
+                ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
                 break;
             }
         }
@@ -203,7 +216,7 @@ public class Player : GridObject
         Debug.Log("Jump Fuel found.");
         currentJumpFuel += amount;
 
-        //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
+        ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
     }
 
     public float OnTickUpdate()
@@ -251,7 +264,7 @@ public class Player : GridObject
         ui.UpdateHUDHP(hp.CurrentHP, hp.MaxHP);
         for (int j = 0; j < weaponInventory.Length; j++)
         {
-            ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+            ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
         }
 
     }
