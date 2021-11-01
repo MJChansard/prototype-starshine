@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Health : MonoBehaviour
 {
+    public System.Action<int, int, float> OnHpAmountChange;
+
     [SerializeField] private int maxHP;    
     [SerializeField] private int currentHP;
 
@@ -32,6 +34,7 @@ public class Health : MonoBehaviour
         if (isInvincible == false && damageAmount > 0)
         {
             currentHP -= damageAmount;
+            OnHpAmountChange?.Invoke(currentHP, maxHP, 1.0f);
         }
     }
     public void AddHealth(int healthAmount)
@@ -41,6 +44,8 @@ public class Health : MonoBehaviour
             currentHP++;
             healthAmount--;
         }
+
+        OnHpAmountChange(currentHP, maxHP, 1.0f);
     }
 
     public void ToggleInvincibility(bool toggle)
