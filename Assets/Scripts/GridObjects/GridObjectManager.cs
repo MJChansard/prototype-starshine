@@ -815,7 +815,7 @@ public class GridObjectManager : MonoBehaviour
                                     if (successfulDock)
                                     {
                                         p.AcceptFuel(kFuel.fuelAmount);
-                                        p.UpdateUICoroutine();
+                                        //p.UpdateUICoroutine();
                                         s.BeginReplenish();
                                     }
                                     if (VerboseConsole)
@@ -824,7 +824,7 @@ public class GridObjectManager : MonoBehaviour
                                 else
                                 {
                                     p.AcceptFuel(kFuel.fuelAmount);
-                                    p.UpdateUICoroutine();
+                                    //p.UpdateUICoroutine();
 
                                     if (VerboseConsole)
                                         Debug.LogFormat("{0} jump fuel retrieved.", kFuel.fuelAmount);
@@ -842,7 +842,7 @@ public class GridObjectManager : MonoBehaviour
                                     if (successfulDock)
                                     {
                                         p.AcceptFuel(jFuel.fuelAmount);
-                                        p.UpdateUICoroutine();
+                                        //p.UpdateUICoroutine();
                                         s.BeginReplenish();
 
                                         if (VerboseConsole)
@@ -852,7 +852,7 @@ public class GridObjectManager : MonoBehaviour
                                 else
                                 {
                                     p.AcceptFuel(jFuel.fuelAmount);
-                                    p.UpdateUICoroutine();
+                                    //p.UpdateUICoroutine();
 
                                     if (VerboseConsole)
                                         Debug.LogFormat("{0} jump fuel retrieved.", jFuel.fuelAmount);
@@ -874,14 +874,14 @@ public class GridObjectManager : MonoBehaviour
                                     if (successfulDock)
                                     {
                                         jHealth.AddHealth(kRepair.repairAmount);
-                                        p.UpdateUICoroutine();
+                                       //p.UpdateUICoroutine();
                                         s.BeginReplenish();
                                     }
                                 }
                                 else
                                 {
                                     jHealth.AddHealth(kRepair.repairAmount);
-                                    p.UpdateUICoroutine();
+                                    //p.UpdateUICoroutine();
                                     kRepair.ConsumeRepair();
                                 }                              
                             }
@@ -897,14 +897,14 @@ public class GridObjectManager : MonoBehaviour
                                     if (successfulDock)
                                     {
                                         kHealth.AddHealth(jRepair.repairAmount);
-                                        p.UpdateUICoroutine();
+                                        //p.UpdateUICoroutine();
                                         s.BeginReplenish();
                                     }
                                 }
                                 else
                                 {
                                     kHealth.AddHealth(jRepair.repairAmount);
-                                    p.UpdateUICoroutine();
+                                    //p.UpdateUICoroutine();
                                     jRepair.ConsumeRepair();
                                 }
                             }
