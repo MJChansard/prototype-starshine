@@ -25,13 +25,13 @@ public class PlayerHUD : MonoBehaviour
             }
         }
 
-        FindObjectOfType<Player>().OnPlayerFireWeapon += UpdateWeaponHUD;
+        Player p = FindObjectOfType<Player>();
+        p.OnAmmoAmountChange += UpdateWeaponHUD;
+        p.OnFuelAmountChange += UpdateFuelHUD;
+        p.GetComponent<Health>().OnHpAmountChange += UpdateHpHUD;
     }
 
-    private void UpdateWeaponHUD(int weaponIndex, int amount)
-    {
-        PlayerHUDEntries[weaponIndex].UpdateText(amount);
-    }
+
         
     public void Init(Weapon[] weaponsForUI, int maxFuelAmount, int maxPlayerHP)
     {
@@ -47,8 +47,8 @@ public class PlayerHUD : MonoBehaviour
             }
         }
 
-        UpdateHUDFuel(0, maxFuelAmount);
-        UpdateHUDHP(maxPlayerHP, maxPlayerHP);
+        UpdateFuelHUD(0, maxFuelAmount, 0.0f);
+        UpdateHpHUD(maxPlayerHP, maxPlayerHP, 0.0f);
     }
 
     public void UpdateWeaponSelection(int disableWeapon, int enableWeapon)
@@ -57,20 +57,47 @@ public class PlayerHUD : MonoBehaviour
         PlayerHUDEntries[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
     }
 
+    private void UpdateWeaponHUD(int weaponIndex, int amount, float animateDelay)
+    {
+        StartCoroutine(UpdateWeaponHUDCoroutine(weaponIndex, amount, animateDelay));
+    }
+
+    /*  #Deprecated
     public void UpdateHUDWeapons(int indexOfWeaponRequiringUpdate, int newAmount)
     {
         //PlayerHUDEntries[indexOfWeaponRequiringUpdate].UpdateText(newAmount);
     }
+    */
 
-    public void UpdateHUDFuel(int currentFuelAmount, int maxFuelAmount)
+    public void UpdateFuelHUD(int currentFuelAmount, int maxFuelAmount, float animateDelay)
     {
-        fuelLabel.text = string.Format("Fuel: {0}/{1}", currentFuelAmount, maxFuelAmount);
-        fuelBar.fillAmount = (float)currentFuelAmount / (float)maxFuelAmount;
+        StartCoroutine(UpdateFuelHUDCoroutine(currentFuelAmount, maxFuelAmount, animateDelay));
     }
 
-    public void UpdateHUDHP(int currentPlayerHP, int maxPlayerHP)
+    public void UpdateHpHUD(int currentPlayerHP, int maxPlayerHP, float animateDelay)
     {
-        hpLabel.text = string.Format("HP: [{0}/{1}]", currentPlayerHP, maxPlayerHP);
-        hpBar.fillAmount = (float)currentPlayerHP / (float)maxPlayerHP;
+        StartCoroutine(UpdateHpHUDCoroutine(currentPlayerHP, maxPlayerHP, animateDelay));
     }
+
+    private IEnumerator UpdateWeaponHUDCoroutine(int weaponIndex, int newAmount, float numberSeconds)
+    {
+        yield return new WaitForSeconds(numberSeconds);
+        PlayerHUDEntries[weaponIndex].UpdateText(newAmount);
+    }
+
+    private IEnumerator UpdateFuelHUDCoroutine(int currentFuel, int maxFuel, float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds);
+
+        fuelLabel.text = string.Format("Fuel: {0}/{1}", currentFuel, maxFuel);
+        fuelBar.fillAmount = (float)currentFuel / (float)maxFuel;
+    }
+
+    private IEnumerator UpdateHpHUDCoroutine(int currentHP, int maxHP, float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds);
+
+        hpLabel.text = string.Format("HP: [{0}/{1}]", currentHP, maxHP);
+        hpBar.fillAmount = (float)currentHP / (float)maxHP;
+    }    
 }
