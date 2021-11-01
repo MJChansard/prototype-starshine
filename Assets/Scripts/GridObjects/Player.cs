@@ -32,7 +32,7 @@ public class Player : GridObject
     private void InflictDamage()
     {
         hp.SubtractHealth(10);
-        ui.UpdateHUDHP(hp.CurrentHP, 40);
+        //ui.UpdateHpHUD(hp.CurrentHP, 40);
     }
 
     // Tick update fields
@@ -53,9 +53,13 @@ public class Player : GridObject
     
 
     public System.Action OnPlayerAdvance;
-    public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
+    //public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
 
-    public System.Action<int, int> OnPlayerFireWeapon;
+    //public System.Action<int, int> OnPlayerFireWeapon;
+    //public System.Action<int, int> OnPlayerGetAmmo;
+    public System.Action<int, int, float> OnAmmoAmountChange;
+    public System.Action<int, int, float> OnFuelAmountChange;
+    
 
 
     private void Start()
@@ -140,7 +144,8 @@ public class Player : GridObject
             {
                 IsAttackingThisTick = true;
                 w.SubtractAmmo();
-                OnPlayerFireWeapon?.Invoke(indexSelectedWeapon, w.currentAmmunition);
+                //OnPlayerFireWeapon?.Invoke(indexSelectedWeapon, w.currentAmmunition);
+                OnAmmoAmountChange?.Invoke(indexSelectedWeapon, w.currentAmmunition, 0.0f);
             }
             
             if (OnPlayerAdvance != null) OnPlayerAdvance();
@@ -205,7 +210,8 @@ public class Player : GridObject
             {
                 //weaponInventory[j].weaponAmmunition += amount;
                 weaponInventory[j].SupplyAmmo(amount);
-                ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
+                OnAmmoAmountChange?.Invoke(j, weaponInventory[j].currentAmmunition, 1.0f);
+                //ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
                 break;
             }
         }
@@ -216,7 +222,8 @@ public class Player : GridObject
         Debug.Log("Jump Fuel found.");
         currentJumpFuel += amount;
 
-        ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
+        OnFuelAmountChange?.Invoke(amount, maxFuelAmount, 1.0f);
+        //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
     }
 
     public float OnTickUpdate()
@@ -228,7 +235,7 @@ public class Player : GridObject
         else
         {
             StartCoroutine(AnimateThrusterCoroutine());
-            StartCoroutine(UpdateUICoroutine());
+            //StartCoroutine(UpdateUICoroutine());
 
             return moveWaitTime;
         }
@@ -241,7 +248,8 @@ public class Player : GridObject
     {
         currentJumpFuel = 0;
         maxFuelAmount = winFuelAmount;
-        StartCoroutine(UpdateUICoroutine());
+        //StartCoroutine(UpdateUICoroutine());
+        OnFuelAmountChange?.Invoke(0, maxFuelAmount, 1.0f);
     }
 
     // #Coroutines
@@ -256,18 +264,7 @@ public class Player : GridObject
 
         //thrusterCoroutineIsRunning = false;
     }
-    public IEnumerator UpdateUICoroutine()
-    {
-        yield return new WaitForSeconds(1.0f);
-
-        ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
-        ui.UpdateHUDHP(hp.CurrentHP, hp.MaxHP);
-        for (int j = 0; j < weaponInventory.Length; j++)
-        {
-            ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
-        }
-
-    }
+    
     public IEnumerator AnimateNextLevel()
     {
         this.gameObject.SetActive(false);
@@ -288,3 +285,18 @@ public class Player : GridObject
         return pData;
     } 
  */
+
+/*  #DEPRECATED
+    public IEnumerator UpdateUICoroutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        //ui.UpdateFuelHUD(currentJumpFuel, maxFuelAmount);
+        ui.UpdateHUDHP(hp.CurrentHP, hp.MaxHP);
+        for (int j = 0; j < weaponInventory.Length; j++)
+        {
+            //ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
+        }
+
+    }
+    */
