@@ -9,6 +9,7 @@ public class PlayerHUDEntry : MonoBehaviour
     [SerializeField] private Sprite entrySprite;
     [SerializeField] private Text entryText;
 
+    
     private void Start()
     {
         Image imageChild = GetComponentInChildren<Image>();

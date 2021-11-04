@@ -19,7 +19,7 @@ public class Phenomena : GridObject
     }
     private ContactRepair refRepair;
 
-
+    
     [HideInInspector] public bool DoesSupply;
     [HideInInspector] public bool DoesFuel;
     [HideInInspector] public bool DoesLeak;

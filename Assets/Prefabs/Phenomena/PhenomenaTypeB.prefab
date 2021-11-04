@@ -154,14 +154,24 @@ MonoBehaviour:
   spawnWarningObject: {fileID: 0}
   spawnRules:
     spawnRegion: 2
+    spawnCategory: 3
     avoidHazardPaths: 0
     avoidAdjacentToPlayer: 1
     requiresOrientation: 0
     avoidShareSpawnLocation: 1
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 0
+  animateMoveSpeed: 0
   IsLeavingGrid: 0
+  displayDockingCounter: 0
+  displayReplenishCounter: 0
+  overrideDefaultSettings: 0
+  limitNumberOfDockings: 0
+  numberOfDockingsAllowed: 0
+  canReplenish: 1
+  replenishTickDuration: 3
+  dockAvailableMaterial: {fileID: 0}
+  dockNotAvailableMaterial: {fileID: 0}
 --- !u!114 &4109421877715783875
 MonoBehaviour:
   m_ObjectHideFlags: 0

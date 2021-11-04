@@ -22,6 +22,7 @@ public class MovePattern : MonoBehaviour
     {
         get { return ticksUntilNextMove == 0 && slowTicksRemaining == 0; }
     }
+    
     private bool eligibleSlow = true;
     private int slowTicksRemaining;
     

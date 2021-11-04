@@ -30,7 +30,7 @@ public class MissileLauncher : Weapon
 
             while (percentTraveled <= 1.0f)
             {
-                float traveled = (Time.time - startTime) * launchedMissile.moveSpeed;
+                float traveled = (Time.time - startTime) * launchedMissile.animateMoveSpeed;
                 percentTraveled = traveled / distance;  // Interpolator for Vector3.Lerp
                 launchedMissile.gameObject.transform.position =
                     Vector3.Lerp

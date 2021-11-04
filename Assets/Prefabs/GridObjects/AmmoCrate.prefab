@@ -98,17 +98,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ProcessingPhase: 2
+  RequiresSpawnWarning: 1
   spawnWarningObject: {fileID: 6570479301102139920}
   spawnRules:
     spawnRegion: 1
+    spawnCategory: 4
     avoidHazardPaths: 1
     avoidAdjacentToPlayer: 0
     requiresOrientation: 0
     avoidShareSpawnLocation: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 0
+  animateMoveSpeed: 0
   IsLeavingGrid: 0
+  spawnBorder: 
 --- !u!114 &6974580819021064867
 MonoBehaviour:
   m_ObjectHideFlags: 0

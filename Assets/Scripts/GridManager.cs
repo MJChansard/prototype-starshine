@@ -267,7 +267,6 @@ public class GridManager : MonoBehaviour
             (int)worldLocation.x * gridSpacing,
             (int)worldLocation.y * gridSpacing
         );
-
     }
 
 
@@ -395,10 +394,19 @@ public class GridManager : MonoBehaviour
 
         return gridBlockPath;
     }
-    public List<Vector2Int> GetSpawnLocations(SpawnRule rules)
+    //public List<Vector2Int> GetSpawnLocations(SpawnRule rules)
+    public List<Vector2Int> GetSpawnLocations(SpawnRule.SpawnRegion region)
     {
         Debug.Log("GridManager.GetSpawnLocations() called.");
 
+        if (region == SpawnRule.SpawnRegion.Interior)
+            return eligibleInteriorSpawns;
+        else if (region == SpawnRule.SpawnRegion.Perimeter)
+            return eligiblePerimeterSpawns;
+        else 
+            return eligibleAllSpawns;
+        
+        /*
         List<Vector2Int> availableSpawnLocations = new List<Vector2Int>();
         List<Vector2Int> ineligibleSpawnLocations = new List<Vector2Int>();
 
@@ -584,6 +592,7 @@ public class GridManager : MonoBehaviour
             }
         }
         return availableSpawnLocations;
+    */
     }
 
 
@@ -620,10 +629,83 @@ public class GridManager : MonoBehaviour
     {
         public enum SpawnRegion { Anywhere, Perimeter, Interior, Center }
         public SpawnRegion spawnRegion = SpawnRegion.Anywhere;
-        public bool avoidHazardPaths = false;
-        public bool avoidAdjacentToPlayer = false;
-        public bool requiresOrientation = false;
-        public bool avoidShareSpawnLocation = false;
+
+        //public enum Category { Hazard, Phenomena, Station };
+        //public Category category;
+        public GridObjectType spawnCategory;
+
+
+        [ShowIf("forAvoidHazardPaths")]         public bool avoidHazardPaths = false;
+        [ShowIf("forRequiresOrientation")]      public bool requiresOrientation = false;
+        [ShowIf("forAvoidAdjacentToPlayer")]    public bool avoidAdjacentToPlayer = false;
+        [ShowIf("forAvoidShareSpawnLocation")]  public bool avoidShareSpawnLocation = false;
+
+        private bool forAvoidHazardPaths
+        {
+            get
+            {
+                if (spawnRegion == SpawnRegion.Perimeter)
+                    return true;
+                else
+                    return false;
+
+                /*
+                if (spawnCategory == GridObjectType.Hazard)
+                    return true;
+                else if (spawnCategory == GridObjectType.Loot)
+                    return true;
+                else
+                    return false;
+                */
+            }
+        }
+        private bool forAvoidAdjacentToPlayer
+        {
+            get
+            {
+                if (spawnRegion == SpawnRegion.Interior)
+                    return true;
+                else
+                    return false;
+                
+                /*
+                if (spawnCategory == GridObjectType.Phenomena)
+                    return true;
+                else if (spawnCategory == GridObjectType.Station)
+                    return true;
+                else
+                    return false;
+                */
+            }
+        }
+        private bool forRequiresOrientation
+        {
+            get
+            {
+                if (spawnRegion == SpawnRegion.Perimeter)
+                    return true;
+                else
+                    return false;
+                /*
+                if (spawnCategory == GridObjectType.Hazard)
+                    return true;
+                else if (spawnCategory == GridObjectType.Loot)
+                    return true;
+                else
+                    return false;
+                */
+            }
+        }
+        private bool forAvoidShareSpawnLocation
+        {
+            get
+            {
+                if (spawnRegion == SpawnRegion.Interior)
+                    return true;
+                else
+                    return false;
+            }
+        }
     }
 
 }

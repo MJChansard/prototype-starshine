@@ -4772,7 +4772,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4830,8 +4829,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bec205d63eb7c248a159e4c97cbeb2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDamage: 20
+  weaponType: 1
+  baseDamage: 20
+  gridDistanceDamageModifier: 0.5
   weaponAmmunition: 10
   doesPenetrate: 0
-  onGridWeaponPrefab: {fileID: 0}
+  requiresGridPlacement: 0
   weaponIcon: {fileID: 21300000, guid: f20e6168f8627b5498fee7ee23409a26, type: 3}
+  onGridWeaponPrefab: {fileID: 0}

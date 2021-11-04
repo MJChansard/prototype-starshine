@@ -28,7 +28,7 @@ public class RailGun : Weapon
 
     public bool FireRailgun(Vector3 currentWorldLocation)
     {
-        if (weaponAmmunition > 0)
+        if (currentAmmunition > 0)
         {
             launchedRailgunProjectile = Instantiate(railAnimationPrefab, currentWorldLocation, player.transform.rotation);
             return true;

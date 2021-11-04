@@ -4954,7 +4954,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10301, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9794,7 +9793,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9852,19 +9850,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ObjectType: 0
   ProcessingPhase: 2
+  RequiresSpawnWarning: 1
   spawnWarningObject: {fileID: 5736782390652883209}
   spawnRules:
     spawnRegion: 1
+    spawnCategory: 1
     avoidHazardPaths: 1
-    avoidAdjacentToPlayer: 0
     requiresOrientation: 1
+    avoidAdjacentToPlayer: 0
+    avoidShareSpawnLocation: 0
   currentWorldLocation: {x: 0, y: 0, z: 0}
   targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 1
+  animateMoveSpeed: 0
   IsLeavingGrid: 0
   hazardType: 3
+  spawnBorder: 
 --- !u!114 &5736782391450772107
 MonoBehaviour:
   m_ObjectHideFlags: 0

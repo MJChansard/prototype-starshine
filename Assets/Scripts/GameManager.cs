@@ -126,7 +126,7 @@ public class GameManager : MonoBehaviour
                 gom.ArrivePlayer();
                 player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
             }
-            player.OnPlayerAddHazard -= OnAddHazard;
+            //player.OnPlayerAddHazard -= OnAddHazard;
         }
         else
         {

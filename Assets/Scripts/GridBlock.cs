@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
-public class GridBlock : MonoBehaviour
+public class GridBlock
 {
     [ReadOnly] public Vector2Int location;
     [ReadOnly] public List<GameObject> objectsOnBlock;
