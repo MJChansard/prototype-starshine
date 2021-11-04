@@ -5,10 +5,6 @@ using Sirenix.OdinInspector;
 
 public class Player : GridObject
 {
-    private PlayerHUD ui;
-    private MovePattern movePattern;
-    private Health hp;
-
     [Header("Player Components")]
     [SerializeField] private GameObject Thruster;
     
@@ -19,16 +15,10 @@ public class Player : GridObject
     private Weapon[] weaponInventory;
     private int indexSelectedWeapon = 0;
 
-    public int CurrentJumpFuel { get { return currentJumpFuel; } }
-    private int currentJumpFuel = 0;
-    private int maxFuelAmount = 10;
-
-    [SerializeField] private float speed = 2.0f;
+    //[SerializeField] private float speed = 2.0f;
     
     [Title("BUTTONS")]
     [Button]
-    //[TitleGroup("BUTTONS")]
-    //[ButtonGroup("BUTTONS")]
     private void InflictDamage()
     {
         hp.SubtractHealth(10);
@@ -46,6 +36,14 @@ public class Player : GridObject
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
 
+    private PlayerHUD ui;
+    private MovePattern movePattern;
+    private Health hp;
+
+    public int CurrentJumpFuel { get { return currentJumpFuel; } }
+    private int currentJumpFuel = 0;
+    private int maxFuelAmount = 10;
+
     //public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
 
     public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
@@ -55,11 +53,8 @@ public class Player : GridObject
     public System.Action OnPlayerAdvance;
     //public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
 
-    //public System.Action<int, int> OnPlayerFireWeapon;
-    //public System.Action<int, int> OnPlayerGetAmmo;
     public System.Action<int, int, float> OnAmmoAmountChange;
     public System.Action<int, int, float> OnFuelAmountChange;
-    
 
 
     private void Start()
@@ -143,8 +138,7 @@ public class Player : GridObject
             if (w.currentAmmunition > 0)
             {
                 IsAttackingThisTick = true;
-                w.SubtractAmmo();
-                //OnPlayerFireWeapon?.Invoke(indexSelectedWeapon, w.currentAmmunition);
+                w.SubtractAmmo();                
                 OnAmmoAmountChange?.Invoke(indexSelectedWeapon, w.currentAmmunition, 0.0f);
             }
             
