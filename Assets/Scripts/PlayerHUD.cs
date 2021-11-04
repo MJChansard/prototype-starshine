@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class PlayerHUD : MonoBehaviour
 {
-    [SerializeField] private GameObject weaponGroupObject;
-    //[SerializeField] private GameObject fuelGroupObject;
+    [SerializeField] private GameObject weaponGroupObject;    
     [SerializeField] private Image fuelBar;
     [SerializeField] private Text fuelLabel;
     [SerializeField] private Image hpBar;
@@ -14,6 +13,7 @@ public class PlayerHUD : MonoBehaviour
 
     private PlayerHUDEntry[] PlayerHUDEntries;
     public PlayerHUDEntry playerEntryPrefab;
+
 
     private void Start()
     {
@@ -29,10 +29,7 @@ public class PlayerHUD : MonoBehaviour
         p.OnAmmoAmountChange += UpdateWeaponHUD;
         p.OnFuelAmountChange += UpdateFuelHUD;
         p.GetComponent<Health>().OnHpAmountChange += UpdateHpHUD;
-    }
-
-
-        
+    }        
     public void Init(Weapon[] weaponsForUI, int maxFuelAmount, int maxPlayerHP)
     {
         PlayerHUDEntries = new PlayerHUDEntry[weaponsForUI.Length];
@@ -51,29 +48,20 @@ public class PlayerHUD : MonoBehaviour
         UpdateHpHUD(maxPlayerHP, maxPlayerHP, 0.0f);
     }
 
+
     public void UpdateWeaponSelection(int disableWeapon, int enableWeapon)
     {
         PlayerHUDEntries[disableWeapon].transform.GetChild(0).gameObject.SetActive(false);
         PlayerHUDEntries[enableWeapon].transform.GetChild(0).gameObject.SetActive(true);
     }
-
     private void UpdateWeaponHUD(int weaponIndex, int amount, float animateDelay)
     {
         StartCoroutine(UpdateWeaponHUDCoroutine(weaponIndex, amount, animateDelay));
     }
-
-    /*  #Deprecated
-    public void UpdateHUDWeapons(int indexOfWeaponRequiringUpdate, int newAmount)
-    {
-        //PlayerHUDEntries[indexOfWeaponRequiringUpdate].UpdateText(newAmount);
-    }
-    */
-
     public void UpdateFuelHUD(int currentFuelAmount, int maxFuelAmount, float animateDelay)
     {
         StartCoroutine(UpdateFuelHUDCoroutine(currentFuelAmount, maxFuelAmount, animateDelay));
     }
-
     public void UpdateHpHUD(int currentPlayerHP, int maxPlayerHP, float animateDelay)
     {
         StartCoroutine(UpdateHpHUDCoroutine(currentPlayerHP, maxPlayerHP, animateDelay));
@@ -84,7 +72,6 @@ public class PlayerHUD : MonoBehaviour
         yield return new WaitForSeconds(numberSeconds);
         PlayerHUDEntries[weaponIndex].UpdateText(newAmount);
     }
-
     private IEnumerator UpdateFuelHUDCoroutine(int currentFuel, int maxFuel, float delaySeconds)
     {
         yield return new WaitForSeconds(delaySeconds);
@@ -92,7 +79,6 @@ public class PlayerHUD : MonoBehaviour
         fuelLabel.text = string.Format("Fuel: {0}/{1}", currentFuel, maxFuel);
         fuelBar.fillAmount = (float)currentFuel / (float)maxFuel;
     }
-
     private IEnumerator UpdateHpHUDCoroutine(int currentHP, int maxHP, float delaySeconds)
     {
         yield return new WaitForSeconds(delaySeconds);
