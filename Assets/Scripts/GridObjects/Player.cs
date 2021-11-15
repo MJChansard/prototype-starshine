@@ -36,7 +36,7 @@ public class Player : GridObject
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
 
-    private PlayerHUD ui;
+    //private PlayerHUD ui;
     private MovePattern movePattern;
     private Health hp;
 
@@ -53,8 +53,10 @@ public class Player : GridObject
     public System.Action OnPlayerAdvance;
     //public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
 
-    public System.Action<int, int, float> OnAmmoAmountChange;
+    public System.Action<int, float> OnAmmoAmountChange;
     public System.Action<int, int, float> OnFuelAmountChange;
+
+    public System.Action<Sprite, int> OnChangeSelectedWeapon;
 
 
     private void Start()
@@ -72,10 +74,11 @@ public class Player : GridObject
             Debug.LogFormat("Added {0} to weaponInventory.", toInsert.Name);
         }
 
-        ui = FindObjectOfType<PlayerHUD>();
+        //ui = FindObjectOfType<PlayerHUD>();
         //ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
 
-        FindObjectOfType<PlayerHUD>().Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
+        //FindObjectOfType<PlayerHUD>().Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
+        FindObjectOfType<PlayerHUD>().Init(weaponInventory[0], maxFuelAmount, hp.CurrentHP);
 
         //HideProperty = true;
     }
@@ -92,13 +95,28 @@ public class Player : GridObject
         // Weapon Selection
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            SelectWeapon(-1);
+            //SelectWeapon(-1);
+            //OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
         }
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            SelectWeapon(1);
+            //SelectWeapon(1);
+            //OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
 
+        }
+
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            Debug.Log("UpArrow key pressed.");
+            SelectWeapon(1);
+            OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            SelectWeapon(-1);
+            OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
         }
 
         // Player Movement & turn advancement
@@ -139,7 +157,7 @@ public class Player : GridObject
             {
                 IsAttackingThisTick = true;
                 w.SubtractAmmo();                
-                OnAmmoAmountChange?.Invoke(indexSelectedWeapon, w.currentAmmunition, 0.0f);
+                OnAmmoAmountChange?.Invoke(w.currentAmmunition, 0.0f);
             }
             
             if (OnPlayerAdvance != null) OnPlayerAdvance();
@@ -159,13 +177,20 @@ public class Player : GridObject
 
     private void SelectWeapon(int choice)
     {
-        int newWeaponIndex = indexSelectedWeapon + choice;
-        Debug.LogFormat("Index of current weapon: {0}, Index of new weapon: {1}", indexSelectedWeapon, newWeaponIndex);
+        if (indexSelectedWeapon + choice >= 0 && indexSelectedWeapon + choice < weaponInventory.Length)
+        {
+            //newWeaponIndex = indexSelectedWeapon + choice;
+            //Debug.LogFormat("Index of current weapon: {0}, Index of new weapon: {1}", indexSelectedWeapon, newWeaponIndex);
+            indexSelectedWeapon += choice;
+            Debug.LogFormat("Index of current weapon: {0}.  Currently using a {1}.", indexSelectedWeapon, weaponInventory[indexSelectedWeapon].weaponType);
+        }
+        /*
         if (newWeaponIndex >= 0 && newWeaponIndex < weaponInventory.Length)
         {
-            ui.UpdateWeaponSelection(indexSelectedWeapon, newWeaponIndex);
+            //ui.UpdateWeaponSelection(indexSelectedWeapon, newWeaponIndex);
             indexSelectedWeapon = newWeaponIndex;
         }
+        */
     }
     public void ExecuteAttackAnimation(GridBlock gridBlock)
     {
@@ -204,8 +229,14 @@ public class Player : GridObject
             {
                 //weaponInventory[j].weaponAmmunition += amount;
                 weaponInventory[j].SupplyAmmo(amount);
-                OnAmmoAmountChange?.Invoke(j, weaponInventory[j].currentAmmunition, 1.0f);
+                
+                //OnAmmoAmountChange?.Invoke(j, weaponInventory[j].currentAmmunition, 1.0f);
                 //ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
+
+                if (type == SelectedWeapon.weaponType)
+                {
+                    OnAmmoAmountChange?.Invoke(SelectedWeapon.currentAmmunition, 1.0f);
+                }    
                 break;
             }
         }
