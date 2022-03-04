@@ -28,15 +28,16 @@ public abstract class Weapon : MonoBehaviour
     [BoxGroup("WEAPON CONFIGURATION")] [SerializeField] protected bool requiresGridPlacement;
     
     public GameObject WeaponPrefab { get { return onGridWeaponPrefab; } }
-    [BoxGroup("WEAPON ASSETS", centerLabel:true)] public Sprite weaponIcon;
+    [BoxGroup("WEAPON ASSETS", centerLabel:true)] public Sprite weaponActiveIcon;
+    [BoxGroup("WEAPON ASSETS")] public Sprite weaponInactiveIcon;
     [ShowIf("requiresGridPlacement")][BoxGroup("WEAPON ASSETS")] [SerializeField] protected GameObject onGridWeaponPrefab;
 
     [BoxGroup("WEAPON PROPERTIES")] public int startingAmmunition;
     [BoxGroup("WEAPON PROPERTIES")] public int maxAmmunition;
     [BoxGroup("WEAPON PROPERTIES", centerLabel:true)][DisplayAsString] public int currentAmmunition;
-    
 
-    
+
+    public bool IsActive { get; private set; } = false;
 
     // METHODS
     public int CalculateDamage(int gridBlockDistance, bool verboseConsole = false)
@@ -73,7 +74,10 @@ public abstract class Weapon : MonoBehaviour
     {
         currentAmmunition += ammoAmount;
     }
-
+    public void ToggleWeaponActive()
+    {
+        IsActive = !IsActive;
+    }
 
     // ANIMATION COROUTINE
     virtual public void StartAnimationCoroutine(GridBlock target)

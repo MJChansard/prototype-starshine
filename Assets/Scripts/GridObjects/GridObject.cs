@@ -5,21 +5,21 @@ using Sirenix.OdinInspector;
 
 public class GridObject : MonoBehaviour
 {
-    [Header("General Properties")]
-    public GridObjectManager.GamePhase ProcessingPhase;
+    //  # INSPECTOR
+    [BoxGroup("GRIDOBJECT PROPERTIES", centerLabel: true)]
+    public GamePhase ProcessingPhase;
 
-
-    [TitleGroup("SPAWN SETTINGS")]
-    public bool RequiresSpawnWarning;
+    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")]
+    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public bool RequiresSpawnWarning;
     [ShowIf("RequiresSpawnWarning")] public GameObject spawnWarningObject;
-    public GridManager.SpawnRule spawnRules;
+    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public GridManager.SpawnRule spawnRules;
     
 
     // MOVEMENT & ANIMATION FIELDS
     [HideInInspector] public Vector3 currentWorldLocation;      
     [HideInInspector] public Vector3 targetWorldLocation;       
     [HideInInspector] public float animateMoveSpeed;
-    [HideInInspector] public bool IsLeavingGrid = false;
+    [HideInInspector] public bool IsLeavingGrid;
     public float Distance
     {
         get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
@@ -40,6 +40,7 @@ public class GridObject : MonoBehaviour
     // METHODS
     public virtual void Init()
     {
+        IsLeavingGrid = false;
         if (spawnWarningObject != null) SetGamePlayMode(Mode.Spawn);
         else SetGamePlayMode(Mode.Play);
     }

@@ -8,6 +8,9 @@ public class ContactSupply : MonoBehaviour
     public bool randomizeSupply;
     [ShowIf("@!randomizeSupply")]
     public WeaponType weaponType;
+
+    [SerializeField] [DisplayAsString] private WeaponType SupplyContents;
+   
     [ShowIf("@!randomizeSupply")]
     public int supplyAmount;
     
@@ -28,11 +31,12 @@ public class ContactSupply : MonoBehaviour
     {
         if (randomizeSupply)
             RequestSupply();
+        SupplyContents = weaponType;
     }
 
     public void RequestSupply()
     {
-        weaponType = (WeaponType)Random.Range(1, 3);
+        weaponType = (WeaponType)Random.Range(1, 4);
         supplyAmount = SupplyData[weaponType];
     }
 

@@ -9,157 +9,338 @@ public class GameManager : MonoBehaviour
     public bool VerboseConsole = true;
 
     [TitleGroup("CUSTOM SPAWN SEQUENCES")]
-    public SpawnSequence[] overrideSpawnSequence;
+    [SerializeField] bool overrideSpawnSequence;
+    [ShowIf("overrideSpawnSequence")] [SerializeField] SpawnSequence[] customSpawnSequence;
 
     [TitleGroup("LEVEL MANAGEMENT")]
-    [SerializeField] private LevelData levelData;
-    [SerializeField] private bool overrideLevelData;
-    [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridWidth;
-    [ShowIf("overrideLevelData")] [SerializeField] private int inspectorGridHeight;
+    [SerializeField] LevelData levelData;
+    [SerializeField] bool overrideLevelData;
+    [ShowIf("overrideLevelData")] [SerializeField] int inspectorGridWidth;
+    [ShowIf("overrideLevelData")] [SerializeField] int inspectorGridHeight;
 
     public int CurrentLevel
     {
         get { return currentLevel; }
     }
-    private int currentLevel = 0;
-    private int LevelDataIndex
+    int currentLevel = 0;
+    int LevelDataIndex
     {
         get { return currentLevel - 1; }
     }
+    GamePhase mainGamePhase;
+
+    //  #FIELDS
+    [HideInInspector] public enum GameState { Player, Board, Animate};
+    StateManager <GameState> stateManager = new StateManager<GameState>();
+
+    Module.UsageData previousModuleData;
+    bool activateModuleReceived = false;
+    bool playerMoveReceived = false;
+    bool endTurnReceived = false;
 
 
-    // REFERENCES
+    //  #REFERENCES
     GameDisplay display;
-    GridManager gm;
-    GridObjectManager gom;
+    InputManager inputM;
+    GridObjectManager gridObjectM;
+    GridManager gridM;
+    PlayerHUD pHUD;    
     Player player;
     DebugHUD debugHUD;
+
+
+
     
-
-    // METHODS
-    private void Start()
+    void Awake()
     {
-        gm = GetComponent<GridManager>();
+        gridM = GetComponent<GridManager>();
+        gridObjectM = GetComponent<GridObjectManager>();
+        debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
+        display = GameObject.FindGameObjectWithTag("Game Display").GetComponent<GameDisplay>();
 
-        // Setup level characteristics for GridManager
+        stateManager.RegisterStateMethods(this, true);
+
         if (currentLevel == 0) currentLevel = 1;
-        if (overrideLevelData)
-        {
-            //LevelData newLevelData = new LevelData(inspectorGridWidth, inspectorGridHeight, 4, 0);
-            //LevelData newLevelData = CreateInstance<LevelData>();
-            LevelData newLevelData = LevelData.CreateInstance<LevelData>();
-            newLevelData.AddRowData(inspectorGridWidth, inspectorGridHeight, 4, 10, 1);
-            
 
-            gm.ReceiveLevelData(newLevelData.LevelTable[0]);
-        }
-        else
-        {
-            gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
-        }
-        gm.Init(); 
+        inputM = FindObjectOfType<InputManager>();
+        inputM.ActivateModuleButtonPressed += ActivateModule;
+        inputM.MoveButtonPressed += OnPlayerMove;
+        inputM.EndTurnButtonPressed += EndPlayerTurn;
+        
 
+        PlayerHUD pHUD = FindObjectOfType<PlayerHUD>();
+        pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
+        
 
-        // Setup GridObjectManager
-        gom = GetComponent<GridObjectManager>();
-        if (overrideSpawnSequence.Length > 0)
+        mainGamePhase = GamePhase.Player;
+    }
+    void Start()
+    {
+        if (customSpawnSequence.Length > 0)
         {
-            for (int i = 0; i < overrideSpawnSequence.Length; i++)
-            {               
-                gom.insertSpawnSequences.Add(overrideSpawnSequence[i].Clone());
+            for (int i = 0; i < customSpawnSequence.Length; i++)
+            {
+                gridObjectM.insertSpawnSequences.Add(customSpawnSequence[i].Clone());
             }
         }
 
-        if (VerboseConsole) debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
-        display = GameObject.FindGameObjectWithTag("Game Display").GetComponent<GameDisplay>();
+        // Setup level characteristics for GridManager
+        if (overrideLevelData)
+        {
+            LevelData newLevelData = LevelData.CreateInstance<LevelData>();
+            newLevelData.AddRowData(inspectorGridWidth, inspectorGridHeight, 4, 10, 1);
 
+            gridM.ReceiveLevelData(newLevelData.LevelTable[0]);
+        }
+        else
+        {
+            gridM.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
+        }
+        gridM.Init();
 
         // Setup Player
         Vector2Int startLocation = new Vector2Int(0, 0);
-        if (overrideSpawnSequence.Length > 0)
+        if (customSpawnSequence.Length > 0)
         {
-            startLocation = overrideSpawnSequence[0].playerSpawnLocation;
+            startLocation = customSpawnSequence[0].playerSpawnLocation;
         }
 
-        GameObject player = Instantiate(gom.playerPrefab, gm.GridToWorld(startLocation), Quaternion.identity);
-        if (VerboseConsole) Debug.Log(player.name + " has been instantiated.");
-
-        if (VerboseConsole) Debug.Log("Adding Player to Grid.");
-        gm.AddObjectToGrid(player, startLocation);
-        this.player = player.GetComponent<Player>();
-        this.player.currentWorldLocation = gm.GridToWorld(startLocation);
-        this.player.targetWorldLocation = gm.GridToWorld(startLocation);
-        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
-
-        this.player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
-
-        // Initialize Game Object Manager now that player exists
-        gom.Init();
-        gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
-        gom.InsertManualSpawnSequence();
-
-        this.player.OnPlayerAdvance += OnTick;
-    }
-   
-    private void OnTick()
-    {
-        StartCoroutine(OnTickCoroutine());
-    }
-    private IEnumerator OnTickCoroutine()
-    {
-        if (player.IsAlive)
-        {
-            player.InputActive = false;
-            player.OnPlayerAdvance -= OnTick;
-
-            //player.OnPlayerAddHazard += OnAddHazard;
-            float delay = player.OnTickUpdate();
-            gom.OnTickUpdate(GridObjectManager.GamePhase.Player);
-            yield return new WaitForSeconds(delay);
-            if (CheckWinCondition())
-            {
-                currentLevel++;
-                gom.ClearLevel();
-                gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
-                gm.NextLevel();   // Don't adjust index
-                gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
-                gom.ArrivePlayer();
-                player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
-            }
-            //player.OnPlayerAddHazard -= OnAddHazard;
-        }
-        else
-        {
-            EndGame();
-        }
-            
-        if (player.IsAlive)
-        {
-            float hazardDelay = gom.OnTickUpdate(GridObjectManager.GamePhase.Manager);
-            yield return new WaitForSeconds(hazardDelay);
-            
-            CurrentTick += 1;
-
-            player.InputActive = true;
-            player.OnPlayerAdvance += OnTick;
-        }
-        else
-        {
-            EndGame();
-        }    
-        
-        // Debug Options
+        GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
         if (VerboseConsole)
         {
-            debugHUD.IncrementTickValue(CurrentTick);
+            Debug.Log(playerObject.name + " has been instantiated.");
+            Debug.Log("Adding Player to Grid.");
         }
+        gridM.AddObjectToGrid(playerObject, startLocation);
+        player = playerObject.GetComponent<Player>();
+        player.currentWorldLocation = gridM.GridToWorld(startLocation);
+        player.targetWorldLocation = gridM.GridToWorld(startLocation);
+
+        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
+
+        player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
+
+        // Initialize Game Object Manager now that player exists
+        gridObjectM.Init();
+        gridObjectM.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
+        gridObjectM.InsertManualSpawnSequence();
+
+        
+        pHUD = GameObject.FindGameObjectWithTag("Player HUD").GetComponent<PlayerHUD>();
+        if (pHUD != null)
+        {
+            Debug.Log("GameManager successfully located PlayerHUD.");
+            pHUD.Init(player.GetEquippedModules, levelData.LevelTable[LevelDataIndex].jumpFuelAmount, player.GetComponent<Health>().MaxHP);
+        }
+        else
+        {
+            Debug.Log("GameManager failed to locate PlayerHUD.");
+        }
+    }
+    private void Update()
+    {
+        stateManager.UpdateState();
+    }
+
+    //  #METHODS
+
+    void PlayerEnter()
+    {
+
+    }
+
+    void PlayerUpdate()
+    {
+        if (activateModuleReceived)
+        {
+            Module.UsageData uData = player.UseCurrentModule();
+            if (uData != null)
+            {
+                gridObjectM.OnPlayerActivateModule(uData);
+                pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
+            }
+            activateModuleReceived = false;
+        }
+        
+
+        if (playerMoveReceived)
+        {
+            inputM.InputActive = false;
+            gridObjectM.OnPlayerMove();
+            stateManager.SwitchState(GameState.Animate);
+            playerMoveReceived = false;
+        }
+        
+    }   
+    
+    void PlayerExit()
+    {
+
+    }
+
+    void BoardEnter()
+    {
+
+    }   
+    
+    void BoardUpdate()
+    {
+
+    }
+
+    void BoardExit()
+    {
+
+    }
+
+    void AnimateEnter()
+    {
+
+    }
+
+    void ActivateModule()
+    {
+        activateModuleReceived = true;
+    }
+
+
+
+    // old
+    private void OnTick()
+    {
+        /*  NOTE
+         *  So I think that this method will need to be called when the Player ends the turn.
+         *  Based on what the mainGamePhase value is
+         */
+
+        /*
+        if (mainGamePhase == GamePhase.Player)
+        {
+            StopCoroutine(OnTickCoroutine(GamePhase.Manager));
+            StartCoroutine(OnTickCoroutine(GamePhase.Player));
+        }
+        else if (mainGamePhase == GamePhase.Manager)
+        {
+            //StopCoroutine(OnTickCoroutine(GamePhase.Player));
+            StartCoroutine(OnTickCoroutine(GamePhase.Manager));
+        }
+        */
+        StartCoroutine(OnTickCoroutine(mainGamePhase));
+    }
+    private IEnumerator OnTickCoroutine(GamePhase phase)
+    {
+        /*  NOTES
+         * 
+         *   - Need to give GameManager the ability to control GamePhase
+         *   - GamePhase needs to be long enough for Player to activate all modules
+         *   - Each module activation will require a call to GOM.OnTickUpdate
+         * 
+         */
+
+        if (phase == GamePhase.Player)
+        {
+            if (player.IsAlive)
+            {
+                inputM.InputActive = true;
+                // Pause the game here so modules can be activated
+                yield return null;
+
+                /*
+                //gom.OnTickUpdate(GamePhase.Player);
+
+                float delay = player.OnTickUpdate();
+                
+                
+                yield return new WaitForSeconds(delay);
+                
+                if (CheckWinCondition())
+                {
+                    currentLevel++;
+                    gom.ClearLevel();
+                    gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
+                    gm.NextLevel();   // Don't adjust index
+                    gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
+                    gom.ArrivePlayer();
+                    player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
+                }
+                //player.OnPlayerAddHazard -= OnAddHazard;
+            }
+            else
+            {
+                EndGame();
+            }
+
+            */
+            }
+        }
+
+        if (phase == GamePhase.Manager)
+        {
+            if (player.IsAlive)
+            {
+                float hazardDelay = gridObjectM.OnManagerTickUpdate();
+                yield return new WaitForSeconds(hazardDelay);
+
+                CurrentTick += 1;
+
+                //player.InputActive = true;
+                UpdateGamePhase();
+                OnTick();
+                inputM.EndTurnButtonPressed += OnTick;
+                inputM.InputActive = true;
+            }
+            else
+            {
+                EndGame();
+            }
+
+            // Debug Options
+            if (VerboseConsole)
+            {
+                debugHUD.IncrementTickValue(CurrentTick);
+            }
+            //yield return null;
+        }
+    }
+    
+    private void OnPlayerActivateModule(Module.UsageData data)
+    {
+        pHUD.OnPlayerHUDModuleActivate -= OnPlayerActivateModule;
+
+        if (previousModuleData != null)
+            StopCoroutine(OnPlayerActivateModuleCoroutine(previousModuleData));
+                     
+        StartCoroutine(OnPlayerActivateModuleCoroutine(data));
+        previousModuleData = data;
+    }
+    private IEnumerator OnPlayerActivateModuleCoroutine(Module.UsageData data)
+    {
+        gridObjectM.OnPlayerActivateModule(data);
+        yield return new WaitForSecondsRealtime(2.0f);
+        pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
         yield return null;
     }
-    private void OnAddHazard(GridObject gridObjectToAdd, Vector2Int position, bool placeOnGrid = true)
+    private void OnPlayerMove()
     {
-        Debug.Log("GameManager.OnAddHazard() called.");
-        gom.AddObjectToGrid(gridObjectToAdd, position, placeOnGrid);
+        playerMoveReceived = true;
     }
+
+
+
+    private void UpdateGamePhase()
+    {
+        if (mainGamePhase == GamePhase.Player)
+            mainGamePhase = GamePhase.Manager;
+        else if (mainGamePhase == GamePhase.Manager)
+            mainGamePhase = GamePhase.Player;
+    }
+    private void EndPlayerTurn()
+    {
+        StopCoroutine(OnTickCoroutine(GamePhase.Player));
+        mainGamePhase = GamePhase.Manager;
+        OnTick();
+    }
+   
         
     private bool CheckWinCondition()
     {
@@ -173,4 +354,10 @@ public class GameManager : MonoBehaviour
         display.GameOver();
     }
 
+}
+
+public enum GamePhase
+{
+    Player = 1,
+    Manager = 2
 }

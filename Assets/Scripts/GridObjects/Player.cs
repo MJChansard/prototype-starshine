@@ -5,62 +5,103 @@ using Sirenix.OdinInspector;
 
 public class Player : GridObject
 {
-    [Header("Player Components")]
-    [SerializeField] private GameObject Thruster;
-    
-    [Header("Weapon Inventory")]
-    [SerializeField] private GameObject[] weaponObjects;
-    [SerializeField] private Transform weaponSource;
-        
-    private Weapon[] weaponInventory;
-    private int indexSelectedWeapon = 0;
+    //  #INSPECTOR
+    [BoxGroup("PLAYER CONFIGURATION", centerLabel: true)]
+    //[TitleGroup("PLAYER CONFIGURATION/MODULES")][SerializeField] private GameObject[] moduleInventory;
+    [TitleGroup("PLAYER CONFIGURATION/MODULES")] [SerializeField] private GameObject[] weaponObjects;
 
-    //[SerializeField] private float speed = 2.0f;
-    
-    [Title("BUTTONS")]
+    [BoxGroup("PLAYER COMMANDS")]
     [Button]
     private void InflictDamage()
     {
         hp.SubtractHealth(10);
-        //ui.UpdateHpHUD(hp.CurrentHP, 40);
     }
 
-    // Tick update fields
-    public bool InputActive = true;
-    public bool IsAttackingThisTick = false;
 
-    public Vector2Int Direction { get { return currentlyFacing; } }
-    private Vector2Int currentlyFacing;
+
+    //  #PROPERTIES
+    public bool IsAlive { get { return hp.HasHP; } }
+    public int CountEquippedModules
+    {
+        get
+        {
+            int total = 0;
+            for (int i = 0; i < equippedModules.Length; i++)
+            {
+                if (equippedModules[i] != null)
+                    total++;
+            }
+
+            return total;
+        }
+    }
+    public Module[] GetEquippedModules
+    {
+        get
+        {
+            Module[] array = new Module[CountEquippedModules];
+            for (int i = 0; i < CountEquippedModules; i++)
+            {
+                if (equippedModules[i] != null)
+                {
+                    array[i] = equippedModules[i];
+                }
+            }
+            return array;
+        }
+    }
+   
+    public Vector2Int Direction { get { return movePattern.DirectionOnGrid; } }
+    public int CurrentJumpFuel { get { return currentJumpFuel; } }
+
+    [HideInInspector] public bool IsAttackingThisTick = false;
     
+
+
+    // # FIELDS
+    private GameObject thruster;
+    private MovePattern movePattern;
+    private Health hp;
+    private Transform weaponSource;
+    private Weapon[] weaponInventory;
+
+    private Module[] equippedModules;
+    private Module[] moduleInventory;
+    private int selectModule = 0;
+    
+    private int currentJumpFuel = 0;
+    private int maxFuelAmount = 10;
+
     private float attackWaitTime = 2.0f;
     private float moveWaitTime = 1.0f;
     private float waitWaitTime = 0.0f;
 
-    //private PlayerHUD ui;
-    private MovePattern movePattern;
-    private Health hp;
 
-    public int CurrentJumpFuel { get { return currentJumpFuel; } }
-    private int currentJumpFuel = 0;
-    private int maxFuelAmount = 10;
-
-    //public GameObject SelectedWeaponProjectile { get { return weaponInventory[indexSelectedWeapon].WeaponPrefab; } }
-
-    public Weapon SelectedWeapon { get { return weaponInventory[indexSelectedWeapon]; } }
-    public bool IsAlive { get { return hp.HasHP; } }
-    
-
-    public System.Action OnPlayerAdvance;
-    //public System.Action<GridObject, Vector2Int, bool> OnPlayerAddHazard;
-
-    public System.Action<int, float> OnAmmoAmountChange;
+    public System.Action<int, int, float> OnAmmoAmountChange;
     public System.Action<int, int, float> OnFuelAmountChange;
 
-    public System.Action<Sprite, int> OnChangeSelectedWeapon;
+    //  # DELEGATES
+    public System.Action<int> OnActivateSelectedWeapon;
 
 
-    private void Start()
+
+    //  # METHODS
+    private void Awake()
     {
+        
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            GameObject _childObject = transform.GetChild(i).gameObject;
+            if(_childObject.name == "PlayerThruster")
+                thruster = _childObject;
+
+            if (_childObject.name == "WeaponSource")
+                weaponSource = _childObject.transform;
+
+            if (thruster != null && weaponSource != null)
+                break;
+        }
+        
         movePattern = GetComponent<MovePattern>();
         movePattern.SetMovePatternUp();
 
@@ -74,169 +115,89 @@ public class Player : GridObject
             Debug.LogFormat("Added {0} to weaponInventory.", toInsert.Name);
         }
 
-        //ui = FindObjectOfType<PlayerHUD>();
-        //ui.Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
+        equippedModules = new Module[6];
+        GameObject playerModuleTray = transform.Find("Modules").gameObject;
+        moduleInventory = new Module[playerModuleTray.transform.childCount];
+        for (int i = 0; i < moduleInventory.Length; i++)
+        {
+            moduleInventory[i] = playerModuleTray.transform.GetChild(i).GetComponent<Module>();
+            EquipModule(i, moduleInventory[i]);
+        }
 
-        //FindObjectOfType<PlayerHUD>().Init(weaponInventory, maxFuelAmount, hp.CurrentHP);
-        FindObjectOfType<PlayerHUD>().Init(weaponInventory[0], maxFuelAmount, hp.CurrentHP);
+        InputManager inputM = FindObjectOfType<InputManager>();
+        inputM.ChangeDirectionButtonPressed += ChangeDirectionFacing;
+        inputM.NextModuleButtonPressed += NextModule;
+        inputM.PreviousModuleButtonPressed += PreviousModule;
 
-        //HideProperty = true;
+        Debug.Log("Successfully subscribed to InputManager.ChangeDirectionButtonPressed");
     }
-    private void Update()
+    
+    //  # METHODS/Input
+    void ChangeDirectionFacing(Vector2Int direction)
     {
-        if (InputActive) PlayerInput();
+        //Debug.Log("Player.ChangeDirectionFacing()");
+        movePattern.SetMovePattern(direction);
 
-        if (Input.GetKeyDown(KeyCode.T)) Debug.LogFormat("Currently facing: {0}", currentlyFacing);
-    }
-
-
-    private void PlayerInput()
-    {
-        // Weapon Selection
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            //SelectWeapon(-1);
-            //OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
-        }
-
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            //SelectWeapon(1);
-            //OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
-
-        }
-
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            Debug.Log("UpArrow key pressed.");
-            SelectWeapon(1);
-            OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
-        }
-
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            SelectWeapon(-1);
-            OnChangeSelectedWeapon?.Invoke(SelectedWeapon.weaponIcon, SelectedWeapon.currentAmmunition);
-        }
-
-        // Player Movement & turn advancement
-        
-        if (Input.GetKeyDown(KeyCode.W))
-        {
+        if(direction == Vector2Int.up)
             transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
-            currentlyFacing = Vector2Int.up;
-            movePattern.SetMovePatternUp();
-        }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
+        else if(direction == Vector2Int.down)
             transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
-            currentlyFacing = Vector2Int.down;
-            movePattern.SetMovePatternDown();
-        }
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
+        else if(direction == Vector2Int.left)
             transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.forward);
-            currentlyFacing = Vector2Int.left;
-            movePattern.SetMovePatternLeft();
-        }
-
-        if (Input.GetKeyDown(KeyCode.D))
-        {
+        else if(direction == Vector2Int.right)
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
-            currentlyFacing = Vector2Int.right;
-            movePattern.SetMovePatternRight();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            Weapon w = weaponInventory[indexSelectedWeapon];
-
-            if (w.currentAmmunition > 0)
-            {
-                IsAttackingThisTick = true;
-                w.SubtractAmmo();                
-                OnAmmoAmountChange?.Invoke(w.currentAmmunition, 0.0f);
-            }
-            
-            if (OnPlayerAdvance != null) OnPlayerAdvance();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (OnPlayerAdvance != null) OnPlayerAdvance();
-        }
-
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            // Debug button
-        }
     }
-
-
-    private void SelectWeapon(int choice)
+    void NextModule()
     {
-        if (indexSelectedWeapon + choice >= 0 && indexSelectedWeapon + choice < weaponInventory.Length)
-        {
-            //newWeaponIndex = indexSelectedWeapon + choice;
-            //Debug.LogFormat("Index of current weapon: {0}, Index of new weapon: {1}", indexSelectedWeapon, newWeaponIndex);
-            indexSelectedWeapon += choice;
-            Debug.LogFormat("Index of current weapon: {0}.  Currently using a {1}.", indexSelectedWeapon, weaponInventory[indexSelectedWeapon].weaponType);
-        }
-        /*
-        if (newWeaponIndex >= 0 && newWeaponIndex < weaponInventory.Length)
-        {
-            //ui.UpdateWeaponSelection(indexSelectedWeapon, newWeaponIndex);
-            indexSelectedWeapon = newWeaponIndex;
-        }
-        */
+        if (selectModule < moduleInventory.Length)
+            selectModule++;
     }
+    void PreviousModule()
+    {
+        if (selectModule > 0)
+            selectModule--;
+    }
+    
+    //  # METHODS/Modules
+    public Module.UsageData UseCurrentModule()
+    {
+        bool success = moduleInventory[selectModule].UseModule(out Module.UsageData uData);
+        if (success)
+            return uData;
+        else
+            return null;
+    }
+    
+
+    public bool EquipModule(int slot, Module module)
+    {
+        if (slot >= 0 && slot <= 5)
+        {
+            equippedModules[slot] = module;
+            module.isEquipped = true;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+       
     public void ExecuteAttackAnimation(GridBlock gridBlock)
     {
-        weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
+        //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
+        //equippedModules[indexSelectedModule].UseModule(gridBlock);
     }
-/*
-    public void AcceptLoot(Loot.LootType type, int amount)
-    {
-        if (type == Loot.LootType.JumpFuel)
-        {
-            Debug.Log("Jump Fuel found.");
-            currentJumpFuel += amount;
-        }
 
-        if (type == Loot.LootType.MissileAmmo)
-        {
-            Debug.Log("Missile Ammo found.");
-            for (int j = 0; j < weaponInventory.Length; j++)
-            {
-                if (weaponInventory[j].Name == "Missile Launcher")
-                {
-                    weaponInventory[j].weaponAmmunition += amount;
-                    ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
-                    break;
-                }
-            }
-        }
-    }
-*/
     public void AcceptAmmo(WeaponType type, int amount)
     {
-        for (int j = 0; j < weaponInventory.Length; j++)
+        for (int i = 0; i < weaponInventory.Length; i++)
         {
-            //if (weaponInventory[j].Name == "Missile Launcher")
-            if (weaponInventory[j].weaponType == type)
+            if (weaponInventory[i].weaponType == type)
             {
-                //weaponInventory[j].weaponAmmunition += amount;
-                weaponInventory[j].SupplyAmmo(amount);
-                
-                //OnAmmoAmountChange?.Invoke(j, weaponInventory[j].currentAmmunition, 1.0f);
-                //ui.UpdateHUDWeapons(j, weaponInventory[j].currentAmmunition);
-
-                if (type == SelectedWeapon.weaponType)
-                {
-                    OnAmmoAmountChange?.Invoke(SelectedWeapon.currentAmmunition, 1.0f);
-                }    
+                weaponInventory[i].SupplyAmmo(amount);
+                OnAmmoAmountChange?.Invoke(i, weaponInventory[i].currentAmmunition, 1.0f);
+             
                 break;
             }
         }
@@ -251,8 +212,10 @@ public class Player : GridObject
         //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
     }
 
-    public float OnTickUpdate()
+    public void OnTickUpdate()
     {
+        StartCoroutine(AnimateThrusterCoroutine());
+        /*
         if (IsAttackingThisTick)
         {
             return attackWaitTime;
@@ -266,6 +229,7 @@ public class Player : GridObject
         }
 
         //return waitWaitTime;
+        */
     }
 
   
@@ -277,12 +241,12 @@ public class Player : GridObject
         OnFuelAmountChange?.Invoke(0, maxFuelAmount, 1.0f);
     }
 
-    // #Coroutines
+    // #COROUTINES
     private IEnumerator AnimateThrusterCoroutine()
     {
         //thrusterCoroutineIsRunning = true;
 
-        ParticleSystem ps = Thruster.GetComponent<ParticleSystem>();
+        ParticleSystem ps = thruster.GetComponent<ParticleSystem>();
         ps.Play();
         yield return new WaitForSeconds(1.0f);
         ps.Stop();
@@ -324,4 +288,29 @@ public class Player : GridObject
         }
 
     }
-    */
+*/
+
+/*  #DEPRECATED
+    public void AcceptLoot(Loot.LootType type, int amount)
+    {
+        if (type == Loot.LootType.JumpFuel)
+        {
+            Debug.Log("Jump Fuel found.");
+            currentJumpFuel += amount;
+        }
+
+        if (type == Loot.LootType.MissileAmmo)
+        {
+            Debug.Log("Missile Ammo found.");
+            for (int j = 0; j < weaponInventory.Length; j++)
+            {
+                if (weaponInventory[j].Name == "Missile Launcher")
+                {
+                    weaponInventory[j].weaponAmmunition += amount;
+                    ui.UpdateHUDWeapons(j, weaponInventory[j].weaponAmmunition);
+                    break;
+                }
+            }
+        }
+    }
+*/
