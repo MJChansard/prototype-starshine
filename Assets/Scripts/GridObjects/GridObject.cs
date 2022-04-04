@@ -7,22 +7,35 @@ public class GridObject : MonoBehaviour
 {
     //  # INSPECTOR
     [BoxGroup("GRIDOBJECT PROPERTIES", centerLabel: true)]
-    public GamePhase ProcessingPhase;
+    //public GameManager.GameState stateForProcessingGridObject;
+    public GamePhase processingPhase;
 
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")]
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public bool RequiresSpawnWarning;
     [ShowIf("RequiresSpawnWarning")] public GameObject spawnWarningObject;
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public GridManager.SpawnRule spawnRules;
-    
+
 
     // MOVEMENT & ANIMATION FIELDS
-    [HideInInspector] public Vector3 currentWorldLocation;      
-    [HideInInspector] public Vector3 targetWorldLocation;       
+    Vector2Int gridCurrentLocation;
+    Vector2Int gridDestinationLocation;
+
+    public Vector3 animateStartWorldLocation
+    {
+        get { return new Vector3(gridCurrentLocation.x, gridCurrentLocation.y, 0); }
+    }
+    public Vector3 animateEndWorldLocation
+    {
+        get { return new Vector3(gridDestinationLocation.x, gridDestinationLocation.y, 0);  }
+    }
+
     [HideInInspector] public float animateMoveSpeed;
-    [HideInInspector] public bool IsLeavingGrid;
+    [HideInInspector] public bool IsLeavingGrid;            //#Deprecated, remove ASAP
+
+    
     public float Distance
     {
-        get { return Vector3.Distance(currentWorldLocation, targetWorldLocation); }
+        get { return Vector3.Distance(animateStartWorldLocation, animateEndWorldLocation); }
     }
     
     

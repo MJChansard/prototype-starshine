@@ -119,25 +119,16 @@ public class GridManager : MonoBehaviour
         Debug.Log(levelGrid.Length);
 
         // Iterate through columns.
-        for (int x = 0; x < currentLevelData.levelWidth; x++) {
+        for (int x = 0; x < currentLevelData.levelWidth; x++)
+        {
             // Iterate through rows.
-            for (int y = 0; y < currentLevelData.levelHeight; y++) {
+            for (int y = 0; y < currentLevelData.levelHeight; y++)
+            {
                 // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
 
                 // Add Vector2Int objects
                 levelGrid[x, y].location = new Vector2Int(x, y);
-
-                // Update canSpawn property
-                if (levelGrid[x, y].location.x == 0 || levelGrid[x, y].location.x == currentLevelData.levelWidth - 1)
-                {
-                    levelGrid[x, y].canSpawn = true;
-                }
-
-                if (levelGrid[x, y].location.y == 0 || levelGrid[x, y].location.y == currentLevelData.levelHeight - 1)
-                {
-                    levelGrid[x, y].canSpawn = true;
-                }
             }
         }
     }
@@ -340,7 +331,6 @@ public class GridManager : MonoBehaviour
         GridBlock origin = FindGridBlockByLocation(gridLocation);
 
         if (origin.objectsOnBlock.Count > 0) {
-
             for (int i = origin.objectsOnBlock.Count - 1; i >= 0; i--) {
                 if (gameObject == origin.objectsOnBlock[i]) {
                     origin.objectsOnBlock.RemoveAt(i);

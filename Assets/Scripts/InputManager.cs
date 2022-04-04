@@ -7,7 +7,7 @@ public class InputManager : MonoBehaviour
     // #INSPECTOR
     [SerializeField] private bool VerboseLogging;
     // #FIELDS
-    [HideInInspector] public bool InputActive;
+    public bool InputActive { get; private set; }
 
     // #DELEGATES
     public System.Action NextModuleButtonPressed;
@@ -17,17 +17,17 @@ public class InputManager : MonoBehaviour
     public System.Action MoveButtonPressed;
     public System.Action ActivateModuleButtonPressed;
 
-    public System.Action <Vector2Int> ChangeDirectionButtonPressed;
+    public System.Action<Vector2Int> ChangeDirectionButtonPressed;
 
-    private void Awake()
+    void Awake()
     {
         InputActive = true;
     }
 
-    private void Update()
+    void Update()
     {
         if (InputActive)
-            PlayerInput(); 
+            PlayerInput();
     }
 
     private void PlayerInput()
@@ -94,6 +94,12 @@ public class InputManager : MonoBehaviour
                 MoveButtonPressed();
         }
     }
+
+    public void SetInputActive(bool isActive)
+    {
+        InputActive = isActive;
+    }
+
 }
 
 

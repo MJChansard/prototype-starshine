@@ -7,7 +7,6 @@ public class GridBlock
 {
     [ReadOnly] public Vector2Int location;
     [ReadOnly] public List<GameObject> objectsOnBlock;
-    [ReadOnly] public bool canSpawn;
 
     
     public GameObject DebugRenderPoint
@@ -29,6 +28,5 @@ public class GridBlock
     {
         this.location = new Vector2Int(x, y);
         this.objectsOnBlock = new List<GameObject>();
-        this.canSpawn = false;
     }
 }

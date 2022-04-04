@@ -5,55 +5,89 @@ using UnityEngine;
 
 public class GridObjectManager : MonoBehaviour
 {
-    [SerializeField] private bool VerboseConsole = true;
+    [SerializeField] bool VerboseConsole = true;
 
+    //  # INSPECTOR
     [Header("Spawn Management")]
-    [SerializeField] private int minTicksUntilSpawn = 2;
-    [SerializeField] private int maxTicksUntilSpawn = 4;
+    [SerializeField] int minTicksUntilSpawn = 2;
+    [SerializeField] int maxTicksUntilSpawn = 4;
 
     [HideInInspector] public List<SpawnSequence> insertSpawnSequences = new List<SpawnSequence>();
-    private Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
-    private int ticksUntilNewSpawn;
+    Queue<SpawnStep> spawnQueue = new Queue<SpawnStep>();
+    int ticksUntilNewSpawn;
 
 
     [Header("GridObject Library")]
-    [SerializeField] private GridObject[] gridObjectPrefabs;
-    private List<GridObject> hazards = new List<GridObject>();
-    private List<GridObject> loot = new List<GridObject>();
-    private List<GridObject> phenomena = new List<GridObject>();
-    private List<GridObject> stations = new List<GridObject>();
-
-    public List<GridObject> hazardLibrary
-    {
-        get
-        {
+    [SerializeField] GridObject[] gridObjectPrefabs;
+    List<GridObject> hazards = new List<GridObject>();
+    List<GridObject> loot = new List<GridObject>();
+    List<GridObject> phenomena = new List<GridObject>();
+    List<GridObject> stations = new List<GridObject>();
 
 
-            return hazards;
-        }
-    }
     public GameObject playerPrefab;
 
-    //  #REFERENCES
-    private GridManager gridM;
-    private Player player;
-    private InputManager inputM;
-    private PlayerHUD pHUD;
+    public GameManager.GameState currentGameState;
+    public GamePhase currentGamePhase;
+    public bool IsAnimationComplete
+    {
+        get { return gridObjectAnimationInProgress.Count == 0; }
+    }
 
-    private int currentTick = 0;
-    private Vector2Int minVector2;
-    private Vector2Int maxVector2;
+    // # REFERENCES
+    GridManager gridM;
+    Player player;
+    InputManager inputM;
+    PlayerHUD pHUD;
+
+    // #FIELDS
+    int currentTick = 0;
+    Vector2Int minVector2;
+    Vector2Int maxVector2;
+
+    //List<GridObject> gridObjectsInPlay;           // Object tracking 
+    List<GridBlock> collisions;
+    Dictionary<GridObject, BoardUpdateStep> gridObjectsInPlay;
+    List<GridObject> gridObjectAnimationInProgress;
 
 
-    private List<GridObject> gridObjectsInPlay = new List<GridObject>();            // Object tracking 
+    class BoardUpdateStep
+    {
+        public bool eligibleForProcessing;
 
-    private List<GridObject> gridObjectsDepartPlay;
-    private List<GridObject> gridObjectsFlyBy;
-    private List<GridObject> gridObjectsMove;
+        public bool canMove;
+        public Vector2Int gridOrigin;
+        public Vector2Int gridDestination;
+        public bool isMoving;
+        public bool isDeparting;
+        public GridObject collidesWith;
+
+        public bool hasHealth;
+        public bool dropsLoot;
+
+        public Vector3 WorldOrigin { get { return new Vector3(gridOrigin.x, gridOrigin.y, 0); } }
+        public Vector3 WorldDestination { get { return new Vector3(gridDestination.x, gridDestination.y, 0); } }
+        public float AnimateDistance { get { return Vector3.Distance(WorldOrigin, WorldDestination); } }
+
+        public BoardUpdateStep()
+        {
+            eligibleForProcessing = false;
+            canMove = false;
+            gridOrigin = new Vector2Int(99, 99);
+            gridDestination = new Vector2Int(99, 99);
+            isMoving = false;
+            isDeparting = false;
+            collidesWith = null;
+        }
+    }
 
     //  #INITIALIZATION
-    private void Awake()
+    void Awake()
     {
+        gridObjectsInPlay = new Dictionary<GridObject, BoardUpdateStep>();
+        gridObjectAnimationInProgress = new List<GridObject>();
+        collisions = new List<GridBlock>();
+
         pHUD = FindObjectOfType<PlayerHUD>().GetComponent<PlayerHUD>();
     }
     public void Init()
@@ -74,8 +108,14 @@ public class GridObjectManager : MonoBehaviour
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         currentTick = 1;
 
-        gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
-        player = gridObjectsInPlay[0].GetComponent<Player>();
+        //gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+
+        // Some minor debugging
+        Debug.LogFormat("Player Instance ID: {0}", player.transform.GetInstanceID().ToString());
+        gridObjectsInPlay.Add(player, null);
+        //player = gridObjectsInPlay[0].GetComponent<Player>();
+        
 
         // Populate GridObject Lists
         for (int i = 0; i < gridObjectPrefabs.Length; i++)
@@ -92,6 +132,8 @@ public class GridObjectManager : MonoBehaviour
             if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Station)
                 stations.Add(gridObjectPrefabs[i]);
         }
+
+        Debug.LogFormat("Current Game Phase: {0}", currentGamePhase.ToString());
     }
     public void InsertManualSpawnSequence()
     {
@@ -116,7 +158,7 @@ public class GridObjectManager : MonoBehaviour
 
 
     //  #SPAWNING
-    private void AddSpawnStep(GridObject objectForSpawn)
+    void AddSpawnStep(GridObject objectForSpawn)
     {
         /*	SUMMARY
          *  -   Randomly selects a spawn location
@@ -150,7 +192,7 @@ public class GridObjectManager : MonoBehaviour
         newSpawnStep.Init(objectForSpawn, hazardSpawnLocation);
         spawnQueue.Enqueue(newSpawnStep);
     }
-    private GridObject SelectGridObject(GridObjectType type)
+    GridObject SelectGridObject(GridObjectType type)
     {
         if (type == GridObjectType.Hazard)
         {
@@ -182,7 +224,7 @@ public class GridObjectManager : MonoBehaviour
             return null;
         }
     }
-    private void CreateGridObject(SpawnStep spawnStep)
+    void CreateGridObject(SpawnStep spawnStep)
     {
         /*  SUMMARY
         *   - Process SpawnStep data to identify hazard to spawn and spawn location
@@ -226,55 +268,46 @@ public class GridObjectManager : MonoBehaviour
 
         }
 
-        //Debug line
-        //Hazard hazardToSpawn = Instantiate(hazardPrefabs[1]);
-
-        AddObjectToGrid(newSpawn, spawnStep.SpawnLocation);
+        PlaceGridObjectInPlay(newSpawn, spawnStep.SpawnLocation);
 
         if (VerboseConsole) Debug.Log("GridObjectManager.CreateGridObject() completed.");
     }
-    public void AddObjectToGrid(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
+    public void PlaceGridObjectInPlay(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
-        Debug.Log("GridObjectManager.AddHazard() called.");
+        if (VerboseConsole) Debug.Log("GridObjectManager.PlaceGridObjectInPlay() called.");
 
         Vector3 worldLocation = gridM.GridToWorld(gridLocation);
 
         if (placeOnGrid == false)
         {
-            gridObject.currentWorldLocation = worldLocation;
-            gridObject.targetWorldLocation = worldLocation;
+            //gridObject.animateStartWorldLocation = worldLocation;
+            //gridObject.animateEndWorldLocation = worldLocation;
 
-            gridObjectsInPlay.Add(gridObject);
+            gridObjectsInPlay.Add(gridObject, null);
         }
         else
         {
             gridObject.transform.position = worldLocation;
             gridM.AddObjectToGrid(gridObject.gameObject, gridLocation);
 
-            gridObject.currentWorldLocation = worldLocation;
-            gridObject.targetWorldLocation = worldLocation;
+            //gridObject.animateStartWorldLocation = worldLocation;
+            //gridObject.animateEndWorldLocation = worldLocation;
 
-            gridObjectsInPlay.Add(gridObject);
+            //gridObjectsInPlay.Add(gridObject);
+            gridObjectsInPlay.Add(gridObject, null);
         }
     }
-    public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true)
-    {
-        GameObject gameObjectToRemove = objectToRemove.gameObject;
-        Vector2Int gridPosition = gridM.FindGridBlockContainingObject(gameObjectToRemove).location;
-
-        if (removeFromGrid) gridM.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
-        gridObjectsInPlay.Remove(objectToRemove);
-    }
-    private List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, GridManager.SpawnRule rule)
+    List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, GridManager.SpawnRule rule)
     {
         List<Vector2Int> ineligibleSpawns = new List<Vector2Int>();
         if (rule.avoidHazardPaths)
         {
             for (int i = 0; i < gridObjectsInPlay.Count; i++)
             {
-                if (gridObjectsInPlay[i].TryGetComponent<Hazard>(out Hazard h) && gridObjectsInPlay[i].TryGetComponent<MovePattern>(out MovePattern mp))
+
+                if (gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<Hazard>(out Hazard h) && gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<MovePattern>(out MovePattern mp))
                 {
-                    Vector2Int gridLocation = gridM.WorldToGrid(h.currentWorldLocation);
+                    Vector2Int gridLocation = gridM.WorldToGrid(h.animateStartWorldLocation);
                     Vector2Int direction = mp.DirectionOnGrid;
 
                     bool onLeftBoundary = false;
@@ -378,7 +411,7 @@ public class GridObjectManager : MonoBehaviour
         if (rule.avoidAdjacentToPlayer)
         {
             // Remove Player location and surrounding GridBlocks
-            Vector2Int pLocation = gridM.WorldToGrid(gridObjectsInPlay[0].currentWorldLocation);
+            Vector2Int pLocation = gridM.WorldToGrid(player.animateStartWorldLocation);
             for (int x = pLocation.x - 1; x < pLocation.x + 2; x++)
             {
                 for (int y = pLocation.y + 1; y > (pLocation.y - 2); y--)
@@ -393,7 +426,7 @@ public class GridObjectManager : MonoBehaviour
         {
             for (int i = 0; i < gridObjectsInPlay.Count; i++)
             {
-                ineligibleSpawns.Add(gridM.WorldToGrid(gridObjectsInPlay[i].currentWorldLocation));
+                ineligibleSpawns.Add(gridM.WorldToGrid(gridObjectsInPlay.Keys.ElementAt(i).animateStartWorldLocation));
             }
         }
 
@@ -421,15 +454,10 @@ public class GridObjectManager : MonoBehaviour
          *  5) Collisions on a GridBlock
          */
 
-        
-        List<GridObject> objectProcessing = new List<GridObject>();
-        List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
-
-
         if (uData.doesDamage)
         {
-            List<GridBlock> targetBlocks = GetGridBlocksInPath(gridM.WorldToGrid(player.currentWorldLocation), player.Direction);
-            
+            List<GridBlock> targetBlocks = GetGridBlocksInPath(gridM.WorldToGrid(player.animateStartWorldLocation), player.Direction);
+
             for (int i = 0; i < targetBlocks.Count; i++)
             {
                 for (int j = 0; j < targetBlocks[i].objectsOnBlock.Count; j++)
@@ -464,69 +492,255 @@ public class GridObjectManager : MonoBehaviour
 
         if (uData.doesPlaceObjectInWorld)
         {
-            GameObject instance = Instantiate(uData.objectToPlaceInWorld, player.currentWorldLocation, player.transform.rotation);
+            GameObject instance = Instantiate(uData.objectToPlaceInWorld, player.animateStartWorldLocation, player.transform.rotation);
             instance.GetComponent<MovePattern>().SetMovePattern(player.Direction);
 
             GridObject newObject = instance.GetComponent<GridObject>();
-            AddObjectToGrid(newObject, gridM.WorldToGrid(player.currentWorldLocation));
-            newObject.targetWorldLocation = newObject.currentWorldLocation + gridM.GridToWorld(player.Direction);
-            objectProcessing.Add(newObject);
-            potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
+            PlaceGridObjectInPlay(newObject, gridM.WorldToGrid(player.animateStartWorldLocation));
+            RefreshBoardUpdateSteps();
         }
-
-
-        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
-        CheckHealth(gridObjectsInPlay, 1.0f);
     }
-    public void OnPlayerMove()
+
+
+    public void RefreshBoardUpdateSteps(bool checkHealth = true, bool checkMove = true, bool checkLoot = true)
     {
-        List<GridObject> objectProcessing = new List<GridObject>();
-        List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
+        //boardUpdateSteps.Clear();
 
         for (int i = 0; i < gridObjectsInPlay.Count; i++)
         {
-            if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Player)
-                objectProcessing.Add(gridObjectsInPlay[i]);
-        }
-        player.OnTickUpdate();
-        potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
-        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
-    }
+            BoardUpdateStep newStep = new BoardUpdateStep();
+            GridObject gridObjectForStep = gridObjectsInPlay.ElementAt(i).Key;
 
-    public float OnManagerTickUpdate()
-    {
-        bool moveOccurredThisTick = true;
-        float moveDurationSeconds = 1.0f;
-
-        bool gridObjectDestroyedThisTick = false;
-        float destroyDurationSeconds = 2.0f;
-
-        float delayTime = 0.0f;
-
-        List<GridObject> objectProcessing = new List<GridObject>();
-        List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
-
-        CheckHealth(gridObjectsInPlay);
-        UpdateStations();
-
-        // Process GridObject behavior for current Tick
-        for (int i = 0; i < gridObjectsInPlay.Count; i++)
-        {
-            if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager)
+            if (gridObjectForStep.processingPhase == currentGamePhase)
             {
-                Health hp = gridObjectsInPlay[i].GetComponent<Health>();
+                newStep.eligibleForProcessing = true;
 
-                if (hp != null && hp.HasHP)
-                    objectProcessing.Add(gridObjectsInPlay[i]);
+                GridBlock _gb = gridM.FindGridBlockContainingObject(gridObjectForStep.gameObject);
+                newStep.gridOrigin = _gb.location;
+
+                if (checkHealth)
+                    if (gridObjectForStep.TryGetComponent<Health>(out Health hp))
+                        newStep.hasHealth = hp.HasHP;
+
+                if (checkMove)
+                    if (gridObjectForStep.TryGetComponent<MovePattern>(out MovePattern _))
+                        newStep.canMove = true;
+
+                if (checkLoot)
+                    if (gridObjectForStep.TryGetComponent<LootHandler>(out LootHandler _))
+                        newStep.dropsLoot = true;
             }
 
+            //boardUpdateSteps.Add(newStep);
+            gridObjectsInPlay[gridObjectForStep] = newStep;
         }
-        potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
+    }
+    public void FillBoardUpdateSteps()
+    {
+        /*  DESCRIPTION
+         *   - Process a list of GridObjects' data
+         *   - Determine one of the following behaviors for the current tick for each object:
+         *      ~ Depart the grid
+         *      ~ Simply move
+         *      ~ FlyBy another object
+         *      ~ Nothing
+         */
 
-        gridObjectDestroyedThisTick = CheckHealth(gridObjectsInPlay, 1.0f);
+        if (VerboseConsole) Debug.Log("GridObjectManager.FillBoardUpdateSteps called.");
 
+        Vector2Int[] allOriginGridLocations = new Vector2Int[gridObjectsInPlay.Count];          // Fly-By Tracker 1
+        Vector2Int[] allDestinationGridLocations = new Vector2Int[gridObjectsInPlay.Count];     // Fly-By Tracker 2
 
-        // SPAWNING
+        for (int i = 0; i < gridObjectsInPlay.Count; i++)
+        {
+            allOriginGridLocations[i].Set(99, 99);
+            allDestinationGridLocations[i].Set(99, 99);
+        }
+
+        if (VerboseConsole) Debug.Log("Processing grid object movement.");
+        for (int i = 0; i < gridObjectsInPlay.Count; i++)
+        {
+            KeyValuePair<GridObject, BoardUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
+            if (kvp.Value.eligibleForProcessing == false)
+                continue;
+
+            if (kvp.Value.canMove)
+            {
+                MovePattern mp = kvp.Key.GetComponent<MovePattern>();
+                mp.OnTickUpdate();
+
+                if (mp.CanMoveThisTurn)
+                {
+                    //GridBlock _gb = gridM.FindGridBlockContainingObject(gridObjectsInPlay[i].gameObject);     // Moved to Refresh()
+                    //boardUpdateSteps[i].origin = _gb.location;                                                // Moved to Refresh()
+                    kvp.Value.gridDestination = kvp.Value.gridOrigin + mp.DirectionOnGrid;
+
+                    allOriginGridLocations[i] = kvp.Value.gridOrigin;                                           // Maintain index of objects requiring additional processing
+                    allDestinationGridLocations[i] = kvp.Value.gridDestination;
+
+                    kvp.Value.isMoving = true;
+
+                    if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
+                    {
+                        kvp.Value.isDeparting = true;
+                    }
+                }
+            }
+        }
+
+        if (VerboseConsole) Debug.Log("Fly-By detection starting.");
+        for (int i = 0; i < allOriginGridLocations.Length; i++)
+        {
+            for (int j = 0; j < allDestinationGridLocations.Length; j++)
+            {
+                if (gridObjectsInPlay.Count > 1 && i == j)
+                {
+                    continue;
+                }
+                else if (allOriginGridLocations[i].x == 99)
+                {
+                    continue;
+                }
+                else if (allDestinationGridLocations[j].x == 99)
+                {
+                    continue;
+                }
+                else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
+                {
+                    gridObjectsInPlay.ElementAt(i).Value.collidesWith = gridObjectsInPlay.ElementAt(j).Key;
+                }
+            }
+        }
+
+        if (VerboseConsole) Debug.Log("Begining health check");
+    }
+    public void ExecuteBoardUpdate()
+    {
+        if (VerboseConsole) Debug.Log("GridObjectManager.UpdateBoardData() called.");
+
+        for (int i = 0; i < gridObjectsInPlay.Count; i++)
+        {
+            KeyValuePair<GridObject, BoardUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
+            
+            if (kvp.Key.CurrentMode == GridObject.Mode.Spawn)
+                kvp.Key.SetGamePlayMode(GridObject.Mode.Play);
+
+            if (kvp.Value.eligibleForProcessing)
+            {
+                if (kvp.Value.isDeparting)
+                {
+                    // Handle departing
+                }
+
+                if (kvp.Value.collidesWith != null)
+                {
+                    GridObject iGridO = kvp.Key;
+                    //GridObject jGridO = gridObjectsInPlay[gridObjectsInPlay.IndexOf(step.collidesWith)];
+                    GridObject jGridO = kvp.Value.collidesWith;
+
+                    iGridO.TryGetComponent<Health>(out Health iHP);
+                    //iGridO.TryGetComponent<ContactDamage>(out ContactDamage iDamage);         // Might need, requires testing
+                    //jGridO.TryGetComponent<Health>(out Health jHP);                           // Might need, requires testing
+                    jGridO.TryGetComponent<ContactDamage>(out ContactDamage jDamage);
+
+                    iHP.SubtractHealth(jDamage.DamageAmount);
+                    //jHP.SubtractHealth(iDamage.DamageAmount);                                 // Might need, requires testing
+                }
+
+                // Eligible to move
+                //gridM.RemoveObjectFromGrid(gridObjectsInPlay[i].gameObject, step.gridOrigin);
+                gridM.RemoveObjectFromGrid(kvp.Key.gameObject, kvp.Value.gridOrigin);
+                //gridM.AddObjectToGrid(gridObjectsInPlay[i].gameObject, step.gridDestination);
+                gridM.AddObjectToGrid(kvp.Key.gameObject, kvp.Value.gridDestination);
+
+                if (!IsLocationInCollisionTracker(kvp.Value.gridDestination))
+                    collisions.Add(gridM.FindGridBlockByLocation(kvp.Value.gridDestination));
+            }
+        }
+    }
+    public void AnimateMovement()
+    {
+        for (int i = 0; i < gridObjectsInPlay.Count; i++)
+        {
+            KeyValuePair<GridObject, BoardUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
+            if (kvp.Value.isMoving)
+            {
+                StartCoroutine(AnimateMoveCoroutine(kvp.Key, kvp.Value.AnimateDistance, kvp.Value.WorldOrigin, kvp.Value.WorldDestination));
+            }
+        }
+    }
+    public void RemoveDepartedObjects()
+    {
+        for (int i = gridObjectsInPlay.Count; i < 0; i--)
+        {
+            KeyValuePair<GridObject, BoardUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
+            if (kvp.Value.isDeparting)
+            {
+                GameObject gameObjectToRemove = kvp.Key.gameObject;
+                Vector2Int gridPosition = kvp.Value.gridDestination;
+
+                gridM.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
+                gridObjectsInPlay.Remove(kvp.Key);
+
+                Destroy(gameObjectToRemove);
+            }
+        }
+    }
+    public void RemoveDeadObjectsAndDropLoot()
+    {
+        List<GridObject> objectsToDestroy = new List<GridObject>();
+        List<GridObject> lootToPutIntoPlay = new List<GridObject>();
+        List<Vector2Int> locationsToPlaceLoot = new List<Vector2Int>();
+
+        for (int i = gridObjectsInPlay.Count; i <= 0; i--)
+        {
+            KeyValuePair<GridObject, BoardUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
+            if (!kvp.Value.hasHealth)
+            {
+                objectsToDestroy.Add(kvp.Key);
+                if (kvp.Value.dropsLoot)
+                {
+                    LootHandler lh = kvp.Key.GetComponent<LootHandler>();
+                    GameObject go = lh.RequestLootDrop(kvp.Value.WorldOrigin);
+
+                    if (go != null)
+                    {
+                        lootToPutIntoPlay.Add(go.GetComponent<GridObject>());
+                        locationsToPlaceLoot.Add(kvp.Value.gridOrigin);
+                    }
+                }
+            }
+        }
+
+        /*  DEPRECATED - USED WHEN gridObjectsInPlay was <List>
+        for (int i = gridObjectsInPlay.Count; i <= 0; i--)
+        {
+            for (int j = 0; j < objectsToDestroy.Count; j++)
+            {
+                if (gridObjectsInPlay[i] == objectsToDestroy[j])
+                {
+                    GameObject dead = gridObjectsInPlay[i].gameObject;
+                    gridObjectsInPlay.RemoveAt(i);
+                    Destroy(dead);
+                }
+            }
+        }
+        */
+
+        for (int i = 0; i < objectsToDestroy.Count; i++)
+        {
+            gridObjectsInPlay.Remove(objectsToDestroy[i]);
+            Destroy(objectsToDestroy[i].gameObject);
+        }
+        objectsToDestroy.Clear();
+
+        for (int i = 0; i < lootToPutIntoPlay.Count; i++)
+        {
+            PlaceGridObjectInPlay(lootToPutIntoPlay[i], locationsToPlaceLoot[i]);
+        }
+    }
+    public void SpawnGridObjects()
+    {
         if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
         {
             if (spawnQueue.Count > 0)
@@ -549,154 +763,27 @@ public class GridObjectManager : MonoBehaviour
 
             ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         }
-
-        currentTick++;
-        ticksUntilNewSpawn--;
-
-        ProcessCollisionsOnGridBlock(potentialBlockCollisions);
-        CheckHealth(gridObjectsInPlay, 1.0f);
-
-        if (moveOccurredThisTick) delayTime += moveDurationSeconds;
-        if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
-        return delayTime;
     }
-    private List<GridBlock> MoveGridObjectsForTick(List<GridObject> objects)
-    {
-        /*  DESCRIPTION
-         *   - Process a list of GridObjects' data
-         *   - Determine one of the following behaviors for the current tick for each object:
-         *      ~ Depart the grid
-         *      ~ Simply move
-         *      ~ FlyBy another object
-         *      ~ Nothing
-         */
 
-        Vector2Int[] allOriginGridLocations = new Vector2Int[objects.Count];
-        Vector2Int[] allDestinationGridLocations = new Vector2Int[objects.Count];
-
-        List<GridBlock> collisionTestBlocks = new List<GridBlock>();        // Tracker for GridBlock collisions
-
-        for (int i = 0; i < objects.Count; i++)
-        {
-            allOriginGridLocations[i].Set(99, 99);
-            allDestinationGridLocations[i].Set(99, 99);
-        }
-
-        // Process movement data
-        for (int i = 0; i < objects.Count; i++)
-        {
-            if (objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
-            {
-                mp.OnTickUpdate();
-
-                if (mp.CanMoveThisTurn)
-                {
-                    Vector2Int currentLocation = gridM.WorldToGrid(objects[i].currentWorldLocation);
-                    Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
-
-                    if (gridM.CheckIfGridBlockInBounds(destinationLocation))
-                    {
-                        // Move or FlyBy
-                        allOriginGridLocations[i] = currentLocation;            // Maintain index of objects requiring additional processing
-                        allDestinationGridLocations[i] = destinationLocation;
-                    }
-                    else
-                    {
-                        // Depart
-                        objects[i].IsLeavingGrid = true;
-                    }
-                }
-            }
-        }
-
-        if (VerboseConsole) Debug.Log("Fly-By detection starting.");
-        for (int i = 0; i < allOriginGridLocations.Length; i++)
-        {
-            for (int j = 0; j < allDestinationGridLocations.Length; j++)
-            {
-                if (objects.Count > 1 && i == j)
-                {
-                    continue;
-                }
-                else if (allOriginGridLocations[i].x == 99)
-                {
-                    continue;
-                }
-                else if (allDestinationGridLocations[j].x == 99)
-                {
-                    continue;
-                }
-                else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
-                {
-                    Health hp = objects[i].GetComponent<Health>();
-                    hp.SubtractHealth(objects[j].GetComponent<ContactDamage>().DamageAmount);
-                }
-            }
-        }
-
-        if (VerboseConsole) Debug.Log("Moving GridObjects.");
-
-        for (int i = 0; i < objects.Count; i++)
-        {
-            if (objects[i].CurrentMode == GridObject.Mode.Spawn)
-            {
-                objects[i].SetGamePlayMode(GridObject.Mode.Play);
-            }
-
-            if (objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
-            {
-                Vector2Int currentLocation = gridM.WorldToGrid(objects[i].currentWorldLocation);
-                Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
-
-                if (mp.CanMoveThisTurn)
-                {
-                    if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
-                    {
-                        // Eligible to move
-                        gridM.RemoveObjectFromGrid(objects[i].gameObject, currentLocation);
-                        gridM.AddObjectToGrid(objects[i].gameObject, destinationLocation);
-
-                        objects[i].targetWorldLocation = gridM.GridToWorld(destinationLocation);
-
-                        if (!IsLocationInCollisionTracker(destinationLocation, collisionTestBlocks))
-                        {
-                            collisionTestBlocks.Add(gridM.FindGridBlockByLocation(destinationLocation));
-                        }
-
-                        StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
-                    }
-                    else
-                    {   // Departing
-                        objects[i].targetWorldLocation = gridM.GridToWorld(destinationLocation);
-
-                        StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
-                        StartCoroutine(GridObjectDestructionCoroutine(objects[i], 1.1f));
-                    }
-                }
-            }
-        }
-
-        return collisionTestBlocks;
-    }
-    private void ProcessCollisionsOnGridBlock(List<GridBlock> gridBlocks)
+    public void ResolveCollisionsOnGridBlocks()
     {
         // i = GridBlock iterator
         // j = objects on GridBlock iterator 1
         // k = objects on GridBlock iterator 2 (j+1)
 
-        for (int i = 0; i < gridBlocks.Count; i++)
+        for (int i = 0; i < collisions.Count; i++)
         {
-            if (gridBlocks[i].objectsOnBlock.Count > 1)
+            if (collisions[i].objectsOnBlock.Count > 1)
             {
-                Debug.Log("Processing collision on " + gridBlocks[i].location.ToString());
+                Debug.Log("Processing collision on " + collisions[i].location.ToString());
 
-                for (int j = 0; j < gridBlocks[i].objectsOnBlock.Count; j++)
+                for (int j = 0; j < collisions[i].objectsOnBlock.Count; j++)
                 {
-                    GridObject jGridObject = gridBlocks[i].objectsOnBlock[j].GetComponent<GridObject>();
+                    GridObject jGridObject = collisions[i].objectsOnBlock[j].GetComponent<GridObject>();
 
-                    for (int k = 1 + j; k < gridBlocks[i].objectsOnBlock.Count; k++)
+                    for (int k = 1 + j; k < collisions[i].objectsOnBlock.Count; k++)
                     {
-                        GridObject kGridObject = gridBlocks[i].objectsOnBlock[k].GetComponent<GridObject>();
+                        GridObject kGridObject = collisions[i].objectsOnBlock[k].GetComponent<GridObject>();
 
                         bool jIsPlayer = jGridObject is Player;
                         bool kIsPlayer = kGridObject is Player;
@@ -760,7 +847,7 @@ public class GridObjectManager : MonoBehaviour
                                     p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
                                     cs.ConsumeSupply();
                                 }
-                               
+
                                 if (kIsLoot)
                                     kHealth.SubtractHealth(kHealth.CurrentHP);
 
@@ -788,7 +875,7 @@ public class GridObjectManager : MonoBehaviour
                                     p.AcceptAmmo(cs.weaponType, cs.supplyAmount);
                                     cs.ConsumeSupply();
                                 }
-                              
+
                                 if (jIsLoot)
                                     jHealth.SubtractHealth(jHealth.CurrentHP);
 
@@ -873,7 +960,7 @@ public class GridObjectManager : MonoBehaviour
                                 {
                                     jHealth.AddHealth(kRepair.repairAmount);
                                     kRepair.ConsumeRepair();
-                                }                              
+                                }
                             }
                             else if (kIsPlayer)
                             {
@@ -887,7 +974,7 @@ public class GridObjectManager : MonoBehaviour
                                     if (successfulDock)
                                     {
                                         kHealth.AddHealth(jRepair.repairAmount);
-                                        
+
                                         s.BeginReplenish();
                                     }
                                 }
@@ -911,12 +998,14 @@ public class GridObjectManager : MonoBehaviour
                 }
             }
         }
+
+        collisions.Clear();
     }
-    private bool IsLocationInCollisionTracker(Vector2Int gridLocation, List<GridBlock> gridList)
+    bool IsLocationInCollisionTracker(Vector2Int gridLocation)
     {
-        for (int i = 0; i < gridList.Count; i++)
+        for (int i = 0; i < collisions.Count; i++)
         {
-            if (gridList[i].location != gridLocation)
+            if (collisions[i].location != gridLocation)
             {
                 continue;
             }
@@ -928,7 +1017,7 @@ public class GridObjectManager : MonoBehaviour
         }
         return false;
     }
-   
+
 
 
     // CHANGING LEVELS
@@ -940,8 +1029,10 @@ public class GridObjectManager : MonoBehaviour
         for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
         {
             //RemoveGridObjectFromPlay(gridObjectsInPlay[i]);
-            Destroy(gridObjectsInPlay[i].gameObject);
-            gridObjectsInPlay.RemoveAt(i);
+            GridObject gridObject = gridObjectsInPlay.Keys.ElementAt(i);
+            GameObject gameObject = gridObject.gameObject;
+            gridObjectsInPlay.Remove(gridObject);
+            Destroy(gameObject);
         }
 
         spawnQueue.Clear();
@@ -985,8 +1076,8 @@ public class GridObjectManager : MonoBehaviour
         }
 
         gridM.AddObjectToGrid(player.gameObject, arriveLocation);
-        player.currentWorldLocation = gridM.GridToWorld(arriveLocation);
-        player.targetWorldLocation = gridM.GridToWorld(arriveLocation);
+        //player.animateStartWorldLocation = gridM.GridToWorld(arriveLocation);
+        //player.animateEndWorldLocation = gridM.GridToWorld(arriveLocation);
         player.transform.position = new Vector3(arriveLocation.x, arriveLocation.y, 0);
 
         if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
@@ -994,24 +1085,7 @@ public class GridObjectManager : MonoBehaviour
 
 
     // UTILITY METHODS
-    private bool CheckHealth(List<GridObject> objects, float delayAnimation = 0.0f)
-    {
-        bool returnBool = false;
-        for (int i = objects.Count - 1; i > -1; i--)
-        {
-            Health hp = objects[i].GetComponent<Health>();
-            if (hp != null && !hp.HasHP)
-            {
-                StartCoroutine(DropLootCoroutine(objects[i], objects[i].targetWorldLocation, delayAnimation));    // <- objects[i].currentWorldLocation
-                StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayAnimation));
-                
-                returnBool = true;
-            }
-        }
-
-        return returnBool;
-    }
-    private int CalculateDamage(int gridBlockDistance, int baseDamage, float damageMultiplier, bool verboseConsole = false)
+    int CalculateDamage(int gridBlockDistance, int baseDamage, float damageMultiplier, bool verboseConsole = false)
     {
         /*  NOTE ON gridBlockDistance
         *    If the Player occupies a GridBlock that is immediately adjacent to the target, the distance = 0
@@ -1037,19 +1111,19 @@ public class GridObjectManager : MonoBehaviour
 
         return (int)newDamageValue;
     }
-    private void UpdateStations()
+    void UpdateStations()
     {
-        
+
         for (int i = 0; i < gridObjectsInPlay.Count; i++)
         {
-            if (gridObjectsInPlay[i] is Station)
+            if (gridObjectsInPlay.Keys.ElementAt(i) is Station)
             {
-                Station s = gridObjectsInPlay[i] as Station;
+                Station s = gridObjectsInPlay.Keys.ElementAt(i) as Station;
                 s.OnTickUpdate();
             }
         }
     }
-    private List<GridBlock> GetGridBlocksInPath(Vector2Int origin, Vector2Int direction)
+    List<GridBlock> GetGridBlocksInPath(Vector2Int origin, Vector2Int direction)
     {
         List<GridBlock> gridBlockPath = new List<GridBlock>();
         List<Vector2Int> gridLocations = gridM.GetGridPath(origin, direction);
@@ -1061,37 +1135,34 @@ public class GridObjectManager : MonoBehaviour
 
         return gridBlockPath;
     }
-    
+
 
     // ANIMATION & MOVEMENT COROUTINES
-    private IEnumerator GridObjectMovementCoroutine(GridObject objectToMove, float travelLength = 1.0f)
+    IEnumerator AnimateMoveCoroutine(GridObject objectToMove, float Distance, Vector3 startLocation, Vector3 endLocation)
     {
+        gridObjectAnimationInProgress.Add(objectToMove);
+
         float startTime = Time.time;
         float percentTraveled = 0.0f;
 
-        while (percentTraveled <= travelLength)
-        {
-            float traveled = (Time.time - startTime) * 1.0f;
-            percentTraveled = traveled / objectToMove.Distance;
-            objectToMove.transform.position = Vector3.Lerp(objectToMove.currentWorldLocation, objectToMove.targetWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+        Debug.LogFormat("Instance of ID of object being move animated: {0}", objectToMove.transform.GetInstanceID().ToString());
 
+        while (percentTraveled <= 1.0)
+        {
+            Debug.LogFormat("Beginning to move {0} from {1} to {2}.", objectToMove.gameObject.name, startLocation.ToString(), endLocation.ToString());
+            
+            float traveled = (Time.time - startTime) * 1.0f;
+            percentTraveled = traveled / Distance;
+            objectToMove.transform.position = Vector3.Lerp(startLocation, endLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+
+            Debug.LogFormat("{0} has traveled {1}% of the distance.", objectToMove.gameObject.name, percentTraveled.ToString());
             yield return null;
         }
 
-        objectToMove.currentWorldLocation = objectToMove.targetWorldLocation;
-        //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
+        gridObjectAnimationInProgress.Remove(objectToMove);
+        Debug.Log("Move animation complete.");
     }
-    private IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f) 
-    {
-        if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");
-        yield return new WaitForSeconds(delay);
-        RemoveGridObjectFromPlay(objectToDestroy);
-        Destroy(objectToDestroy.gameObject);
-        if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine ended.");
-
-        //TODO: Spawn explosion here
-    }
-    private IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
+    IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
     {
         LootHandler lh = gridObject.gameObject.GetComponent<LootHandler>();
         if (lh != null)
@@ -1104,7 +1175,8 @@ public class GridObjectManager : MonoBehaviour
                 renderer.enabled = false;
 
                 gridM.AddObjectToGrid(lootObjectToDrop, gridM.WorldToGrid(dropLocation));
-                gridObjectsInPlay.Add(lootObjectToDrop.GetComponent<Loot>());
+                //gridObjectsInPlay.Add(lootObjectToDrop.GetComponent<Loot>());
+                gridObjectsInPlay.Add(gridObject, null);
 
                 Rotator lootRotator = lootObjectToDrop.GetComponent<Rotator>();
                 lootRotator.enabled = true;
@@ -1116,54 +1188,321 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 }
-
 public enum GridObjectType
 {
     Hazard = 1,
     Phenomena = 2,
     Station = 3,
     Loot = 4
+};
+
+
+// METHODS UNDERGOING DEPRECATION
+/*
+public void RemoveGridObjectFromPlay(GridObject objectToRemove, bool removeFromGrid = true)
+{
+    GameObject gameObjectToRemove = objectToRemove.gameObject;
+    Vector2Int gridPosition = gridM.FindGridBlockContainingObject(gameObjectToRemove).location;
+
+    if (removeFromGrid) gridM.RemoveObjectFromGrid(gameObjectToRemove, gridPosition);
+    gridObjectsInPlay.Remove(objectToRemove);
 }
+*/
+/*
+public float OnManagerTickUpdate()
+{
+    bool moveOccurredThisTick = true;
+    float moveDurationSeconds = 1.0f;
+
+    bool gridObjectDestroyedThisTick = false;
+    float destroyDurationSeconds = 2.0f;
+
+    float delayTime = 0.0f;
+
+    List<GridObject> objectProcessing = new List<GridObject>();
+    List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
+
+    CheckHealth(gridObjectsInPlay);
+    UpdateStations();
+
+    // Process GridObject behavior for current Tick
+    for (int i = 0; i < gridObjectsInPlay.Count; i++)
+    {
+        if (gridObjectsInPlay[i].ProcessingPhase == GamePhase.Manager)
+        {
+            Health hp = gridObjectsInPlay[i].GetComponent<Health>();
+
+            if (hp != null && hp.HasHP)
+                objectProcessing.Add(gridObjectsInPlay[i]);
+        }
+
+    }
+    potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
+
+    gridObjectDestroyedThisTick = CheckHealth(gridObjectsInPlay, 1.0f);
+
+
+    // SPAWNING
+    if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
+    {
+        if (spawnQueue.Count > 0)
+        {
+            CreateGridObject(spawnQueue.Dequeue());
+        }
+        else
+        {
+            if (Random.Range(0, 10) > 7)    // 20% chance
+            {
+                AddSpawnStep(SelectGridObject(GridObjectType.Loot));
+                CreateGridObject(spawnQueue.Dequeue());
+            }
+            else
+            {
+                AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
+                CreateGridObject(spawnQueue.Dequeue());
+            }
+        }
+
+        ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
+    }
+
+    currentTick++;
+    ticksUntilNewSpawn--;
+
+    ProcessCollisionsOnGridBlock(potentialBlockCollisions);
+    CheckHealth(gridObjectsInPlay, 1.0f);
+
+    if (moveOccurredThisTick) delayTime += moveDurationSeconds;
+    if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
+    return delayTime;
+}
+*/
+/*
+public bool CheckHealth(List<GridObject> objects, float delayAnimation = 0.0f)
+{
+    bool returnBool = false;
+    for (int i = objects.Count - 1; i > -1; i--)
+    {
+        Health hp = objects[i].GetComponent<Health>();
+        if (hp != null && !hp.HasHP)
+        {
+            StartCoroutine(DropLootCoroutine(objects[i], objects[i].animateEndWorldLocation, delayAnimation));    // <- objects[i].currentWorldLocation
+            StartCoroutine(GridObjectDestructionCoroutine(objects[i], delayAnimation));
+
+            returnBool = true;
+        }
+    }
+
+    return returnBool;
+}
+*/
+/*
+void MoveGridObjectsForTick(List<GridObject> objects)
+{
+    /*  DESCRIPTION
+     *   - Process a list of GridObjects' data
+     *   - Determine one of the following behaviors for the current tick for each object:
+     *      ~ Depart the grid
+     *      ~ Simply move
+     *      ~ FlyBy another object
+     *      ~ Nothing
+     *
+
+    Vector2Int[] allOriginGridLocations = new Vector2Int[objects.Count];
+    Vector2Int[] allDestinationGridLocations = new Vector2Int[objects.Count];
+
+    List<GridBlock> collisionTestBlocks = new List<GridBlock>();        // Tracker for GridBlock collisions
+
+    for (int i = 0; i < objects.Count; i++)
+    {
+        allOriginGridLocations[i].Set(99, 99);
+        allDestinationGridLocations[i].Set(99, 99);
+    }
+
+    // Process movement data
+    for (int i = 0; i < objects.Count; i++)
+    {
+        if (objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
+        {
+            mp.OnTickUpdate();
+
+            if (mp.CanMoveThisTurn)
+            {
+                Vector2Int currentLocation = gridM.WorldToGrid(objects[i].animateStartWorldLocation);
+                Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
+
+                if (gridM.CheckIfGridBlockInBounds(destinationLocation))
+                {
+                    // Move or FlyBy
+                    allOriginGridLocations[i] = currentLocation;            // Maintain index of objects requiring additional processing
+                    allDestinationGridLocations[i] = destinationLocation;
+                }
+                else
+                {
+                    // Depart
+                    objects[i].IsLeavingGrid = true;
+                }
+            }
+        }
+    }
+
+    if (VerboseConsole) Debug.Log("Fly-By detection starting.");
+    for (int i = 0; i < allOriginGridLocations.Length; i++)
+    {
+        for (int j = 0; j < allDestinationGridLocations.Length; j++)
+        {
+            if (objects.Count > 1 && i == j)
+            {
+                continue;
+            }
+            else if (allOriginGridLocations[i].x == 99)
+            {
+                continue;
+            }
+            else if (allDestinationGridLocations[j].x == 99)
+            {
+                continue;
+            }
+            else if (allOriginGridLocations[i] == allDestinationGridLocations[j] && allOriginGridLocations[j] == allDestinationGridLocations[i])
+            {
+                Health hp = objects[i].GetComponent<Health>();
+                hp.SubtractHealth(objects[j].GetComponent<ContactDamage>().DamageAmount);
+            }
+        }
+    }
+
+    if (VerboseConsole) Debug.Log("Moving GridObjects.");
+
+    for (int i = 0; i < objects.Count; i++)
+    {
+        if (objects[i].CurrentMode == GridObject.Mode.Spawn)
+        {
+            objects[i].SetGamePlayMode(GridObject.Mode.Play);
+        }
+
+        if (objects[i].TryGetComponent<MovePattern>(out MovePattern mp))
+        {
+            Vector2Int currentLocation = gridM.WorldToGrid(objects[i].animateStartWorldLocation);
+            Vector2Int destinationLocation = currentLocation + mp.DirectionOnGrid;
+
+            if (mp.CanMoveThisTurn)
+            {
+                if (objects[i].IsLeavingGrid == false && objects[i].GetComponent<Health>().HasHP)
+                {
+                    // Eligible to move
+                    gridM.RemoveObjectFromGrid(objects[i].gameObject, currentLocation);
+                    gridM.AddObjectToGrid(objects[i].gameObject, destinationLocation);
+
+                    objects[i].animateEndWorldLocation = gridM.GridToWorld(destinationLocation);
+
+                    if (!IsLocationInCollisionTracker(destinationLocation, collisionTestBlocks))
+                    {
+                        collisionTestBlocks.Add(gridM.FindGridBlockByLocation(destinationLocation));
+                    }
+
+                    StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
+                }
+                else
+                {   // Departing
+                    objects[i].animateEndWorldLocation = gridM.GridToWorld(destinationLocation);
+
+                    StartCoroutine(GridObjectMovementCoroutine(objects[i], 1.0f));
+                    StartCoroutine(GridObjectDestructionCoroutine(objects[i], 1.1f));
+                }
+            }
+        }
+    }
+
+    return collisionTestBlocks;
+}
+*/
+/*
+IEnumerator GridObjectMovementCoroutine(GridObject objectToMove, float travelLength = 1.0f)
+{
+    float startTime = Time.time;
+    float percentTraveled = 0.0f;
+
+    while (percentTraveled <= travelLength)
+    {
+        float traveled = (Time.time - startTime) * 1.0f;
+        percentTraveled = traveled / objectToMove.Distance;
+        objectToMove.transform.position = Vector3.Lerp(objectToMove.animateStartWorldLocation, objectToMove.animateEndWorldLocation, Mathf.SmoothStep(0, 1, percentTraveled));
+
+        yield return null;
+    }
+
+    objectToMove.animateStartWorldLocation = objectToMove.animateEndWorldLocation;
+    //StartCoroutine(DropLootCoroutine(objectToMove, objectToMove.currentWorldLocation));
+}
+*/
+/*
+IEnumerator GridObjectDestructionCoroutine(GridObject objectToDestroy, float delay = 0.0f)
+{
+    if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine called.");
+    yield return new WaitForSeconds(delay);
+    RemoveGridObjectFromPlay(objectToDestroy);
+    Destroy(objectToDestroy.gameObject);
+    if (VerboseConsole) Debug.Log("GridObject Destruction Coroutine ended.");
+
+    //TODO: Spawn explosion here
+}
+*/
+/*
+public void OnPlayerMove()
+{
+    List<GridObject> objectProcessing = new List<GridObject>();
+    List<GridBlock> potentialBlockCollisions = new List<GridBlock>();
+
+    for (int i = 0; i < gridObjectsInPlay.Count; i++)
+    {
+        //if (gridObjectsInPlay[i].processingPhase == currentGameState)
+            objectProcessing.Add(gridObjectsInPlay[i]);
+    }
+    player.OnTickUpdate();
+    //potentialBlockCollisions = MoveGridObjectsForTick(objectProcessing);
+    //ProcessCollisionsOnGridBlock(potentialBlockCollisions);
+}
+*/
 
 /*
-     
-  
-        List<AnimateTickBehaviors> tickBehaviors;
-
-        IEnumerator AnimateTick() {
-
-            // ...
 
 
-            // Start of hazards moving
-            // do anything that needs to happen at this timestamp
+    List<AnimateTickBehaviors> tickBehaviors;
 
-            return waitForSeconds(hazardTimeDelay * 0.5);
+    IEnumerator AnimateTick() {
 
-            // do anything that needs to happen at halfway point (flybys)
-            DoAnimateTickBehavior(halfway);
+        // ...
 
 
-            return waitForSeconds(hazardTimeDelay * 0.5); 
+        // Start of hazards moving
+        // do anything that needs to happen at this timestamp
+
+        return waitForSeconds(hazardTimeDelay * 0.5);
+
+        // do anything that needs to happen at halfway point (flybys)
+        DoAnimateTickBehavior(halfway);
 
 
-            DoAnimateTickBehavior(end);
+        return waitForSeconds(hazardTimeDelay * 0.5); 
 
-        }
 
-        void DoAnimateTickBehavior(Phase phase) {
+        DoAnimateTickBehavior(end);
 
-        }
-
-    public class AnimateTickBehavior
-    {
-        public enum ExecutionPhase { StartOfHazardPhase, HalfwayHazardPhase, EndOfHazardPhase}
-        public enum BehaviorType { Destroy, DropLoot }
-
-        public GridObject gridObject;
-        public ExecutionPhase executionPhase;
-        public BehaviorType behaviorType;
     }
+
+    void DoAnimateTickBehavior(Phase phase) {
+
+    }
+
+public class AnimateTickBehavior
+{
+    public enum ExecutionPhase { StartOfHazardPhase, HalfwayHazardPhase, EndOfHazardPhase}
+    public enum BehaviorType { Destroy, DropLoot }
+
+    public GridObject gridObject;
+    public ExecutionPhase executionPhase;
+    public BehaviorType behaviorType;
+}
 */
 /*
 public float OnTickUpdate(GamePhase phase)  #OnTickUpdate_OLD

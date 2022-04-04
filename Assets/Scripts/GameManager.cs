@@ -30,13 +30,16 @@ public class GameManager : MonoBehaviour
     GamePhase mainGamePhase;
 
     //  #FIELDS
-    [HideInInspector] public enum GameState { Player, Board, Animate};
+    [HideInInspector] public enum GameState { Launch, Player, Board};
     StateManager <GameState> stateManager = new StateManager<GameState>();
 
     Module.UsageData previousModuleData;
     bool activateModuleReceived = false;
     bool playerMoveReceived = false;
     bool endTurnReceived = false;
+    bool playerTurnFulfilled = false;
+
+    bool boardUpdateAnimationComplete = false;
 
 
     //  #REFERENCES
@@ -76,6 +79,17 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
+        stateManager.SwitchState(GameState.Launch);
+        stateManager.SwitchState(GameState.Player);
+    }
+    private void Update()
+    {
+        stateManager.UpdateState();
+    }
+
+    //  #METHODS
+    void LaunchEnter()
+    {
         if (customSpawnSequence.Length > 0)
         {
             for (int i = 0; i < customSpawnSequence.Length; i++)
@@ -83,6 +97,7 @@ public class GameManager : MonoBehaviour
                 gridObjectM.insertSpawnSequences.Add(customSpawnSequence[i].Clone());
             }
         }
+
 
         // Setup level characteristics for GridManager
         if (overrideLevelData)
@@ -97,6 +112,7 @@ public class GameManager : MonoBehaviour
             gridM.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
         }
         gridM.Init();
+
 
         // Setup Player
         Vector2Int startLocation = new Vector2Int(0, 0);
@@ -113,19 +129,16 @@ public class GameManager : MonoBehaviour
         }
         gridM.AddObjectToGrid(playerObject, startLocation);
         player = playerObject.GetComponent<Player>();
-        player.currentWorldLocation = gridM.GridToWorld(startLocation);
-        player.targetWorldLocation = gridM.GridToWorld(startLocation);
-
         if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
-
         player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
+
 
         // Initialize Game Object Manager now that player exists
         gridObjectM.Init();
         gridObjectM.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
         gridObjectM.InsertManualSpawnSequence();
 
-        
+
         pHUD = GameObject.FindGameObjectWithTag("Player HUD").GetComponent<PlayerHUD>();
         if (pHUD != null)
         {
@@ -137,72 +150,95 @@ public class GameManager : MonoBehaviour
             Debug.Log("GameManager failed to locate PlayerHUD.");
         }
     }
-    private void Update()
-    {
-        stateManager.UpdateState();
-    }
-
-    //  #METHODS
 
     void PlayerEnter()
     {
-
+        gridObjectM.currentGamePhase = GamePhase.Player;
+        playerTurnFulfilled = false;
+        inputM.SetInputActive(true);
     }
 
     void PlayerUpdate()
     {
+        // Could potentially put movement stuff in here
         if (activateModuleReceived)
         {
+            activateModuleReceived = false;
+            
             Module.UsageData uData = player.UseCurrentModule();
             if (uData != null)
             {
                 gridObjectM.OnPlayerActivateModule(uData);
                 pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
             }
-            activateModuleReceived = false;
+           
+            gridObjectM.ResolveCollisionsOnGridBlocks();
+            gridObjectM.RemoveDeadObjectsAndDropLoot();
         }
         
 
         if (playerMoveReceived)
         {
-            inputM.InputActive = false;
-            gridObjectM.OnPlayerMove();
-            stateManager.SwitchState(GameState.Animate);
             playerMoveReceived = false;
+            playerTurnFulfilled = true;
+            inputM.SetInputActive(false);
+            gridObjectM.RefreshBoardUpdateSteps();
+            gridObjectM.FillBoardUpdateSteps();
+            gridObjectM.ExecuteBoardUpdate();
+            gridObjectM.AnimateMovement();
         }
-        
+
+        if (playerTurnFulfilled && gridObjectM.IsAnimationComplete)
+            stateManager.SwitchState(GameState.Board);
     }   
     
     void PlayerExit()
     {
-
+        //gridObjectM.AnimateMovement();
     }
 
     void BoardEnter()
     {
+        gridObjectM.currentGamePhase = GamePhase.Board;
+        gridObjectM.RefreshBoardUpdateSteps();
+        gridObjectM.RemoveDeadObjectsAndDropLoot();
+        gridObjectM.FillBoardUpdateSteps();
 
+        gridObjectM.ExecuteBoardUpdate();
+        gridObjectM.AnimateMovement();
+        //stateManager.SwitchState(GameState.Animate);
     }   
     
     void BoardUpdate()
     {
+        /*
+        gridObjectM.ExecuteBoardUpdate();
+        gridObjectM.ResolveCollisionsOnGridBlocks();
+        gridObjectM.AnimateMovement();
+        stateManager.SwitchState(GameState.Animate);
+        */
+        //        gridObjectM.RefreshBoardUpdateSteps(checkHealth: true, checkMove: false, checkLoot: true);
+        //        gridObjectM.RemoveDeadObjectsAndDropLoot();   
 
+        // Move all of this into BoardEnter
+        // Coroutines will start in BoardEnter()
+        // In BoardUpdate, wait for indication that animations are complete
+        // That way, you don't need an animate state at all
+        if (gridObjectM.IsAnimationComplete)
+            stateManager.SwitchState(GameState.Player);
     }
 
     void BoardExit()
     {
-
-    }
-
-    void AnimateEnter()
-    {
-
+        gridObjectM.ResolveCollisionsOnGridBlocks();
+        gridObjectM.RemoveDeadObjectsAndDropLoot();
+        gridObjectM.SpawnGridObjects();
     }
 
     void ActivateModule()
     {
         activateModuleReceived = true;
     }
-
 
 
     // old
@@ -229,19 +265,11 @@ public class GameManager : MonoBehaviour
     }
     private IEnumerator OnTickCoroutine(GamePhase phase)
     {
-        /*  NOTES
-         * 
-         *   - Need to give GameManager the ability to control GamePhase
-         *   - GamePhase needs to be long enough for Player to activate all modules
-         *   - Each module activation will require a call to GOM.OnTickUpdate
-         * 
-         */
-
         if (phase == GamePhase.Player)
         {
             if (player.IsAlive)
             {
-                inputM.InputActive = true;
+                inputM.SetInputActive(true);
                 // Pause the game here so modules can be activated
                 yield return null;
 
@@ -274,12 +302,12 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (phase == GamePhase.Manager)
+        if (phase == GamePhase.Board)
         {
             if (player.IsAlive)
             {
-                float hazardDelay = gridObjectM.OnManagerTickUpdate();
-                yield return new WaitForSeconds(hazardDelay);
+                //float hazardDelay = gridObjectM.OnManagerTickUpdate();
+                //yield return new WaitForSeconds(hazardDelay);
 
                 CurrentTick += 1;
 
@@ -287,7 +315,7 @@ public class GameManager : MonoBehaviour
                 UpdateGamePhase();
                 OnTick();
                 inputM.EndTurnButtonPressed += OnTick;
-                inputM.InputActive = true;
+                inputM.SetInputActive(true);
             }
             else
             {
@@ -330,14 +358,14 @@ public class GameManager : MonoBehaviour
     private void UpdateGamePhase()
     {
         if (mainGamePhase == GamePhase.Player)
-            mainGamePhase = GamePhase.Manager;
-        else if (mainGamePhase == GamePhase.Manager)
+            mainGamePhase = GamePhase.Board;
+        else if (mainGamePhase == GamePhase.Board)
             mainGamePhase = GamePhase.Player;
     }
     private void EndPlayerTurn()
     {
         StopCoroutine(OnTickCoroutine(GamePhase.Player));
-        mainGamePhase = GamePhase.Manager;
+        mainGamePhase = GamePhase.Board;
         OnTick();
     }
    
@@ -359,5 +387,5 @@ public class GameManager : MonoBehaviour
 public enum GamePhase
 {
     Player = 1,
-    Manager = 2
+    Board = 2
 }

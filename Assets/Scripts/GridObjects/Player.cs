@@ -6,9 +6,9 @@ using Sirenix.OdinInspector;
 public class Player : GridObject
 {
     //  #INSPECTOR
-    [BoxGroup("PLAYER CONFIGURATION", centerLabel: true)]
+    [BoxGroup("PLAYER PROPERTIES", centerLabel: true)]
     //[TitleGroup("PLAYER CONFIGURATION/MODULES")][SerializeField] private GameObject[] moduleInventory;
-    [TitleGroup("PLAYER CONFIGURATION/MODULES")] [SerializeField] private GameObject[] weaponObjects;
+    [TitleGroup("PLAYER PROPERTIES/MODULES")] [SerializeField] private GameObject[] weaponObjects;
 
     [BoxGroup("PLAYER COMMANDS")]
     [Button]
