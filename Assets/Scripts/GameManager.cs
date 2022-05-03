@@ -10,23 +10,8 @@ public class GameManager : MonoBehaviour
 
     [TitleGroup("CUSTOM SPAWN SEQUENCES")]
     [SerializeField] bool overrideSpawnSequence;
-    [ShowIf("overrideSpawnSequence")] [SerializeField] SpawnSequence[] customSpawnSequence;
+    [ShowIf("overrideSpawnSequence")] [SerializeField] SpawnWave[] customSpawnSequence;
 
-    [TitleGroup("LEVEL MANAGEMENT")]
-    [SerializeField] LevelData levelData;
-    [SerializeField] bool overrideLevelData;
-    [ShowIf("overrideLevelData")] [SerializeField] int inspectorGridWidth;
-    [ShowIf("overrideLevelData")] [SerializeField] int inspectorGridHeight;
-
-    public int CurrentLevel
-    {
-        get { return currentLevel; }
-    }
-    int currentLevel = 0;
-    int LevelDataIndex
-    {
-        get { return currentLevel - 1; }
-    }
     GamePhase mainGamePhase;
 
     //  #FIELDS
@@ -38,15 +23,17 @@ public class GameManager : MonoBehaviour
     bool playerMoveReceived = false;
     bool endTurnReceived = false;
     bool playerTurnFulfilled = false;
+    bool gridCurrentlyAnimating = false;
 
-    bool boardUpdateAnimationComplete = false;
-
-
+    public System.Action EndOfTurn;
+    
     //  #REFERENCES
     GameDisplay display;
     InputManager inputM;
     GridObjectManager gridObjectM;
     GridManager gridM;
+    SpawnManager spawnM;
+    LevelManager levelM;
     PlayerHUD pHUD;    
     Player player;
     DebugHUD debugHUD;
@@ -58,12 +45,12 @@ public class GameManager : MonoBehaviour
     {
         gridM = GetComponent<GridManager>();
         gridObjectM = GetComponent<GridObjectManager>();
+        spawnM = GetComponent<SpawnManager>();
+        levelM = GetComponent<LevelManager>();
         debugHUD = GameObject.FindGameObjectWithTag("Debug HUD").GetComponent<DebugHUD>();
         display = GameObject.FindGameObjectWithTag("Game Display").GetComponent<GameDisplay>();
 
         stateManager.RegisterStateMethods(this, true);
-
-        if (currentLevel == 0) currentLevel = 1;
 
         inputM = FindObjectOfType<InputManager>();
         inputM.ActivateModuleButtonPressed += ActivateModule;
@@ -90,6 +77,8 @@ public class GameManager : MonoBehaviour
     //  #METHODS
     void LaunchEnter()
     {
+        LevelRecord level = levelM.CurrentLevelData;
+        /*
         if (customSpawnSequence.Length > 0)
         {
             for (int i = 0; i < customSpawnSequence.Length; i++)
@@ -97,22 +86,18 @@ public class GameManager : MonoBehaviour
                 gridObjectM.insertSpawnSequences.Add(customSpawnSequence[i].Clone());
             }
         }
+        */
 
-
-        // Setup level characteristics for GridManager
-        if (overrideLevelData)
+        if (spawnM.CustomSpawnSequenceExist)
         {
-            LevelData newLevelData = LevelData.CreateInstance<LevelData>();
-            newLevelData.AddRowData(inspectorGridWidth, inspectorGridHeight, 4, 10, 1);
+            
+        }
 
-            gridM.ReceiveLevelData(newLevelData.LevelTable[0]);
-        }
-        else
-        {
-            gridM.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
-        }
+        
+        // Setup level characteristics for GridManager        
+        gridM.ReceiveLevelData(level);
         gridM.Init();
-
+        
 
         // Setup Player
         Vector2Int startLocation = new Vector2Int(0, 0);
@@ -130,12 +115,13 @@ public class GameManager : MonoBehaviour
         gridM.AddObjectToGrid(playerObject, startLocation);
         player = playerObject.GetComponent<Player>();
         if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
-        player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
+        player.NextLevel(levelM.CurrentLevelData.jumpFuelAmount);
+        
 
 
         // Initialize Game Object Manager now that player exists
         gridObjectM.Init();
-        gridObjectM.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
+        gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
         gridObjectM.InsertManualSpawnSequence();
 
 
@@ -143,7 +129,7 @@ public class GameManager : MonoBehaviour
         if (pHUD != null)
         {
             Debug.Log("GameManager successfully located PlayerHUD.");
-            pHUD.Init(player.GetEquippedModules, levelData.LevelTable[LevelDataIndex].jumpFuelAmount, player.GetComponent<Health>().MaxHP);
+            pHUD.Init(player.GetEquippedModules, level.jumpFuelAmount, player.GetComponent<Health>().MaxHP);
         }
         else
         {
@@ -169,11 +155,20 @@ public class GameManager : MonoBehaviour
             if (uData != null)
             {
                 gridObjectM.OnPlayerActivateModule(uData);
+                if (uData.doesPlaceObjectInWorld)
+                {
+                    gridObjectM.NewGridUpdateSteps(includePlayer: false);
+                    gridObjectM.LoadGridUpdateSteps();
+                    gridObjectM.RunGridUpdate();
+                    gridObjectM.AnimateMovement();
+                    gridCurrentlyAnimating = true;
+                }
                 pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
             }
-           
-            gridObjectM.ResolveCollisionsOnGridBlocks();
-            gridObjectM.RemoveDeadObjectsAndDropLoot();
+            else
+            {
+                Debug.Log("No uData available for current module.");
+            }
         }
         
 
@@ -182,10 +177,27 @@ public class GameManager : MonoBehaviour
             playerMoveReceived = false;
             playerTurnFulfilled = true;
             inputM.SetInputActive(false);
-            gridObjectM.RefreshBoardUpdateSteps();
-            gridObjectM.FillBoardUpdateSteps();
-            gridObjectM.ExecuteBoardUpdate();
+            gridObjectM.NewGridUpdateSteps();
+            gridObjectM.LoadGridUpdateSteps();
+            gridObjectM.RunGridUpdate();
             gridObjectM.AnimateMovement();
+            gridCurrentlyAnimating = true;
+        }
+
+        if (endTurnReceived)
+        {
+            endTurnReceived = false;
+        }
+
+        if (gridCurrentlyAnimating)
+        {
+            if (gridObjectM.IsAnimationComplete)
+            {
+                gridObjectM.ResolveCollisionsOnGridBlocks();
+                gridObjectM.NewGridUpdateSteps(checkMove: false, checkLoot: false);
+                gridObjectM.RemoveDeadObjectsAndDropLoot();
+                gridCurrentlyAnimating = false;
+            }
         }
 
         if (playerTurnFulfilled && gridObjectM.IsAnimationComplete)
@@ -195,35 +207,29 @@ public class GameManager : MonoBehaviour
     void PlayerExit()
     {
         //gridObjectM.AnimateMovement();
+        gridObjectM.ResolveCollisionsOnGridBlocks();
+        gridObjectM.NewGridUpdateSteps(checkHealth: true, checkMove: false, checkLoot: true);
+        gridObjectM.LoadGridUpdateSteps();
+        gridObjectM.RemoveDeadObjectsAndDropLoot();
+        
+        if (EndOfTurn != null)
+            EndOfTurn();
     }
 
     void BoardEnter()
     {
         gridObjectM.currentGamePhase = GamePhase.Board;
-        gridObjectM.RefreshBoardUpdateSteps();
+        gridObjectM.NewGridUpdateSteps();
         gridObjectM.RemoveDeadObjectsAndDropLoot();
-        gridObjectM.FillBoardUpdateSteps();
+        gridObjectM.LoadGridUpdateSteps();
 
-        gridObjectM.ExecuteBoardUpdate();
+        gridObjectM.RunGridUpdate();
         gridObjectM.AnimateMovement();
         //stateManager.SwitchState(GameState.Animate);
     }   
     
     void BoardUpdate()
     {
-        /*
-        gridObjectM.ExecuteBoardUpdate();
-        gridObjectM.ResolveCollisionsOnGridBlocks();
-        gridObjectM.AnimateMovement();
-        stateManager.SwitchState(GameState.Animate);
-        */
-        //        gridObjectM.RefreshBoardUpdateSteps(checkHealth: true, checkMove: false, checkLoot: true);
-        //        gridObjectM.RemoveDeadObjectsAndDropLoot();   
-
-        // Move all of this into BoardEnter
-        // Coroutines will start in BoardEnter()
-        // In BoardUpdate, wait for indication that animations are complete
-        // That way, you don't need an animate state at all
         if (gridObjectM.IsAnimationComplete)
             stateManager.SwitchState(GameState.Player);
     }
@@ -231,7 +237,8 @@ public class GameManager : MonoBehaviour
     void BoardExit()
     {
         gridObjectM.ResolveCollisionsOnGridBlocks();
-        gridObjectM.RemoveDeadObjectsAndDropLoot();
+        gridObjectM.NewGridUpdateSteps(checkMove: false, checkHealth: true, checkLoot: true);
+        gridObjectM.RemoveDeadObjectsAndDropLoot(); //Is a missile not being removed because of eligibleForProcessing?
         gridObjectM.SpawnGridObjects();
     }
 
@@ -241,95 +248,6 @@ public class GameManager : MonoBehaviour
     }
 
 
-    // old
-    private void OnTick()
-    {
-        /*  NOTE
-         *  So I think that this method will need to be called when the Player ends the turn.
-         *  Based on what the mainGamePhase value is
-         */
-
-        /*
-        if (mainGamePhase == GamePhase.Player)
-        {
-            StopCoroutine(OnTickCoroutine(GamePhase.Manager));
-            StartCoroutine(OnTickCoroutine(GamePhase.Player));
-        }
-        else if (mainGamePhase == GamePhase.Manager)
-        {
-            //StopCoroutine(OnTickCoroutine(GamePhase.Player));
-            StartCoroutine(OnTickCoroutine(GamePhase.Manager));
-        }
-        */
-        StartCoroutine(OnTickCoroutine(mainGamePhase));
-    }
-    private IEnumerator OnTickCoroutine(GamePhase phase)
-    {
-        if (phase == GamePhase.Player)
-        {
-            if (player.IsAlive)
-            {
-                inputM.SetInputActive(true);
-                // Pause the game here so modules can be activated
-                yield return null;
-
-                /*
-                //gom.OnTickUpdate(GamePhase.Player);
-
-                float delay = player.OnTickUpdate();
-                
-                
-                yield return new WaitForSeconds(delay);
-                
-                if (CheckWinCondition())
-                {
-                    currentLevel++;
-                    gom.ClearLevel();
-                    gm.ReceiveLevelData(levelData.LevelTable[LevelDataIndex]);
-                    gm.NextLevel();   // Don't adjust index
-                    gom.NextLevel(levelData.LevelTable[LevelDataIndex].numberOfPhenomenaToSpawn, levelData.LevelTable[LevelDataIndex].numberOfStationsToSpawn);
-                    gom.ArrivePlayer();
-                    player.NextLevel(levelData.LevelTable[LevelDataIndex].jumpFuelAmount);
-                }
-                //player.OnPlayerAddHazard -= OnAddHazard;
-            }
-            else
-            {
-                EndGame();
-            }
-
-            */
-            }
-        }
-
-        if (phase == GamePhase.Board)
-        {
-            if (player.IsAlive)
-            {
-                //float hazardDelay = gridObjectM.OnManagerTickUpdate();
-                //yield return new WaitForSeconds(hazardDelay);
-
-                CurrentTick += 1;
-
-                //player.InputActive = true;
-                UpdateGamePhase();
-                OnTick();
-                inputM.EndTurnButtonPressed += OnTick;
-                inputM.SetInputActive(true);
-            }
-            else
-            {
-                EndGame();
-            }
-
-            // Debug Options
-            if (VerboseConsole)
-            {
-                debugHUD.IncrementTickValue(CurrentTick);
-            }
-            //yield return null;
-        }
-    }
     
     private void OnPlayerActivateModule(Module.UsageData data)
     {
@@ -352,27 +270,15 @@ public class GameManager : MonoBehaviour
     {
         playerMoveReceived = true;
     }
-
-
-
-    private void UpdateGamePhase()
-    {
-        if (mainGamePhase == GamePhase.Player)
-            mainGamePhase = GamePhase.Board;
-        else if (mainGamePhase == GamePhase.Board)
-            mainGamePhase = GamePhase.Player;
-    }
     private void EndPlayerTurn()
     {
-        StopCoroutine(OnTickCoroutine(GamePhase.Player));
-        mainGamePhase = GamePhase.Board;
-        OnTick();
+        endTurnReceived = true;
     }
    
         
     private bool CheckWinCondition()
     {
-        if (player.CurrentJumpFuel >= levelData.LevelTable[LevelDataIndex].jumpFuelAmount)
+        if (player.CurrentJumpFuel >= levelM.CurrentLevelData.jumpFuelAmount)   // #OPTIMIZE
             return true;
         else
             return false;

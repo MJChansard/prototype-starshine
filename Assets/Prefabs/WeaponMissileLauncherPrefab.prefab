@@ -43,8 +43,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405219faf7726354a85874d8e9eac9f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDamage: 60
-  weaponAmmunition: 5
+  weaponType: 2
+  baseDamage: 0
+  gridDistanceDamageModifier: 0
   doesPenetrate: 0
-  onGridWeaponPrefab: {fileID: 0}
-  weaponIcon: {fileID: 21300000, guid: d86d5e56d3476d74da992c4b0f90b9db, type: 3}
+  requiresGridPlacement: 1
+  weaponActiveIcon: {fileID: 21300000, guid: a83d658d001f1d847bfebd8055ef7c03, type: 3}
+  weaponInactiveIcon: {fileID: 21300000, guid: f026481ed9cb7294a84905720570cb83, type: 3}
+  onGridWeaponPrefab: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
+    type: 3}
+  startingAmmunition: 2
+  maxAmmunition: 6
+  currentAmmunition: 2

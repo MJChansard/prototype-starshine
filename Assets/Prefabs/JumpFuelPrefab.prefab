@@ -94,18 +94,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66c880742d93367499fa03083dabb7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ProcessingPhase: 0
+  processingPhase: 2
+  RequiresSpawnWarning: 0
   spawnWarningObject: {fileID: 0}
   spawnRules:
     spawnRegion: 0
+    spawnCategory: 0
     avoidHazardPaths: 0
-    avoidAdjacentToPlayer: 0
     requiresOrientation: 0
+    avoidAdjacentToPlayer: 0
     avoidShareSpawnLocation: 0
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
-  moveSpeed: 0
+  animateMoveSpeed: 0
   IsLeavingGrid: 0
+  spawnBorder: 
 --- !u!114 &5496093553973511339
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,7 +4,7 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 
 [CreateAssetMenu(fileName = "SpawnStep", menuName = "Scriptable Objects/Spawn Step", order = 1)]
-public class SpawnStep : ScriptableObject
+public class SpawnRecord : ScriptableObject
 {
     [AssetSelector(Paths = "Assets/Prefabs/GridObjects")]
     public GridObject gridObject;

@@ -10,6 +10,8 @@ TagManager:
   - Debug HUD
   - Game Display
   - Phenomena
+  - Modules HUD
+  - Player HUD
   layers:
   - Default
   - TransparentFX

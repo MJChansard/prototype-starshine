@@ -4832,8 +4832,11 @@ MonoBehaviour:
   weaponType: 1
   baseDamage: 20
   gridDistanceDamageModifier: 0.5
-  weaponAmmunition: 10
   doesPenetrate: 0
   requiresGridPlacement: 0
-  weaponIcon: {fileID: 21300000, guid: f20e6168f8627b5498fee7ee23409a26, type: 3}
+  weaponActiveIcon: {fileID: 21300000, guid: cdc9eaaca10828f419512aae6745da50, type: 3}
+  weaponInactiveIcon: {fileID: 21300000, guid: b14863a2fb16fd14987a92d991f19490, type: 3}
   onGridWeaponPrefab: {fileID: 0}
+  startingAmmunition: 10
+  maxAmmunition: 20
+  currentAmmunition: 10

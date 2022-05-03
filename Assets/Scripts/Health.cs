@@ -1,37 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class Health : MonoBehaviour
 {
     public System.Action<int, int, float> OnHpAmountChange;
 
-    [SerializeField] private int maxHP;    
-    [SerializeField] private int currentHP;
+    [SerializeField] int maxHP;    
+    [ShowInInspector][DisplayAsString] int currentHP;
 
     public int MaxHP { get { return maxHP; } }
     public int CurrentHP { get { return currentHP; } }
-    public bool HasHP { get { return currentHP > 0; } }
-    
-        
-
-    public bool IsInvincible
+    public bool HasHP
     {
-        get {return isInvincible; }
+        get
+        {
+            if (currentHP > 0)
+                return true;
+            else if (IsInvincible)
+                return true;
+            else
+                return false;
+        } 
     }
-    private bool isInvincible;
+      
 
-
+    [ShowInInspector] public bool IsInvincible { get; private set; }
+    
     private void Awake()
     {
         currentHP = maxHP;
-        isInvincible = false;
     }
 
 
     public void SubtractHealth(int damageAmount)
     {
-        if (isInvincible == false && damageAmount > 0)
+        if (IsInvincible == false && damageAmount > 0)
         {
             currentHP -= damageAmount;
             OnHpAmountChange?.Invoke(currentHP, maxHP, 1.0f);
@@ -50,6 +55,6 @@ public class Health : MonoBehaviour
 
     public void ToggleInvincibility(bool toggle)
     {
-        isInvincible = toggle;
+        IsInvincible = toggle;
     }
 }

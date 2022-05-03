@@ -45,12 +45,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbef1dd55f58685458bd3fdc92b315d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDamage: 100
-  weaponAmmunition: 2
+  weaponType: 3
+  baseDamage: 0
+  gridDistanceDamageModifier: 0
   doesPenetrate: 1
+  requiresGridPlacement: 0
+  weaponActiveIcon: {fileID: 21300000, guid: 2eb13ed746c3f9f4eb837207e08eca0b, type: 3}
+  weaponInactiveIcon: {fileID: 21300000, guid: 36670f7746f98434983e31c0211a89e9, type: 3}
   onGridWeaponPrefab: {fileID: 0}
-  weaponIcon: {fileID: 21300000, guid: 25f0e4b29a32a2948aeaece7af1dce61, type: 3}
-  railAnimationPrefab: {fileID: 0}
+  startingAmmunition: 0
+  maxAmmunition: 1
+  currentAmmunition: 0
+  railAnimationPrefab: {fileID: 5989933133772402662, guid: 1e390fef251c24c4b82a193026c3aef5,
+    type: 3}
 --- !u!198 &-6436203699009888884
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -4790,7 +4797,6 @@ ParticleSystemRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10301, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

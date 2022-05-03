@@ -5040,7 +5040,7 @@ Transform:
   - {fileID: 5736782391238398631}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -8.345, z: -12.728}
 --- !u!198 &5736782391450772106
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -9850,7 +9850,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba194c1d0a09354c8659e2216619340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ProcessingPhase: 2
+  processingPhase: 2
   RequiresSpawnWarning: 1
   spawnWarningObject: {fileID: 5736782390652883209}
   spawnRules:
@@ -9860,8 +9860,6 @@ MonoBehaviour:
     requiresOrientation: 1
     avoidAdjacentToPlayer: 0
     avoidShareSpawnLocation: 0
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
   animateMoveSpeed: 0
   IsLeavingGrid: 0
   hazardType: 3

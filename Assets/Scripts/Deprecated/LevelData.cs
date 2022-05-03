@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
-[CreateAssetMenu(fileName = "LevelData", menuName = "Scriptable Objects/Level Data", order = 2)]
+//[CreateAssetMenu(fileName = "LevelData", menuName = "Scriptable Objects/Level Data", order = 2)]
 [TypeInfoBox("Level Width and Level Height must take the spawn ring into account.")]
 public class LevelData : ScriptableObject
 {

@@ -80,7 +80,7 @@ public class Loot : GridObject
         Health hp = GetComponent<Health>();
         hp.ToggleInvincibility(true);
 
-        MovePattern mp = GetComponent<MovePattern>();
+        GridMover mp = GetComponent<GridMover>();
         switch (spawnBorder)
         {
             case "Bottom":

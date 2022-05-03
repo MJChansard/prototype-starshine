@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SpawnSequence", menuName = "Scriptable Objects/Spawn Sequence", order = 1)]
-public class SpawnSequence : ScriptableObject
+public class SpawnWave : ScriptableObject
 {
     public Vector2Int playerSpawnLocation;
     //public List<SpawnStep> hazardSpawnSteps;
-    public SpawnStep[] hazardSpawnSteps;
+    public SpawnRecord[] spawnSteps;
 
-    public SpawnSequence Clone()
+    public SpawnWave Clone()
     {
         //SpawnSequence newSpawnSequence = new SpawnSequence();
 
-        SpawnSequence newSpawnSequence = CreateInstance<SpawnSequence>();
+        SpawnWave newSpawnSequence = CreateInstance<SpawnWave>();
 
         newSpawnSequence.playerSpawnLocation = this.playerSpawnLocation;
-        newSpawnSequence.hazardSpawnSteps = new SpawnStep[this.hazardSpawnSteps.Length];
+        newSpawnSequence.spawnSteps = new SpawnRecord[this.spawnSteps.Length];
 
-        for (int i = 0; i < this.hazardSpawnSteps.Length; i++)
+        for (int i = 0; i < this.spawnSteps.Length; i++)
         {
-            newSpawnSequence.hazardSpawnSteps[i] = this.hazardSpawnSteps[i];
+            newSpawnSequence.spawnSteps[i] = this.spawnSteps[i];
         }
 
         return newSpawnSequence;

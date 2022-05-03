@@ -60,7 +60,7 @@ public class Player : GridObject
 
     // # FIELDS
     private GameObject thruster;
-    private MovePattern movePattern;
+    private GridMover movePattern;
     private Health hp;
     private Transform weaponSource;
     private Weapon[] weaponInventory;
@@ -102,7 +102,7 @@ public class Player : GridObject
                 break;
         }
         
-        movePattern = GetComponent<MovePattern>();
+        movePattern = GetComponent<GridMover>();
         movePattern.SetMovePatternUp();
 
         hp = GetComponent<Health>();

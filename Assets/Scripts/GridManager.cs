@@ -11,31 +11,31 @@ public class GridManager : MonoBehaviour
 {
     public int BoundaryLeftActual
     {
-        get { return -(currentLevelData.levelWidth / 2); }
+        get { return -(currentLevelData.width / 2); }
     }
     public int BoundaryRightActual
     {
         get
         {
-            if (currentLevelData.levelWidth % 2 == 0)
-                return (currentLevelData.levelWidth / 2) - 1;
+            if (currentLevelData.width % 2 == 0)
+                return (currentLevelData.width / 2) - 1;
             else
-                return (currentLevelData.levelWidth / 2);
+                return (currentLevelData.width / 2);
         }
     }
     public int BoundaryTopActual
     {
         get
         {
-            if (currentLevelData.levelHeight % 2 == 0)
-                return (currentLevelData.levelHeight / 2) - 1;
+            if (currentLevelData.height % 2 == 0)
+                return (currentLevelData.height / 2) - 1;
             else
-                return currentLevelData.levelHeight / 2;
+                return currentLevelData.height / 2;
         }
     }
     public int BoundaryBottomActual
     {
-        get { return -(currentLevelData.levelHeight / 2); }
+        get { return -(currentLevelData.height / 2); }
     }
 
 
@@ -55,41 +55,6 @@ public class GridManager : MonoBehaviour
     {
         get { return BoundaryBottomActual + 1; }
     }
-
-
-    public List<Vector2Int> EligiblePerimeterSpawns
-    {
-        get
-        {
-            return eligiblePerimeterSpawns;
-        }
-    }
-    public List<Vector2Int> EligibleInteriorSpawns
-    {
-        get
-        {
-            return eligibleInteriorSpawns;
-        }
-    }
-    public List<Vector2Int> EligibleAllSpawns
-    {
-        get
-        {
-            eligibleAllSpawns.Clear();
-
-            for(int i = 0; i < EligiblePerimeterSpawns.Count; i++)
-            {
-                eligibleAllSpawns.Add(eligiblePerimeterSpawns[i]);
-            }
-            for(int i = 0; i < EligibleInteriorSpawns.Count; i++)
-            {
-                eligibleAllSpawns.Add(EligibleInteriorSpawns[i]);
-            }
-
-            return eligibleAllSpawns;
-        }
-    }
-
     
     
     [TitleGroup("GRID PROPERTIES")]
@@ -104,7 +69,7 @@ public class GridManager : MonoBehaviour
     private List<Vector2Int> eligiblePerimeterSpawns    = new List<Vector2Int>();
     private List<Vector2Int> eligibleInteriorSpawns     = new List<Vector2Int>();
     private List<Vector2Int> eligibleAllSpawns          = new List<Vector2Int>();
-    private LevelData.LevelDataRow currentLevelData;
+    private LevelRecord currentLevelData;               // #OPTIMIZE
 
     public void Init()
     {
@@ -114,15 +79,15 @@ public class GridManager : MonoBehaviour
     
     private void InitializeGrid()
     {
-        levelGrid = new GridBlock[currentLevelData.levelWidth, currentLevelData.levelHeight];
+        levelGrid = new GridBlock[currentLevelData.width, currentLevelData.height];
         Debug.Log("Object: [levelGrid] created.");
         Debug.Log(levelGrid.Length);
 
         // Iterate through columns.
-        for (int x = 0; x < currentLevelData.levelWidth; x++)
+        for (int x = 0; x < currentLevelData.width; x++)
         {
             // Iterate through rows.
-            for (int y = 0; y < currentLevelData.levelHeight; y++)
+            for (int y = 0; y < currentLevelData.height; y++)
             {
                 // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
@@ -132,7 +97,7 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    private void InitializeGrid(LevelData.LevelDataRow initLevelData, GameObject gridPoint, float offset)
+    private void InitializeGrid(LevelRecord initLevelData, GameObject gridPoint, float offset)
     {
         /*  SUMMARY
          *  - Instantiate levelGrid
@@ -142,8 +107,8 @@ public class GridManager : MonoBehaviour
          */
 
         Debug.LogFormat("Initializing Grid\nWidth: {0}\nHeight: {1}\nFuel Required: {2}\nPhenomena: {3}\nStations: {4}",
-            initLevelData.levelWidth,
-            initLevelData.levelHeight,
+            initLevelData.width,
+            initLevelData.height,
             initLevelData.jumpFuelAmount,
             initLevelData.numberOfPhenomenaToSpawn,
             initLevelData.numberOfStationsToSpawn);
@@ -152,18 +117,19 @@ public class GridManager : MonoBehaviour
         //int _width = initLevelData.levelWidth + 1;
         //int _height = initLevelData.levelHeight + 1;       
         //levelGrid = new GridBlock[_width, _height];
-        levelGrid = new GridBlock[initLevelData.levelWidth, initLevelData.levelHeight];
+        levelGrid = new GridBlock[initLevelData.width, initLevelData.height];
 
         int locationX = BoundaryLeftActual;
         int locationY = BoundaryBottomActual;
-        for (int i = 0; i < initLevelData.levelWidth; i++)
+        for (int i = 0; i < initLevelData.width; i++)
         {
-            for (int j = 0; j < initLevelData.levelHeight; j++)
+            for (int j = 0; j < initLevelData.height; j++)
             {
                 if (j == 0) locationY = BoundaryBottomActual;
 
                 levelGrid[i, j] = new GridBlock(locationX, locationY);
                 
+                /*  #CAN DELETE
                 if ((locationX == BoundaryLeftActual || locationX == BoundaryRightActual) && locationY != BoundaryTopActual && locationY != BoundaryBottomActual)
                 {
                     eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
@@ -176,7 +142,7 @@ public class GridManager : MonoBehaviour
                 {
                     eligibleInteriorSpawns.Add(levelGrid[i, j].location);
                 }
-
+                */
                 GameObject point = Instantiate
                 (
                     gridPoint,
@@ -224,7 +190,7 @@ public class GridManager : MonoBehaviour
     }
 
 
-    public void ReceiveLevelData(LevelData.LevelDataRow levelData)
+    public void ReceiveLevelData(LevelRecord levelData)
     {
         currentLevelData = levelData;
     }
@@ -326,13 +292,16 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    public void RemoveObjectFromGrid(GameObject gameObject, Vector2Int gridLocation)
+    public void RemoveObjectFromGrid(GameObject gameObject)
     {
-        GridBlock origin = FindGridBlockByLocation(gridLocation);
+        GridBlock origin = FindGridBlockContainingObject(gameObject);
 
-        if (origin.objectsOnBlock.Count > 0) {
-            for (int i = origin.objectsOnBlock.Count - 1; i >= 0; i--) {
-                if (gameObject == origin.objectsOnBlock[i]) {
+        if (origin.objectsOnBlock.Count > 0)
+        {
+            for (int i = origin.objectsOnBlock.Count - 1; i >= 0; i--)
+            {
+                if (gameObject == origin.objectsOnBlock[i])
+                {
                     origin.objectsOnBlock.RemoveAt(i);
                     return;
                 }

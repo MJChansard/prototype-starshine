@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c9daf11efde03b4e91c2326f7236a89, type: 3}
   m_Name: Seq_Generic
   m_EditorClassIdentifier: 
-  playerSpawnLocation: {x: -1, y: -1}
+  playerSpawnLocation: {x: 0, y: 0}
   hazardSpawnSteps:
-  - {fileID: 11400000, guid: e1cac948677fb0442a99aa38b22028e0, type: 2}
+  - {fileID: 11400000, guid: 63e7d70453b05634989d14434253f98f, type: 2}

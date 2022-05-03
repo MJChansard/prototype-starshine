@@ -97,18 +97,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66c880742d93367499fa03083dabb7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ProcessingPhase: 2
+  processingPhase: 2
   RequiresSpawnWarning: 1
   spawnWarningObject: {fileID: 6570479301102139920}
   spawnRules:
     spawnRegion: 1
     spawnCategory: 4
     avoidHazardPaths: 1
-    avoidAdjacentToPlayer: 0
     requiresOrientation: 0
+    avoidAdjacentToPlayer: 0
     avoidShareSpawnLocation: 0
-  currentWorldLocation: {x: 0, y: 0, z: 0}
-  targetWorldLocation: {x: 0, y: 0, z: 0}
   animateMoveSpeed: 0
   IsLeavingGrid: 0
   spawnBorder: 
@@ -126,6 +124,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   randomizeSupply: 1
   weaponType: 0
+  SupplyContents: 0
   supplyAmount: 0
   randomizeNumberResupplyRemaining: 0
   numberResupplyRemaining: 1

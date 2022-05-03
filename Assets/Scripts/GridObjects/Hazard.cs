@@ -38,7 +38,7 @@ public class Hazard : GridObject
         Health hp = GetComponent<Health>();
         if (hp != null) hp.ToggleInvincibility(true);
 
-        MovePattern movement = GetComponent<MovePattern>();
+        GridMover movement = GetComponent<GridMover>();
         if (movement != null)
         {
             switch (spawnBorder)
