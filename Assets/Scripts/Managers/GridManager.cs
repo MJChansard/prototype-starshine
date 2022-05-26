@@ -317,7 +317,7 @@ public class GridManager : MonoBehaviour
         if (direction == Vector2Int.up)     // x stays the same, y increments positively
         {
             Vector2Int targetLocation = origin + Vector2Int.up;
-            for (int i = origin.y; i < BoundaryTopActual; i++)
+            for (int y = origin.y; y < BoundaryTopActual; y++)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.up;
@@ -326,7 +326,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.down)   // x stays the same, y increments negatively
         {
             Vector2Int targetLocation = origin + Vector2Int.down;
-            for (int i = origin.y; i > BoundaryBottomActual; i--)
+            for (int y = origin.y; y > BoundaryBottomActual; y--)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.down;
@@ -335,7 +335,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.left)   // y stays the same, x increments negatively
         {
             Vector2Int targetLocation = origin + Vector2Int.left;
-            for (int i = origin.x; i > BoundaryLeftActual; i--)
+            for (int x = origin.x; x > BoundaryLeftActual; x--)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.left;
@@ -344,7 +344,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.right)   // y stays the same, x increments positively
         {
             Vector2Int targetLocation = origin + Vector2Int.right; 
-            for (int i = origin.x; i < BoundaryRightActual; i++)
+            for (int x = origin.x; x < BoundaryRightActual; x++)
             {
                 gridBlockPath.Add(targetLocation);  
                 targetLocation += Vector2Int.right; 
