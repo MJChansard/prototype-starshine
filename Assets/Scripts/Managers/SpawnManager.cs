@@ -1,16 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
     //  # INSPECTOR
     [BoxGroup("GENERAL COMPONENT CONFIGURATION", centerLabel: true)]
     [SerializeField] bool VerboseConsole;
-
-    [BoxGroup("LIBRARY", centerLabel: true)]
-    [SerializeField] GridObject[] gridObjectPrefabs;
+    [BoxGroup("GENERAL COMPONENT CONFIGURATION")][SerializeField] bool forceSpawnEveryTurn;
 
     [BoxGroup("CUSTOM SPAWN CONFIGURATION", centerLabel: true)]
     [BoxGroup("CUSTOM SPAWN CONFIGURATION")][SerializeField] bool enable;
@@ -24,42 +22,173 @@ public class SpawnManager : MonoBehaviour
      */
 
     //  # PROPERTIES
-    public bool CustomSpawnSequenceExist { get { return customSpawnSequences.Count == 0; } }
+    public bool CustomSpawnSequenceExist { get { return customSpawnSequence.Count == 0; } }
+    public SpawnWave GetSpawnWave
+    {
+        get
+        {
+            if (spawnQueue.Count == 0)
+                EnqueueNewSpawnWave(1);
+
+            SpawnWave result = spawnQueue.Dequeue();
+            EnqueueNewSpawnWave(1);
+
+            return result;
+        }
+    }
+    public SpawnWave GetSpawnForLevel
+    {
+        get
+        {
+            SpawnWave result = CreateSpawnLevel(thisLevel.numberOfPhenomenaToSpawn, thisLevel.numberOfStationsToSpawn);
+            return result;
+        }
+    }
+    public bool ForceSpawnEveryTurn { get { return forceSpawnEveryTurn; } }
+
+    List<Vector2Int> remainingPerimeterSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            foreach (var spawn in eligiblePerimeterSpawns)
+            {
+                if (!takenSpawns.Contains(spawn))
+                    result.Add(spawn);
+            }
+            return result;
+        }
+    }
+    List<Vector2Int> remainingInteriorSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            foreach (var spawn in eligibleInteriorSpawns)
+            {
+                if (!takenSpawns.Contains(spawn))
+                    result.Add(spawn);
+            }
+            return result;
+        }
+    }
+    List<Vector2Int> remainingTopSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            Vector2Int test = new Vector2Int();
+
+            for (int x = thisLevel.BoundaryLeftActual + 1; x < thisLevel.BoundaryRightActual; x++)  //Offset left by 1, don't want corner
+            {
+                test.Set(x, thisLevel.BoundaryTopActual);
+                if (!takenSpawns.Contains(test))
+                    result.Add(test);
+            }
+            return result;
+        }
+    }
+    List<Vector2Int> remainingBottomSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            Vector2Int test = new Vector2Int();
+
+            for (int x = thisLevel.BoundaryLeftActual + 1; x < thisLevel.BoundaryRightActual; x++)  //Offset left by 1, don't want corner
+            {
+                test.Set(x, thisLevel.BoundaryBottomActual);
+                if (!takenSpawns.Contains(test))
+                    result.Add(test);
+            }
+            return result;
+        }
+    }
+    List<Vector2Int> remainingLeftSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            Vector2Int test = new Vector2Int();
+
+            for (int y = thisLevel.BoundaryBottomActual + 1; y < thisLevel.BoundaryTopActual; y++)  //Offset bottom by 1, don't want corner
+            {
+                test.Set(thisLevel.BoundaryLeftActual, y);
+                if (!takenSpawns.Contains(test))
+                    result.Add(test);
+            }
+            return result;
+        }
+    }
+    List<Vector2Int> remainingRightSpawns
+    {
+        get
+        {
+            List<Vector2Int> result = new List<Vector2Int>();
+            Vector2Int test = new Vector2Int();
+
+            for (int y = thisLevel.BoundaryBottomActual + 1; y < thisLevel.BoundaryTopActual; y++)  //Offset bottom by 1, don't want corner
+            {
+                test.Set(thisLevel.BoundaryRightActual, y);
+                if (!takenSpawns.Contains(test))
+                    result.Add(test);
+            }
+            return result;
+        }
+    }
+    
+
+
 
     //  # FIELDS
-    List<GridObject> hazards    = new List<GridObject>();
-    List<GridObject> loot       = new List<GridObject>();
-    List<GridObject> phenomena  = new List<GridObject>();
-    
-    List<Vector2Int> eligiblePerimeterSpawns    = new List<Vector2Int>();
-    List<Vector2Int> eligibleInteriorSpawns     = new List<Vector2Int>();
-    List<Vector2Int> eligibleAllSpawns          = new List<Vector2Int>();
-
-    List<SpawnWave> customSpawnSequences = new List<SpawnWave>();
-    Queue<SpawnRecord> spawnQueue = new Queue<SpawnRecord>();
+    List<GridObject> hazards;
+    List<GridObject> loot;
+    List<GridObject> phenomena;
+    List<GridObject> stations;
+        
+    List<Vector2Int> eligiblePerimeterSpawns;
+    List<Vector2Int> eligibleInteriorSpawns;
+    List<Vector2Int> takenSpawns;
+    Queue<SpawnWave> spawnQueue;
 
     LevelRecord thisLevel;
+    
 
-
-    void Init()
+    private void Awake()
     {
-        for (int i = 0; i < gridObjectPrefabs.Length; i++)
-        {
-            if (gridObjectPrefabs[i] is Hazard)
-                hazards.Add(gridObjectPrefabs[i]);
+        eligiblePerimeterSpawns = new List<Vector2Int>();
+        eligibleInteriorSpawns  = new List<Vector2Int>();
+        takenSpawns             = new List<Vector2Int>();
+        
+        customSpawnSequence     = new List<SpawnWave>();
+        spawnQueue              = new Queue<SpawnWave>();
+    }
 
-            if (gridObjectPrefabs[i] is Phenomena)
-                phenomena.Add(gridObjectPrefabs[i]);
-        }
+    //void Init(LevelRecord level)
+    public void Init()
+    {
+        GridObjectManager gom = GetComponent<GridObjectManager>();
+        hazards     = gom.HazardList;
+        loot        = gom.LootList;
+        phenomena   = gom.PhenomenaList;
+        stations    = gom.StationList;
 
-        if (thisLevel == null)
-            Debug.Log("No data available for current level.");
-        else
-        {
-            int leftSpawn = 0;
-        }
+        LevelManager lm = GetComponent<LevelManager>();
+        thisLevel = lm.CurrentLevelData;
 
         FindEligibleSpawns();
+
+        if (customSpawnSequence.Count > 0)
+        {
+            for (int i = 0; i < customSpawnSequence.Count; i++)
+            {
+                spawnQueue.Enqueue(customSpawnSequence[i]);
+            }
+        }
+        else
+        {
+            EnqueueNewSpawnWave(3);
+        }
     }
 
     void FindEligibleSpawns()
@@ -93,14 +222,168 @@ public class SpawnManager : MonoBehaviour
             locationX += 1;
         }
     }
-    void CreateSpawnRecord()
-    {
-        SpawnRecord newSpawn = SpawnRecord.CreateInstance<SpawnRecord>();
 
+    void EnqueueNewSpawnWave(int waveCount)
+    {
+        int numberOfObjectsInWave = 0;
+        Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
+
+        for (int w = 0; w < waveCount; w++)
+        {
+            numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, thisLevel.maxObjectsPerWave + 1);
+            SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
+
+
+            for (int i = 0; i < thisLevel.bordersEligibleForSpawn.Length; i++)
+            {
+                GridBorder b = thisLevel.bordersEligibleForSpawn[i];               
+                spawnBorderTracker.Add(b, thisLevel.MaxSpawnOnBorder(b));
+            }
+
+
+            for (int i = 0; i < numberOfObjectsInWave; i++)
+            {
+                SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
+
+                if (Random.Range(1, 10) > 5)
+                    sr.GridObject = hazards[Random.Range(0, hazards.Count)];
+                else
+                    sr.GridObject = loot[Random.Range(0, loot.Count)];
+
+                if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Interior)
+                {
+                    // Start with eligibleInteriorSpawns
+                }
+                else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
+                {
+                    GridBorder toDrop = GridBorder.None;
+                    foreach (var kvp in spawnBorderTracker)
+                    {
+                        if (kvp.Key == GridBorder.Top)
+                        {
+                            if (remainingTopSpawns.Count == 0 || kvp.Value == 0)
+                                toDrop = kvp.Key;
+                        }
+                        else if (kvp.Key == GridBorder.Bottom)
+                        {
+                            if (remainingBottomSpawns.Count == 0 || kvp.Value == 0)
+                                toDrop = kvp.Key;
+                        }
+                        else if(kvp.Key == GridBorder.Left)
+                        {
+                            if (remainingLeftSpawns.Count == 0 || kvp.Value == 0)
+                                toDrop = kvp.Key;
+                        }
+                        else if (kvp.Key == GridBorder.Right)
+                        {
+                            if (remainingRightSpawns.Count == 0 || kvp.Value == 0)
+                                toDrop = kvp.Key;
+                        }
+                    }
+                    if (toDrop != GridBorder.None)
+                        spawnBorderTracker.Remove(toDrop);
+
+                    int x = Random.Range(0, spawnBorderTracker.Count);
+                    GridBorder selected = spawnBorderTracker.Keys.ElementAt(x);
+                    spawnBorderTracker[selected]--;
+
+                    switch (selected)
+                    {
+                        case GridBorder.Top:
+                            sr.GridLocation = remainingTopSpawns[Random.Range(0, remainingTopSpawns.Count)];
+                            sr.Border = GridBorder.Top;
+                            takenSpawns.Add(sr.GridLocation);
+
+                            if (sr.GridObject.spawnRules.avoidHazardPaths)
+                            {
+                                Vector2Int opposite = new Vector2Int(sr.GridLocation.x, thisLevel.BoundaryBottomActual);
+                                takenSpawns.Add(opposite);
+                            }
+                            break;
+
+                        case GridBorder.Bottom:
+                            sr.GridLocation = remainingBottomSpawns[Random.Range(0, remainingBottomSpawns.Count)];
+                            sr.Border = GridBorder.Bottom;
+                            takenSpawns.Add(sr.GridLocation);
+
+                            if (sr.GridObject.spawnRules.avoidHazardPaths)
+                            {
+                                Vector2Int opposite = new Vector2Int(sr.GridLocation.x, thisLevel.BoundaryTopActual);
+                                takenSpawns.Add(opposite);
+                            }
+                            break;
+
+                        case GridBorder.Left:
+                            sr.GridLocation = remainingLeftSpawns[Random.Range(0, remainingLeftSpawns.Count)];
+                            sr.Border = GridBorder.Left;
+                            takenSpawns.Add(sr.GridLocation);
+
+                            if (sr.GridObject.spawnRules.avoidHazardPaths)
+                            {
+                                Vector2Int opposite = new Vector2Int(thisLevel.BoundaryRightActual, sr.GridLocation.y);
+                                takenSpawns.Add(opposite);
+                            }
+                            break;
+
+                        case GridBorder.Right:
+                            sr.GridLocation = remainingRightSpawns[Random.Range(0, remainingRightSpawns.Count)];
+                            sr.Border = GridBorder.Right;
+                            takenSpawns.Add(sr.GridLocation);
+
+                            if (sr.GridObject.spawnRules.avoidHazardPaths)
+                            {
+                                Vector2Int opposite = new Vector2Int(thisLevel.BoundaryLeftActual, sr.GridLocation.y);
+                                takenSpawns.Add(opposite);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+
+                }
+                newWave.spawns[i] = sr;
+            }
+            spawnQueue.Enqueue(newWave);
+            spawnBorderTracker.Clear();
+        }
     }
-    void CreateSpawnWave()
+    SpawnWave CreateSpawnLevel(int phenomenaCount, int stationCount)
     {
+        SpawnWave level = SpawnWave.CreateSpawnWave(phenomenaCount + stationCount);
+        
+        if (phenomenaCount > 0 || stationCount > 0)
+            level.spawns = new SpawnRecord[phenomenaCount + stationCount];
+        else
+            return level;
 
+        int arrayIndex = 0;
+        if (phenomenaCount > 0)
+        {
+            for (int i = 0; i < phenomenaCount; i++)
+            {
+                SpawnRecord current = SpawnRecord.CreateSpawnRecord();
+                current.GridObject = phenomena[Random.Range(0, phenomena.Count)];
+                Vector2Int gridLocation = remainingInteriorSpawns[Random.Range(0, remainingInteriorSpawns.Count)];
+                takenSpawns.Add(gridLocation);
+                level.spawns[i] = current;
+                arrayIndex++;
+            }
+        }
+        
+        if (stationCount > 0)
+        {
+            for (int i = arrayIndex; i < level.spawns.Length; i++)
+            {
+                SpawnRecord current = SpawnRecord.CreateSpawnRecord();
+                current.GridObject = stations[Random.Range(0, stations.Count)];
+                Vector2Int gridLocation = remainingInteriorSpawns[(Random.Range(0, stations.Count))];
+                takenSpawns.Add(gridLocation);
+                level.spawns[i] = current;
+            }
+        }
+        
+        return level;
     }
     //void AddSpawnStep(GridObject objectForSpawn)
     //{

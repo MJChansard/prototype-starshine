@@ -37,7 +37,7 @@ public class Loot : GridObject
     public WeaponType AmmoType { get { return supply.weaponType; } }
     public int AmmoAmount { get { return supply.supplyAmount; } }
 
-    [HideInInspector] public string spawnBorder;
+    
     private GameObject meshObject;
 
     // May want to re-work this as an Init() so it can be called by a LootHandler when loot is dropped
@@ -54,7 +54,7 @@ public class Loot : GridObject
         }
     }
 
-    public override void Init()
+    public void Init(GridBorder border)
     {
         base.Init();
 
@@ -81,27 +81,27 @@ public class Loot : GridObject
         hp.ToggleInvincibility(true);
 
         GridMover mp = GetComponent<GridMover>();
-        switch (spawnBorder)
+        switch (border)
         {
-            case "Bottom":
+            case GridBorder.Bottom:
                 mp.SetMovePatternUp();
                 break;
 
-            case "Top":
+            case GridBorder.Top:
                 if (spawnRules.requiresOrientation)
                     meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
 
                 mp.SetMovePatternDown();
                 break;
 
-            case "Right":
+            case GridBorder.Right:
                 if (spawnRules.requiresOrientation)
                     meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
 
                 mp.SetMovePatternLeft();
                 break;
 
-            case "Left":
+            case GridBorder.Left:
                 if (spawnRules.requiresOrientation)
                     meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
 
@@ -112,7 +112,7 @@ public class Loot : GridObject
         if(TryGetComponent<Rotator>(out Rotator r))
         {
             if (!r.enabled) r.enabled = true;
-            r.ApplyRotation(spawnBorder);
+            r.ApplyRotation(border);
         }
     }
 }

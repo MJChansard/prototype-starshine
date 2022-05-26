@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class GridObjectManager : MonoBehaviour
 {
@@ -18,34 +19,84 @@ public class GridObjectManager : MonoBehaviour
 
     [Header("GridObject Library")]
     [SerializeField] GridObject[] gridObjectPrefabs;
-    List<GridObject> hazards = new List<GridObject>();
-    List<GridObject> loot = new List<GridObject>();
-    List<GridObject> phenomena = new List<GridObject>();
-    List<GridObject> stations = new List<GridObject>();
+    List<GridObject> hazards;
+    List<GridObject> loot;
+    List<GridObject> phenomena;
+    List<GridObject> stations;
 
-
-    public GameObject playerPrefab;
-
+    //  #PROPERTIES
     public GameManager.GameState currentGameState;
     public GamePhase currentGamePhase;
     public bool IsAnimationComplete
     {
         get { return gridObjectAnimationInProgress.Count == 0; }
     }
+    public List<GridObject> HazardList
+    {
+        get
+        {
+            List<GridObject> HazardList = new List<GridObject>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Hazard)
+                    HazardList.Add(gridObjectPrefabs[i]);
+            }
+            return HazardList;
+        }
+    }
+    public List<GridObject> LootList
+    {
+        get
+        {
+            List<GridObject> LootList = new List<GridObject>();
+            for (int  i = 0;  i < gridObjectPrefabs.Length;  i++)
+            {
+                if (gridObjectPrefabs[i] is Loot)
+                    LootList.Add(gridObjectPrefabs[i]);
+            }
+            return LootList;
+        }
+    }
+    public List<GridObject> PhenomenaList
+    {
+        get
+        {
+            List<GridObject> PhenomenaList = new List<GridObject>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Phenomena)
+                    PhenomenaList.Add(gridObjectPrefabs[i]);
+            }
+            return PhenomenaList;
+        }
+    }
+    public List<GridObject> StationList
+    {
+        get
+        {
+            List<GridObject> StationList = new List<GridObject>();
+            for (int i = 0; i < gridObjectPrefabs.Length; i++)
+            {
+                if (gridObjectPrefabs[i] is Station)
+                    StationList.Add(gridObjectPrefabs[i]);
+            }
+            return StationList;
+        }
+    }
 
-    // # REFERENCES
+
+    // #FIELDS
     GridManager gridM;
     Player player;
     InputManager inputM;
     PlayerHUD pHUD;
 
-    // #FIELDS
+    public GameObject playerPrefab;
     int currentTick = 0;
     Vector2Int minVector2;
     Vector2Int maxVector2;
     int ticksUntilNewSpawn;
 
-    //List<GridObject> gridObjectsInPlay;           // Object tracking 
     List<GridBlock> collisions;
     Dictionary<GridObject, GridUpdateStep> gridObjectsInPlay;
     List<GridObject> gridObjectAnimationInProgress;
@@ -87,38 +138,39 @@ public class GridObjectManager : MonoBehaviour
     //  #INITIALIZATION
     void Awake()
     {
-        gridObjectsInPlay = new Dictionary<GridObject, GridUpdateStep>();
-        gridObjectAnimationInProgress = new List<GridObject>();
-        collisions = new List<GridBlock>();
+        gridM = GetComponent<GridManager>();
+
+        hazards     = new List<GridObject>();
+        loot        = new List<GridObject>();
+        phenomena   = new List<GridObject>();
+        stations    = new List<GridObject>();
+
+        gridObjectsInPlay               = new Dictionary<GridObject, GridUpdateStep>();
+        gridObjectAnimationInProgress   = new List<GridObject>();
+        collisions                      = new List<GridBlock>();
 
         pHUD = FindObjectOfType<PlayerHUD>().GetComponent<PlayerHUD>();
     }
     public void Init()
     {
         /*  SUMMARY
-         *   - Reference to GridManager
          *   - Cache level boundaries
          *   - Identify next tick requiring a spawn
          *   - Handle Player
          *   - Insert Spawn Sequence data if present
          * 
          */
-        gridM = GetComponent<GridManager>();
-
-        minVector2 = new Vector2Int(gridM.BoundaryLeftActual, gridM.BoundaryBottomActual);
-        maxVector2 = new Vector2Int(gridM.BoundaryRightActual, gridM.BoundaryTopActual);
+        
+        //minVector2 = new Vector2Int(gridM.BoundaryLeftActual, gridM.BoundaryBottomActual);
+        //maxVector2 = new Vector2Int(gridM.BoundaryRightActual, gridM.BoundaryTopActual);
 
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
         currentTick = 1;
 
-        //gridObjectsInPlay.Insert(0, GameObject.FindWithTag("Player").GetComponent<Player>());
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-
-        // Some minor debugging
-        Debug.LogFormat("Player Instance ID: {0}", player.transform.GetInstanceID().ToString());
-        gridObjectsInPlay.Add(player, null);
-        //player = gridObjectsInPlay[0].GetComponent<Player>();
         
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        gridObjectsInPlay.Add(player, null);
+                
 
         // Populate GridObject Lists
         for (int i = 0; i < gridObjectPrefabs.Length; i++)
@@ -135,32 +187,38 @@ public class GridObjectManager : MonoBehaviour
             if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Station)
                 stations.Add(gridObjectPrefabs[i]);
         }
-
-        Debug.LogFormat("Current Game Phase: {0}", currentGamePhase.ToString());
-    }
-    public void InsertManualSpawnSequence()
-    {
-        if (insertSpawnSequences.Count > 0)
-        {
-            for (int i = 0; i < insertSpawnSequences.Count; i++)
-            {
-                for (int j = 0; j < insertSpawnSequences[i].spawnSteps.Length; j++)
-                {
-                    spawnQueue.Enqueue(insertSpawnSequences[i].spawnSteps[j]);
-                }
-            }
-
-            CreateGridObject(spawnQueue.Dequeue());
-        }
-        else
-        {
-            AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
-            CreateGridObject(spawnQueue.Dequeue());
-        }
     }
 
 
     //  #SPAWNING
+    public void ApplySpawnWave(SpawnWave received)
+    {
+        if (received.spawns.Length > 0)
+        {
+            for (int i = 0; i < received.spawns.Length; i++)
+            {
+                SpawnRecord current = received.spawns[i];
+                GridObject go = Instantiate(current.GridObject);
+                PlaceGridObjectInPlay(go, current.GridLocation);
+
+                if (go is Hazard)
+                {
+                    Hazard newHazard = go as Hazard;
+                    newHazard.Init(current.Border);
+                }
+                else if (go is Loot)
+                {
+                    Loot newLoot = go as Loot;
+                    newLoot.Init(current.Border);
+                }
+                else
+                {
+                    go.Init();
+                }
+            }
+        }
+        else return;
+    }
     void AddSpawnStep(GridObject objectForSpawn)
     {
         /*	SUMMARY
@@ -226,53 +284,9 @@ public class GridObjectManager : MonoBehaviour
     }
     void CreateGridObject(SpawnRecord spawnStep)
     {
-        /*  SUMMARY
-        *   - Process SpawnStep data to identify hazard to spawn and spawn location
-        *   - Instantiate hazard
-        *   - Prepare hazard for gameplay
-        *       ~ Set Animation Mode
-        *       ~ Toggle Invincibility
-        *       ~ Activates Rotator
-        *       ~ Sets MovePattern
-        */
 
-        if (VerboseConsole) Debug.Log("GridObjectManager.CreateHazard() called.");
-
-        GridObject newSpawn = Instantiate(spawnStep.gridObject);
-
-        if (newSpawn.spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Perimeter)
-        {
-            string borderName = "";
-            if (spawnStep.SpawnLocation.y == gridM.BoundaryBottomActual) borderName = "Bottom";
-            else if (spawnStep.SpawnLocation.y == gridM.BoundaryTopActual) borderName = "Top";
-            else if (spawnStep.SpawnLocation.x == gridM.BoundaryRightActual) borderName = "Right";
-            else if (spawnStep.SpawnLocation.x == gridM.BoundaryLeftActual) borderName = "Left";
-
-            //newSpawn.Init(borderName);
-            if (newSpawn is Hazard)
-            {
-                Hazard newHazard = newSpawn as Hazard;
-                newHazard.spawnBorder = borderName;
-                newHazard.Init();
-            }
-            else if (newSpawn is Loot)
-            {
-                Loot newLoot = newSpawn as Loot;
-                newLoot.spawnBorder = borderName;
-                newLoot.Init();
-            }
-            else
-            {
-                newSpawn.Init();
-            }
-
-        }
-
-        PlaceGridObjectInPlay(newSpawn, spawnStep.SpawnLocation);
-
-        if (VerboseConsole) Debug.Log("GridObjectManager.CreateGridObject() completed.");
     }
-    public void PlaceGridObjectInPlay(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
+    void PlaceGridObjectInPlay(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
         if (VerboseConsole) Debug.Log("GridObjectManager.PlaceGridObjectInPlay() called.");
 
@@ -289,7 +303,7 @@ public class GridObjectManager : MonoBehaviour
             gridObjectsInPlay.Add(gridObject, null);
         }
     }
-    List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, GridManager.SpawnRule rule)
+    List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, SpawnRule rule)
     {
         List<Vector2Int> ineligibleSpawns = new List<Vector2Int>();
         if (rule.avoidHazardPaths)
@@ -439,13 +453,13 @@ public class GridObjectManager : MonoBehaviour
     {
         if (uData.doesDamage)
         {
-            List<GridBlock> targetBlocks = GetGridBlocksInPath(gridM.WorldToGrid(player.animateStartWorldLocation), player.Direction);
-
-            for (int i = 0; i < targetBlocks.Count; i++)
+            List<GridBlock> possibleTargets = GetGridBlocksInPath(gridM.WorldToGrid(player.animateStartWorldLocation), player.Direction);
+            
+            for (int i = 0; i < possibleTargets.Count; i++)
             {
-                for (int j = 0; j < targetBlocks[i].objectsOnBlock.Count; j++)
+                for (int j = 0; j < possibleTargets[i].objectsOnBlock.Count; j++)
                 {
-                    Health hp = targetBlocks[i].objectsOnBlock[j].GetComponent<Health>();
+                    Health hp = possibleTargets[i].objectsOnBlock[j].GetComponent<Health>();
                     if (hp != null)
                     {
                         if (uData.dynamicDamage)
@@ -463,13 +477,14 @@ public class GridObjectManager : MonoBehaviour
                         if (!uData.doesPenetrate)
                         {
                             //  #TO-DO: Execute appropriate animation
+                            player.StartAttackAnimation(possibleTargets[i]);
                             break;
                         }
                     }
                 }
             }
             // End animation at end of targetBlocks List
-            player.ExecuteAttackAnimation(targetBlocks[targetBlocks.Count - 1]);
+            
         }
 
 
@@ -742,31 +757,7 @@ public class GridObjectManager : MonoBehaviour
             PlaceGridObjectInPlay(lootToPutIntoPlay[i], locationsToPlaceLoot[i]);
         }
     }
-    public void SpawnGridObjects()
-    {
-        if (ticksUntilNewSpawn == 0 || gridObjectsInPlay.Count == 0)
-        {
-            if (spawnQueue.Count > 0)
-            {
-                CreateGridObject(spawnQueue.Dequeue());
-            }
-            else
-            {
-                if (Random.Range(0, 10) > 7)    // 20% chance
-                {
-                    AddSpawnStep(SelectGridObject(GridObjectType.Loot));
-                    CreateGridObject(spawnQueue.Dequeue());
-                }
-                else
-                {
-                    AddSpawnStep(SelectGridObject(GridObjectType.Hazard));
-                    CreateGridObject(spawnQueue.Dequeue());
-                }
-            }
-
-            ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
-        }
-    }
+    
 
     public void ResolveCollisionsOnGridBlocks()
     {
@@ -1073,7 +1064,7 @@ public class GridObjectManager : MonoBehaviour
 
         if (VerboseConsole) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
 
-        if (player.spawnRules.spawnRegion == GridManager.SpawnRule.SpawnRegion.Center)
+        if (player.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Center)
         {
             // Can put some new arrival logic here    
         }
@@ -1183,7 +1174,7 @@ public class GridObjectManager : MonoBehaviour
 
                 Rotator lootRotator = lootObjectToDrop.GetComponent<Rotator>();
                 lootRotator.enabled = true;
-                lootRotator.ApplyRotation("Left");
+                lootRotator.ApplyRotation(GridBorder.Left);
 
                 yield return new WaitForSeconds(delayAppear);
                 renderer.enabled = true;
@@ -1191,13 +1182,6 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 }
-public enum GridObjectType
-{
-    Hazard = 1,
-    Phenomena = 2,
-    Station = 3,
-    Loot = 4
-};
 
 
 // METHODS UNDERGOING DEPRECATION

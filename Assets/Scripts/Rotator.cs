@@ -174,23 +174,23 @@ public class Rotator : MonoBehaviour
         }
     }
 
-    public void ApplyRotation(string border)
+    public void ApplyRotation(GridBorder border)
     {
         switch(border)
         {
-            case "Bottom":
+            case GridBorder.Bottom:
                 RotateUp();
                 break;
 
-            case "Top":
+            case GridBorder.Top:
                 RotateDown();
                 break;
 
-            case "Left":
+            case GridBorder.Left:
                 RotateRight();
                 break;
 
-            case "Right":
+            case GridBorder.Right:
                 RotateLeft();
                 break;
         }

@@ -7,7 +7,7 @@ using Sirenix.OdinInspector;
 [TypeInfoBox("Level Width and Level Height must take the spawn ring into account.")]
 public class LevelRecord : ScriptableObject
 {
-    //  #FIELDS
+    //  #LEVEL TRAITS
     public int width;
     public int height;
     public int jumpFuelAmount;
@@ -15,15 +15,7 @@ public class LevelRecord : ScriptableObject
     public int numberOfStationsToSpawn;
     //public Vector2Int playerSpawnLocation;
 
-    public int minObjectsPerWave;           // Value to set lowest number of object to spawn in a wave
-    public int maxObjectsPerWaveWave;
-    public int minGridObjectsOnGrid;
-    public int maxGridObjectsOnGrid;        // Value to cap number of objects on Grid
-    public int maxSpawnPerSide;
-    public int maxSidesEligibleForSpawn;
-    public int maxInteriorSpawn;
 
-    //  #PROPERTIES
     public int BoundaryLeftActual
     {
         get { return -(width / 2); }
@@ -70,17 +62,35 @@ public class LevelRecord : ScriptableObject
         get { return BoundaryBottomActual + 1; }
     }
 
+    public int LevelAreaPlay { get { return (width - 2) * (height - 2); } }
 
-    // CONSTRUCTOR
-    public LevelRecord(int w, int h, int f, int p, int s)
+
+    //  #SPAWN TRAITS
+    public int minObjectsPerWave;
+    public int maxObjectsPerWave;
+    public int minGridObjectsOnGrid;
+    public bool scarcity;
+    public bool saturation;
+
+    public GridBorder[] bordersEligibleForSpawn;
+    public GridObject[] eligibleForSpawn;
+
+
+    public int MaxObjectsOnGrid { get { return LevelAreaPlay / 2; } }
+    public int MaxInteriorSpawns { get { return LevelAreaPlay / 4; } }
+    public int MaxSpawnOnBorder(GridBorder border)
     {
-        width = w;
-        height = h;
-        jumpFuelAmount = f;
-        numberOfPhenomenaToSpawn = p;
-        numberOfStationsToSpawn = s;
+        int result;
+        if (border == GridBorder.Top || border == GridBorder.Bottom)
+            result = width - 2;
+        else
+            result = height - 2;
+        
+        return result;
     }
 
+
+    // CONSTRUCTOR
     public static LevelRecord CreateLevelRecord(int w, int h, int f, int p, int s)
     {
         LevelRecord lr = LevelRecord.CreateInstance<LevelRecord>();
@@ -93,14 +103,11 @@ public class LevelRecord : ScriptableObject
         return lr;
     }
 
-    public void InitSpawn(int _minObjectsPerWave, int _maxObjectsPerWaveWave, int _minGridObjectsOnGrid, int _maxGridObjectsOnGrid, int _maxSpawnPerSide, int _maxSidesEligibleForSpawn, int _maxInteriorSpawn)
+    public void InitSpawn(int _minObjectsPerWave, int _maxObjectsPerWave, int _minGridObjectsOnGrid, GridBorder[] _bordersEligibleForSpawn)
     {
         minObjectsPerWave           = _minObjectsPerWave;
-        maxObjectsPerWaveWave       = _maxObjectsPerWaveWave;
+        maxObjectsPerWave           = _maxObjectsPerWave;
         minGridObjectsOnGrid        = _minGridObjectsOnGrid;
-        maxGridObjectsOnGrid        = _maxGridObjectsOnGrid;
-        maxSpawnPerSide             = _maxSpawnPerSide;
-        maxSidesEligibleForSpawn    = _maxSidesEligibleForSpawn;
-        maxInteriorSpawn            = _maxInteriorSpawn;
+        bordersEligibleForSpawn     = _bordersEligibleForSpawn;
     }
 }

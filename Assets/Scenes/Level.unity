@@ -503,7 +503,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 2.3509887e-38, z: 4.1543445e+34, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
@@ -1443,10 +1443,10 @@ MonoBehaviour:
   - {fileID: 3895122475705928741, guid: 4b42328e6cd51334e9862495dadb2f4c, type: 3}
   - {fileID: 2910511005259669579, guid: f991b8c8e754e494b83a17fc33d1838f, type: 3}
   - {fileID: 6411797529739266589, guid: 0c34b2dd55dca3f44bc97fd1d7c1a19d, type: 3}
-  playerPrefab: {fileID: 1294845988134193544, guid: 38180cfc29e24094989a019bbcb5780e,
-    type: 3}
   currentGameState: 0
   currentGamePhase: 0
+  playerPrefab: {fileID: 1294845988134193544, guid: 38180cfc29e24094989a019bbcb5780e,
+    type: 3}
 --- !u!114 &477210642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1490,7 +1490,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   VerboseConsole: 0
-  gridObjectPrefabs: []
+  forceSpawnEveryTurn: 1
   enable: 0
   customSpawnSequence: []
 --- !u!114 &477210645
@@ -1505,13 +1505,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32255d24ddc1f6e4fb92755a495c66ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData:
-  - {fileID: 11400000, guid: d017776471463504f9a0971763515f85, type: 2}
   inspectorGridWidth: 0
   inspectorGridHeight: 0
   inspectorJumpFuelAmount: 0
   inspectorPhenomenaSpawnCount: 0
   inspectorStationSpawnCount: 0
+  inspectorLevelData: []
 --- !u!1 &534669902
 GameObject:
   m_ObjectHideFlags: 0

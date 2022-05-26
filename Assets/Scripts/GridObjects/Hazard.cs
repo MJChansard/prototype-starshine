@@ -22,7 +22,7 @@ public class Hazard : GridObject
     [HideInInspector] public string spawnBorder;
     private GameObject meshObject;
 
-    public override void Init()
+    public void Init(GridBorder border)
     {
         base.Init();
 
@@ -41,27 +41,27 @@ public class Hazard : GridObject
         GridMover movement = GetComponent<GridMover>();
         if (movement != null)
         {
-            switch (spawnBorder)
+            switch (border)
             {
-                case "Bottom":
+                case GridBorder.Bottom:
                     movement.SetMovePatternUp();
                     break;
 
-                case "Top":
+                case GridBorder.Top:
                     if (spawnRules.requiresOrientation)
                         meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 180.0f);
 
                     movement.SetMovePatternDown();
                     break;
 
-                case "Right":
+                case GridBorder.Right:
                     if (spawnRules.requiresOrientation)
                         meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 90.0f);
                         
                     movement.SetMovePatternLeft();
                     break;
 
-                case "Left":
+                case GridBorder.Left:
                     if (spawnRules.requiresOrientation)
                         meshObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 270.0f);
                     movement.SetMovePatternRight();
@@ -72,7 +72,7 @@ public class Hazard : GridObject
             if (r != null)
             {
                 if (!r.enabled) r.enabled = true;
-                r.ApplyRotation(spawnBorder);
+                r.ApplyRotation(border);
             }
         }
     }

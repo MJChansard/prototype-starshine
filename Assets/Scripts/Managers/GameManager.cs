@@ -77,23 +77,9 @@ public class GameManager : MonoBehaviour
     //  #METHODS
     void LaunchEnter()
     {
+        levelM.Init();
         LevelRecord level = levelM.CurrentLevelData;
-        /*
-        if (customSpawnSequence.Length > 0)
-        {
-            for (int i = 0; i < customSpawnSequence.Length; i++)
-            {
-                gridObjectM.insertSpawnSequences.Add(customSpawnSequence[i].Clone());
-            }
-        }
-        */
-
-        if (spawnM.CustomSpawnSequenceExist)
-        {
-            
-        }
-
-        
+  
         // Setup level characteristics for GridManager        
         gridM.ReceiveLevelData(level);
         gridM.Init();
@@ -101,12 +87,7 @@ public class GameManager : MonoBehaviour
 
         // Setup Player
         Vector2Int startLocation = new Vector2Int(0, 0);
-        if (customSpawnSequence.Length > 0)
-        {
-            startLocation = customSpawnSequence[0].playerSpawnLocation;
-        }
-
-        GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
+         GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
         if (VerboseConsole)
         {
             Debug.Log(playerObject.name + " has been instantiated.");
@@ -116,15 +97,41 @@ public class GameManager : MonoBehaviour
         player = playerObject.GetComponent<Player>();
         if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
         player.NextLevel(levelM.CurrentLevelData.jumpFuelAmount);
-        
 
 
-        // Initialize Game Object Manager now that player exists
+        // Initialize GridObjectManager now that player exists
         gridObjectM.Init();
         gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
-        gridObjectM.InsertManualSpawnSequence();
 
 
+        // Initialize SpawnManager
+        spawnM.Init();
+        if (spawnM.CustomSpawnSequenceExist)
+        {
+
+        }
+
+        // Spawn GridObjects
+        SpawnWave levelSpawns = spawnM.GetSpawnForLevel;
+        gridObjectM.ApplySpawnWave(levelSpawns);
+
+        gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
+
+        /*  STORING AS ALTERNATE IMPLEMENTATION
+        bool spawnCountBelowThreshold = true;
+        int spawnCount = 0;
+        while (spawnCountBelowThreshold)
+        {
+            SpawnWave wave = spawnM.GetSpawnWave;
+            spawnCount += wave.spawns.Length;
+            gridObjectM.ApplySpawnWave(wave);
+
+            if (spawnCount >= level.MaxObjectsOnGrid)
+                spawnCountBelowThreshold = false;
+        }      
+        */
+
+        // PlayerHUD
         pHUD = GameObject.FindGameObjectWithTag("Player HUD").GetComponent<PlayerHUD>();
         if (pHUD != null)
         {
@@ -155,6 +162,7 @@ public class GameManager : MonoBehaviour
             if (uData != null)
             {
                 gridObjectM.OnPlayerActivateModule(uData);
+
                 if (uData.doesPlaceObjectInWorld)
                 {
                     gridObjectM.NewGridUpdateSteps(includePlayer: false);
@@ -239,7 +247,11 @@ public class GameManager : MonoBehaviour
         gridObjectM.ResolveCollisionsOnGridBlocks();
         gridObjectM.NewGridUpdateSteps(checkMove: false, checkHealth: true, checkLoot: true);
         gridObjectM.RemoveDeadObjectsAndDropLoot(); //Is a missile not being removed because of eligibleForProcessing?
-        gridObjectM.SpawnGridObjects();
+
+        //Spawn stuff goes here
+        if (spawnM.ForceSpawnEveryTurn || Random.Range(0, 10) > 4)    // 50%
+            gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
+            
     }
 
     void ActivateModule()

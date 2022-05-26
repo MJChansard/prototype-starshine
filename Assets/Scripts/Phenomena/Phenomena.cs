@@ -24,7 +24,7 @@ public class Phenomena : GridObject
     [HideInInspector] public bool DoesFuel;
     [HideInInspector] public bool DoesLeak;
 
-    private void Start()
+    private void Awake()
     {
         DoesDamage = this.gameObject.TryGetComponent<ContactDamage>(out ContactDamage _);
         

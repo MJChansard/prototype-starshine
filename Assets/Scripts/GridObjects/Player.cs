@@ -183,10 +183,10 @@ public class Player : GridObject
         }
     }
        
-    public void ExecuteAttackAnimation(GridBlock gridBlock)
+    public void StartAttackAnimation(GridBlock gridBlock)
     {
         //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-        //equippedModules[indexSelectedModule].UseModule(gridBlock);
+        equippedModules[selectModule].AnimateModule(gridBlock);
     }
 
     public void AcceptAmmo(WeaponType type, int amount)

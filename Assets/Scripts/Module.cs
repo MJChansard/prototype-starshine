@@ -108,7 +108,7 @@ public class Module : MonoBehaviour
 
     // #FIELDS
     private bool isActive;
-    private ModuleAnimator animator;
+    private IModuleAnimator animator;
     private int currentAmmo;
 
 
@@ -116,7 +116,7 @@ public class Module : MonoBehaviour
     {
         if(hasAnimation)
         {
-            animator = GetComponent<ModuleAnimator>();
+            animator = GetComponent<IModuleAnimator>();
         }
         currentAmmo = startAmmo;
         displayAmmoInspector = currentAmmo;
@@ -153,13 +153,14 @@ public class Module : MonoBehaviour
         }
         
         // UI needs to be updated
-
+                    
         return sufficientResource;
     }
 
     public void AnimateModule(GridBlock gb)
     {
-        StartCoroutine(animator.TriggerModuleAnimationCoroutine(gb));
+        //StartCoroutine(animator.TriggerModuleAnimationCoroutine(gb));
+        animator.StartModuleAnimationCoroutine(gb);
     }
     
     public void UpdateCounter()

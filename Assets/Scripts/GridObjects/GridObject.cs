@@ -13,31 +13,22 @@ public class GridObject : MonoBehaviour
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")]
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public bool RequiresSpawnWarning;
     [ShowIf("RequiresSpawnWarning")] public GameObject spawnWarningObject;
-    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public GridManager.SpawnRule spawnRules;
+    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public SpawnRule spawnRules;
 
 
     // MOVEMENT & ANIMATION FIELDS
-    Vector2Int gridCurrentLocation;
-    Vector2Int gridDestinationLocation;
-
+        
     public Vector3 animateStartWorldLocation
     {
-        get { return new Vector3(gridCurrentLocation.x, gridCurrentLocation.y, 0); }
+        
     }
     public Vector3 animateEndWorldLocation
     {
-        get { return new Vector3(gridDestinationLocation.x, gridDestinationLocation.y, 0);  }
+        
     }
 
     [HideInInspector] public float animateMoveSpeed;
-    [HideInInspector] public bool IsLeavingGrid;            //#Deprecated, remove ASAP
-
-    
-    public float Distance
-    {
-        get { return Vector3.Distance(animateStartWorldLocation, animateEndWorldLocation); }
-    }
-    
+    [HideInInspector] public bool IsLeavingGrid;            //#Deprecated, remove ASAP  
     
     // OBJECT MODES
     public enum Mode

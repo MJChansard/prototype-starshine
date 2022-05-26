@@ -24,7 +24,7 @@ public class MissileLauncher : Weapon
         if (launchedMissile != null)
         {
             // D = s * t
-            float distance = Vector3.Distance(launchedMissile.animateStartWorldLocation, launchedMissile.animateEndWorldLocation);
+            //float distance = Vector3.Distance(launchedMissile.animateStartWorldLocation, launchedMissile.animateEndWorldLocation);
             float startTime = Time.time;
             float percentTraveled = 0.0f;
 
@@ -35,8 +35,8 @@ public class MissileLauncher : Weapon
                 launchedMissile.gameObject.transform.position =
                     Vector3.Lerp
                     (
-                        launchedMissile.animateStartWorldLocation,
-                        launchedMissile.animateEndWorldLocation,
+//                        launchedMissile.animateStartWorldLocation,
+//                        launchedMissile.animateEndWorldLocation,
                         Mathf.SmoothStep(0f, 1f, percentTraveled)
                     );
 
