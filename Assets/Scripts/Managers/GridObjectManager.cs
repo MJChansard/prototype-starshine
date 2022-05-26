@@ -219,37 +219,6 @@ public class GridObjectManager : MonoBehaviour
         }
         else return;
     }
-    void AddSpawnStep(GridObject objectForSpawn)
-    {
-        /*	SUMMARY
-         *  -   Randomly selects a spawn location
-         *  -   Instantiates SpawnStep ScriptableObject
-         *  -   Initializes the new SpawnStep
-         *  -   Enqueue the new SpawnStep
-         */
-
-        if (VerboseConsole) Debug.Log("GridObjectManager.CreateSpawnStep() called.");
-
-        Vector2Int hazardSpawnLocation = new Vector2Int();
-
-        // DEBUG: Make sure spawn selection is working appropriately
-        //if (VerboseConsole) Debug.LogFormat("Array Length: {0}, Random value: {1}", gridObjectPrefabs.Length, gridObjectSelector);
-
-        // Identify an appropriate spawn location
-        //        List<Vector2Int> availableSpawns = gm.GetSpawnLocations(gridObjectPrefabs[gridObjectSelector].spawnRules);
-
-        List<Vector2Int> allAvailableSpawns = gridM.GetSpawnLocations(objectForSpawn.spawnRules.spawnRegion);
-        List<Vector2Int> finalAvailableSpawns = ResolveSpawns(allAvailableSpawns, objectForSpawn.spawnRules);
-
-        Vector2Int targetLocation = finalAvailableSpawns[Random.Range(0, allAvailableSpawns.Count)];
-        hazardSpawnLocation.Set(targetLocation.x, targetLocation.y);
-
-        // Create the SpawnStep
-        SpawnRecord newSpawnStep = ScriptableObject.CreateInstance<SpawnRecord>();
-        //        newSpawnStep.Init(gridObjectPrefabs[gridObjectSelector], hazardSpawnLocation);
-        newSpawnStep.Init(objectForSpawn, hazardSpawnLocation);
-        spawnQueue.Enqueue(newSpawnStep);
-    }
     GridObject SelectGridObject(GridObjectType type)
     {
         if (type == GridObjectType.Hazard)
@@ -303,157 +272,15 @@ public class GridObjectManager : MonoBehaviour
             gridObjectsInPlay.Add(gridObject, null);
         }
     }
-    List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, SpawnRule rule)
-    {
-        List<Vector2Int> ineligibleSpawns = new List<Vector2Int>();
-        if (rule.avoidHazardPaths)
-        {
-            for (int i = 0; i < gridObjectsInPlay.Count; i++)
-            {
-
-                if (gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<Hazard>(out Hazard h) && gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<GridMover>(out GridMover mp))
-                {
-                    Vector2Int gridLocation = gridM.WorldToGrid(h.animateStartWorldLocation);
-                    Vector2Int direction = mp.DirectionOnGrid;
-
-                    bool onLeftBoundary = false;
-                    bool onRightBoundary = false;
-                    bool onTopBoundary = false;
-                    bool onBottomBoundary = false;
-
-                    if (gridLocation.x == gridM.BoundaryLeftPlay)
-                        onLeftBoundary = true;
-                    else if (gridLocation.x == gridM.BoundaryRightPlay)
-                        onRightBoundary = true;
-                    else if (gridLocation.y == gridM.BoundaryTopPlay)
-                        onTopBoundary = true;
-                    else if (gridLocation.y == gridM.BoundaryBottomPlay)
-                        onBottomBoundary = true;
-
-                    if (direction == Vector2Int.up)
-                    {
-                        // Disable spawning on opposing GridBlock at boundary
-                        Vector2Int oppositeBoundary = new Vector2Int(gridLocation.x, gridM.BoundaryTopActual);
-                        ineligibleSpawns.Add(oppositeBoundary);
-
-                        // Remove neighboring GridBlocks along boundary
-                        if (onLeftBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-
-                        if (onRightBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y + 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-                    }
-
-                    if (direction == Vector2Int.down)
-                    {
-                        // Disable spawning on opposing GridBlock at boundary
-                        Vector2Int oppositeBoundary = new Vector2Int(gridLocation.x, gridM.BoundaryBottomActual);
-                        ineligibleSpawns.Add(oppositeBoundary);
-
-                        // Remove neighboring GridBlocks along boundary
-                        if (onLeftBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y - 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-
-                        if (onRightBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y - 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-                    }
-
-                    if (direction == Vector2Int.left)
-                    {
-                        // Disable spawning on opposing GridBlock at boundary
-                        Vector2Int oppositeBoundary = new Vector2Int(gridM.BoundaryLeftActual, gridLocation.y);
-                        ineligibleSpawns.Add(oppositeBoundary);
-
-                        // Remove neighboring GridBlocks along boundary
-                        if (onTopBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-
-                        if (onBottomBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y - 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-                    }
-
-                    if (direction == Vector2Int.right)
-                    {
-                        // Disable spawning on opposing GridBlock at boundary
-                        Vector2Int oppositeBoundary = new Vector2Int(gridM.BoundaryRightActual, gridLocation.y);
-                        ineligibleSpawns.Add(oppositeBoundary);
-
-                        // Remove neighboring GridBlocks along boundary
-                        if (onLeftBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-
-                        if (onRightBoundary)
-                        {
-                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y + 1);
-                            ineligibleSpawns.Add(neighbor);
-                        }
-                    }
-                }
-            }
-
-        }
-
-        if (rule.avoidAdjacentToPlayer)
-        {
-            // Remove Player location and surrounding GridBlocks
-            Vector2Int pLocation = gridM.WorldToGrid(player.animateStartWorldLocation);
-            for (int x = pLocation.x - 1; x < pLocation.x + 2; x++)
-            {
-                for (int y = pLocation.y + 1; y > (pLocation.y - 2); y--)
-                {
-                    Vector2Int area = new Vector2Int(x, y);
-                    ineligibleSpawns.Add(area);
-                }
-            }
-        }
-
-        if (rule.avoidShareSpawnLocation)
-        {
-            for (int i = 0; i < gridObjectsInPlay.Count; i++)
-            {
-                ineligibleSpawns.Add(gridM.WorldToGrid(gridObjectsInPlay.Keys.ElementAt(i).animateStartWorldLocation));
-            }
-        }
-
-        //List<Vector2Int> resolvedSpawns = possibleSpawns;
-        for (int i = 0; i < possibleSpawns.Count; i++)
-        {
-            for (int j = 0; j < ineligibleSpawns.Count; j++)
-            {
-                if (possibleSpawns.Contains(ineligibleSpawns[j]))
-                    possibleSpawns.Remove(ineligibleSpawns[j]);
-            }
-        }
-        return possibleSpawns;
-    }
+    
 
     //  #CORE FUNCTIONALITY
     public void OnPlayerActivateModule(Module.UsageData uData)
     {
         if (uData.doesDamage)
         {
-            List<GridBlock> possibleTargets = GetGridBlocksInPath(gridM.WorldToGrid(player.animateStartWorldLocation), player.Direction);
+            Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
+            List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
             
             for (int i = 0; i < possibleTargets.Count; i++)
             {
@@ -1645,3 +1472,151 @@ if (gridObjectDestroyedThisTick) delayTime += destroyDurationSeconds;
 return delayTime;
     }
  */
+
+/*
+List<Vector2Int> ResolveSpawns(List<Vector2Int> possibleSpawns, SpawnRule rule)
+    {
+        List<Vector2Int> ineligibleSpawns = new List<Vector2Int>();
+        if (rule.avoidHazardPaths)
+        {
+            for (int i = 0; i < gridObjectsInPlay.Count; i++)
+            {
+
+                if (gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<Hazard>(out Hazard h) && gridObjectsInPlay.Keys.ElementAt(i).TryGetComponent<GridMover>(out GridMover mp))
+                {
+                    //Vector2Int gridLocation = gridM.WorldToGrid(h.animateStartWorldLocation);
+                    Vector2Int gridLocation = gridM.WorldToGrid(gridObjectsInPlay[])
+                    Vector2Int direction = mp.DirectionOnGrid;
+
+                    bool onLeftBoundary = false;
+                    bool onRightBoundary = false;
+                    bool onTopBoundary = false;
+                    bool onBottomBoundary = false;
+
+                    if (gridLocation.x == gridM.BoundaryLeftPlay)
+                        onLeftBoundary = true;
+                    else if (gridLocation.x == gridM.BoundaryRightPlay)
+                        onRightBoundary = true;
+                    else if (gridLocation.y == gridM.BoundaryTopPlay)
+                        onTopBoundary = true;
+                    else if (gridLocation.y == gridM.BoundaryBottomPlay)
+                        onBottomBoundary = true;
+
+                    if (direction == Vector2Int.up)
+                    {
+                        // Disable spawning on opposing GridBlock at boundary
+                        Vector2Int oppositeBoundary = new Vector2Int(gridLocation.x, gridM.BoundaryTopActual);
+                        ineligibleSpawns.Add(oppositeBoundary);
+
+                        // Remove neighboring GridBlocks along boundary
+                        if (onLeftBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+
+                        if (onRightBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y + 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+                    }
+
+                    if (direction == Vector2Int.down)
+                    {
+                        // Disable spawning on opposing GridBlock at boundary
+                        Vector2Int oppositeBoundary = new Vector2Int(gridLocation.x, gridM.BoundaryBottomActual);
+                        ineligibleSpawns.Add(oppositeBoundary);
+
+                        // Remove neighboring GridBlocks along boundary
+                        if (onLeftBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y - 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+
+                        if (onRightBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y - 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+                    }
+
+                    if (direction == Vector2Int.left)
+                    {
+                        // Disable spawning on opposing GridBlock at boundary
+                        Vector2Int oppositeBoundary = new Vector2Int(gridM.BoundaryLeftActual, gridLocation.y);
+                        ineligibleSpawns.Add(oppositeBoundary);
+
+                        // Remove neighboring GridBlocks along boundary
+                        if (onTopBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+
+                        if (onBottomBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y - 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+                    }
+
+                    if (direction == Vector2Int.right)
+                    {
+                        // Disable spawning on opposing GridBlock at boundary
+                        Vector2Int oppositeBoundary = new Vector2Int(gridM.BoundaryRightActual, gridLocation.y);
+                        ineligibleSpawns.Add(oppositeBoundary);
+
+                        // Remove neighboring GridBlocks along boundary
+                        if (onLeftBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x - 1, gridLocation.y + 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+
+                        if (onRightBoundary)
+                        {
+                            Vector2Int neighbor = new Vector2Int(gridLocation.x + 1, gridLocation.y + 1);
+                            ineligibleSpawns.Add(neighbor);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if (rule.avoidAdjacentToPlayer)
+        {
+            // Remove Player location and surrounding GridBlocks
+            Vector2Int pLocation = gridM.WorldToGrid(player.animateStartWorldLocation);
+            for (int x = pLocation.x - 1; x < pLocation.x + 2; x++)
+            {
+                for (int y = pLocation.y + 1; y > (pLocation.y - 2); y--)
+                {
+                    Vector2Int area = new Vector2Int(x, y);
+                    ineligibleSpawns.Add(area);
+                }
+            }
+        }
+
+        if (rule.avoidShareSpawnLocation)
+        {
+            for (int i = 0; i < gridObjectsInPlay.Count; i++)
+            {
+                ineligibleSpawns.Add(gridM.WorldToGrid(gridObjectsInPlay.Keys.ElementAt(i).animateStartWorldLocation));
+            }
+        }
+
+        //List<Vector2Int> resolvedSpawns = possibleSpawns;
+        for (int i = 0; i < possibleSpawns.Count; i++)
+        {
+            for (int j = 0; j < ineligibleSpawns.Count; j++)
+            {
+                if (possibleSpawns.Contains(ineligibleSpawns[j]))
+                    possibleSpawns.Remove(ineligibleSpawns[j]);
+            }
+        }
+        return possibleSpawns;
+    }
+*/

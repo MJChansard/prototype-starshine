@@ -17,16 +17,6 @@ public class GridObject : MonoBehaviour
 
 
     // MOVEMENT & ANIMATION FIELDS
-        
-    public Vector3 animateStartWorldLocation
-    {
-        
-    }
-    public Vector3 animateEndWorldLocation
-    {
-        
-    }
-
     [HideInInspector] public float animateMoveSpeed;
     [HideInInspector] public bool IsLeavingGrid;            //#Deprecated, remove ASAP  
     
