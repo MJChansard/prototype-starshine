@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Phenomena : GridObject
 {
-
+    public Sprite IconForLevelEditor;
     [HideInInspector] public bool DoesDamage;
   
     [HideInInspector] public bool DoesRepair;

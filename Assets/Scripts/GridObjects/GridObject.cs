@@ -26,7 +26,7 @@ public class GridObject : MonoBehaviour
         Spawn = 1,
         Play = 2
     }
-
+        
     protected Mode currentMode;
     public Mode CurrentMode { get { return currentMode; } }
     

@@ -8,55 +8,7 @@ using UnityEngine.UIElements;
 using Sirenix.OdinInspector;
 
 public class GridManager : MonoBehaviour
-{
-    public int BoundaryLeftActual
-    {
-        get { return -(currentLevelData.width / 2); }
-    }
-    public int BoundaryRightActual
-    {
-        get
-        {
-            if (currentLevelData.width % 2 == 0)
-                return (currentLevelData.width / 2) - 1;
-            else
-                return (currentLevelData.width / 2);
-        }
-    }
-    public int BoundaryTopActual
-    {
-        get
-        {
-            if (currentLevelData.height % 2 == 0)
-                return (currentLevelData.height / 2) - 1;
-            else
-                return currentLevelData.height / 2;
-        }
-    }
-    public int BoundaryBottomActual
-    {
-        get { return -(currentLevelData.height / 2); }
-    }
-
-
-    public int BoundaryLeftPlay
-    {
-        get { return BoundaryLeftActual + 1; }
-    }
-    public int BoundaryRightPlay
-    {
-        get { return BoundaryRightActual - 1; }
-    }
-    public int BoundaryTopPlay
-    {
-        get { return BoundaryTopActual - 1; }
-    }
-    public int BoundaryBottomPlay
-    {
-        get { return BoundaryBottomActual + 1; }
-    }
-    
-    
+{   
     [TitleGroup("GRID PROPERTIES")]
     [SerializeField] private int gridSpacing = 1;
     [SerializeField] private GameObject debugGridPrefab;
@@ -69,25 +21,25 @@ public class GridManager : MonoBehaviour
     private List<Vector2Int> eligiblePerimeterSpawns    = new List<Vector2Int>();
     private List<Vector2Int> eligibleInteriorSpawns     = new List<Vector2Int>();
     private List<Vector2Int> eligibleAllSpawns          = new List<Vector2Int>();
-    private LevelRecord currentLevelData;               // #OPTIMIZE
+    private LevelRecord currentLevel;                   // #OPTIMIZE
 
     public void Init()
     {
-        InitializeGrid(currentLevelData, debugGridPrefab, 0f);
+        InitializeGrid(currentLevel, debugGridPrefab, 0f);
     }
 
     
     private void InitializeGrid()
     {
-        levelGrid = new GridBlock[currentLevelData.width, currentLevelData.height];
+        levelGrid = new GridBlock[currentLevel.width, currentLevel.height];
         Debug.Log("Object: [levelGrid] created.");
         Debug.Log(levelGrid.Length);
 
         // Iterate through columns.
-        for (int x = 0; x < currentLevelData.width; x++)
+        for (int x = 0; x < currentLevel.width; x++)
         {
             // Iterate through rows.
-            for (int y = 0; y < currentLevelData.height; y++)
+            for (int y = 0; y < currentLevel.height; y++)
             {
                 // Instantiate a GridBlock at each index in the 2D array
                 levelGrid[x, y] = new GridBlock(x, y);
@@ -97,7 +49,7 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-    private void InitializeGrid(LevelRecord initLevelData, GameObject gridPoint, float offset)
+    private void InitializeGrid(LevelRecord level, GameObject gridPoint, float offset)
     {
         /*  SUMMARY
          *  - Instantiate levelGrid
@@ -106,43 +58,31 @@ public class GridManager : MonoBehaviour
          *  - Update levelGrid[x, y].canSpawn
          */
 
-        Debug.LogFormat("Initializing Grid\nWidth: {0}\nHeight: {1}\nFuel Required: {2}\nPhenomena: {3}\nStations: {4}",
-            initLevelData.width,
-            initLevelData.height,
-            initLevelData.jumpFuelAmount,
-            initLevelData.numberOfPhenomenaToSpawn,
-            initLevelData.numberOfStationsToSpawn);
+        Debug.LogFormat("Initializing Grid\nWidth: {0}\nHeight: {1}\nFuel Required: {2}\n",
+            level.width,
+            level.height,
+            level.jumpFuelAmount
+            //initLevelData.numberOfPhenomenaToSpawn,
+            //initLevelData.numberOfStationsToSpawn
+        );
 
         // Pad width and height by 1 for spawn ring
         //int _width = initLevelData.levelWidth + 1;
         //int _height = initLevelData.levelHeight + 1;       
         //levelGrid = new GridBlock[_width, _height];
-        levelGrid = new GridBlock[initLevelData.width, initLevelData.height];
+        
+        levelGrid = new GridBlock[level.width, level.height];
 
-        int locationX = BoundaryLeftActual;
-        int locationY = BoundaryBottomActual;
-        for (int i = 0; i < initLevelData.width; i++)
+        int locationX = level.BoundaryLeftActual;
+        int locationY = level.BoundaryBottomActual;
+        for (int i = 0; i < level.width; i++)
         {
-            for (int j = 0; j < initLevelData.height; j++)
+            for (int j = 0; j < level.height; j++)
             {
-                if (j == 0) locationY = BoundaryBottomActual;
+                if (j == 0) locationY = level.BoundaryBottomActual;
 
                 levelGrid[i, j] = new GridBlock(locationX, locationY);
                 
-                /*  #CAN DELETE
-                if ((locationX == BoundaryLeftActual || locationX == BoundaryRightActual) && locationY != BoundaryTopActual && locationY != BoundaryBottomActual)
-                {
-                    eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
-                }
-                else if ((locationX != BoundaryLeftActual && locationX != BoundaryRightActual) && (locationY == BoundaryTopActual || locationY == BoundaryBottomActual))
-                {
-                    eligiblePerimeterSpawns.Add(levelGrid[i, j].location);
-                }
-                else if ((locationX > BoundaryLeftActual && locationX < BoundaryRightActual && locationY < BoundaryTopActual && locationY > BoundaryBottomActual))
-                {
-                    eligibleInteriorSpawns.Add(levelGrid[i, j].location);
-                }
-                */
                 GameObject point = Instantiate
                 (
                     gridPoint,
@@ -192,7 +132,7 @@ public class GridManager : MonoBehaviour
 
     public void ReceiveLevelData(LevelRecord levelData)
     {
-        currentLevelData = levelData;
+        currentLevel = levelData;
     }
     public void NextLevel()
     {
@@ -201,7 +141,7 @@ public class GridManager : MonoBehaviour
         DestroyGrid();
 
         Debug.Log("Creating new level.");
-        InitializeGrid(currentLevelData, debugGridPrefab, 0f);
+        //InitializeGrid(currentLevelData, debugGridPrefab, 0f);
 
         Debug.Log("New level creation complete.");
         gridBlockLabels = true;
@@ -224,6 +164,10 @@ public class GridManager : MonoBehaviour
             (int)worldLocation.x * gridSpacing,
             (int)worldLocation.y * gridSpacing
         );
+    }
+    public Vector2Int IndexToGrid(int x, int y)
+    {
+        return levelGrid[x, y].location;
     }
 
 
@@ -266,10 +210,10 @@ public class GridManager : MonoBehaviour
     {
         if
         (
-            gridLocation.x >= BoundaryLeftPlay &&
-            gridLocation.x <= BoundaryRightPlay &&
-            gridLocation.y <= BoundaryTopPlay &&
-            gridLocation.y >= BoundaryBottomPlay
+            gridLocation.x >= currentLevel.BoundaryLeftPlay &&
+            gridLocation.x <= currentLevel.BoundaryRightPlay &&
+            gridLocation.y <= currentLevel.BoundaryTopPlay &&
+            gridLocation.y >= currentLevel.BoundaryBottomPlay
         ) return true;
 
         else return false;
@@ -317,7 +261,7 @@ public class GridManager : MonoBehaviour
         if (direction == Vector2Int.up)     // x stays the same, y increments positively
         {
             Vector2Int targetLocation = origin + Vector2Int.up;
-            for (int y = origin.y; y < BoundaryTopActual; y++)
+            for (int y = origin.y; y < currentLevel.BoundaryTopActual; y++)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.up;
@@ -326,7 +270,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.down)   // x stays the same, y increments negatively
         {
             Vector2Int targetLocation = origin + Vector2Int.down;
-            for (int y = origin.y; y > BoundaryBottomActual; y--)
+            for (int y = origin.y; y > currentLevel.BoundaryBottomActual; y--)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.down;
@@ -335,7 +279,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.left)   // y stays the same, x increments negatively
         {
             Vector2Int targetLocation = origin + Vector2Int.left;
-            for (int x = origin.x; x > BoundaryLeftActual; x--)
+            for (int x = origin.x; x > currentLevel.BoundaryLeftActual; x--)
             {
                 gridBlockPath.Add(targetLocation);
                 targetLocation += Vector2Int.left;
@@ -344,7 +288,7 @@ public class GridManager : MonoBehaviour
         else if (direction == Vector2Int.right)   // y stays the same, x increments positively
         {
             Vector2Int targetLocation = origin + Vector2Int.right; 
-            for (int x = origin.x; x < BoundaryRightActual; x++)
+            for (int x = origin.x; x < currentLevel.BoundaryRightActual; x++)
             {
                 gridBlockPath.Add(targetLocation);  
                 targetLocation += Vector2Int.right; 

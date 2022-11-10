@@ -21,6 +21,7 @@ public class MissileLauncher : Weapon
     {
         //#ToDo: Need to rework this animation
         //          - activate a Particle System so missile looks like it is being fired
+        /*
         if (launchedMissile != null)
         {
             // D = s * t
@@ -43,5 +44,7 @@ public class MissileLauncher : Weapon
                 yield return null;
             }
         }
+        */
+        yield return new WaitForEndOfFrame();
     }
 }

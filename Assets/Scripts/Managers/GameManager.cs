@@ -87,7 +87,7 @@ public class GameManager : MonoBehaviour
 
         // Setup Player
         Vector2Int startLocation = new Vector2Int(0, 0);
-         GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
+        GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
         if (VerboseConsole)
         {
             Debug.Log(playerObject.name + " has been instantiated.");
@@ -100,8 +100,12 @@ public class GameManager : MonoBehaviour
 
 
         // Initialize GridObjectManager now that player exists
-        gridObjectM.Init();
-        gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
+        if (level.levelTopography == null)
+            Debug.Log("The topography for this level is NULL.");
+        else
+            Debug.Log("The topography for this level has been found.");
+        gridObjectM.Init(level);
+        //gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
 
 
         // Initialize SpawnManager
@@ -112,9 +116,6 @@ public class GameManager : MonoBehaviour
         }
 
         // Spawn GridObjects
-        SpawnWave levelSpawns = spawnM.GetSpawnForLevel;
-        gridObjectM.ApplySpawnWave(levelSpawns);
-
         gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
 
         /*  STORING AS ALTERNATE IMPLEMENTATION

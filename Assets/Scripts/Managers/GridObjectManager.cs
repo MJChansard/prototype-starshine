@@ -92,7 +92,7 @@ public class GridObjectManager : MonoBehaviour
     PlayerHUD pHUD;
 
     public GameObject playerPrefab;
-    int currentTick = 0;
+    //int currentTick = 0;
     Vector2Int minVector2;
     Vector2Int maxVector2;
     int ticksUntilNewSpawn;
@@ -151,7 +151,7 @@ public class GridObjectManager : MonoBehaviour
 
         pHUD = FindObjectOfType<PlayerHUD>().GetComponent<PlayerHUD>();
     }
-    public void Init()
+    public void Init(LevelRecord level)
     {
         /*  SUMMARY
          *   - Cache level boundaries
@@ -165,7 +165,7 @@ public class GridObjectManager : MonoBehaviour
         //maxVector2 = new Vector2Int(gridM.BoundaryRightActual, gridM.BoundaryTopActual);
 
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
-        currentTick = 1;
+        //currentTick = 1;
 
         
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
@@ -187,6 +187,62 @@ public class GridObjectManager : MonoBehaviour
             if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Station)
                 stations.Add(gridObjectPrefabs[i]);
         }
+
+        if (level.levelTopography == null)
+            Debug.Log("Argument 'topography' is null.");
+        else
+        {
+            int x = level.levelTopography.GetLength(0);
+            int y = level.levelTopography.GetLength(1);
+            Debug.LogFormat("Argument 'topography' is not NULL.\nWidth: {0}\nHeight: {1}", x, y);
+        }
+            
+        
+        for (int x = 0; x < level.levelTopography.GetLength(0); x++)
+        {
+            for (int y = 0; y < level.levelTopography.GetLength(1); y++)
+            {
+                TopographyElementIcon element = level.levelTopography[x, y];
+                if (element == null)
+                    Debug.LogFormat("Element at ({0},{1}) is NULL", x, y);
+                else
+                {
+                    Debug.LogFormat("Element at ({0},{1}) contains GridObject to spawn", x, y);
+                    Vector2Int gridLocation = level.IndexToGrid(x, y);
+                    GameObject instance = Instantiate(element.gameObject, gridM.GridToWorld(gridLocation), Quaternion.identity);
+                    Debug.LogFormat("Instantiated a {0}", instance.name);
+
+                    if (instance == null)
+                        Debug.Log("Grrrr, null reference dood");
+                    //GridObject spawn = topography[x, y].gameObject.GetComponent<GridObject>();
+
+                    GridObject go = instance.GetComponent<GridObject>();
+                    if (go == null)
+                        Debug.Log("Something is wrong with GetComponent<>()");
+
+                    PlaceGridObjectInPlay(go, gridLocation);
+                }
+
+                /*
+                GameObject go = element.gameObject;
+                if (go == null)
+                    Debug.Log("Unable to find attached GameObject.");
+                else
+                    Debug.LogFormat("Found {0} at element ({1},{2})", go.name, x, y);
+
+                GridObject spawn = go.GetComponent<GridObject>();
+                if (spawn == null)
+                    Debug.Log("Unable to find attached GridObject Component");
+                else
+                    Debug.Log("Found attached GridObject Component");
+
+                //GridObject spawn = topography[x, y].gameObject.GetComponent<GridObject>();
+                if (spawn == null)
+                    Debug.Log("Can't find the attached GameObject.");
+                */                
+            }
+        }
+
     }
 
 
@@ -267,7 +323,12 @@ public class GridObjectManager : MonoBehaviour
         }
         else
         {
-            gridObject.transform.position = worldLocation;
+            if (gridObject == null)
+                Debug.Log("gridObject reference is NULL");
+            else if (gridObject.gameObject == null)
+                Debug.Log("GameObject attached to gridObject is NULL");
+                            
+            gridObject.gameObject.transform.position = worldLocation;
             gridM.AddObjectToGrid(gridObject.gameObject, gridLocation);
             gridObjectsInPlay.Add(gridObject, null);
         }
@@ -868,19 +929,15 @@ public class GridObjectManager : MonoBehaviour
         // For each phenomenaRequired, should randomly select one 
         for (int i = 0; i < phenomenaRequired; i++)
         {
-            AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));
+            //AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));     #DEPRECATED, replace with SpawnManager
             CreateGridObject(spawnQueue.Dequeue());
         }
 
         for (int i = 0; i < stationsRequired; i++)
         {
-            AddSpawnStep(SelectGridObject(GridObjectType.Station));
+            //AddSpawnStep(SelectGridObject(GridObjectType.Station));       #DEPRECATED, replace with SpawnManager
             CreateGridObject(spawnQueue.Dequeue());
         }
-
-        // For each stationRequired, should randomly select one
-        // Create SpawnSteps
-
     }
     public void ArrivePlayer()
     {

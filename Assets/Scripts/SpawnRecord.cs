@@ -4,6 +4,11 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 
 [CreateAssetMenu(fileName = "SpawnStep", menuName = "Scriptable Objects/Spawn Step", order = 1)]
+
+/*  I need to begin deprecating this.  There isn't a use for having a ScriptableObject derived class 
+ *  that holds GridObject and Location data.  At best, this should be a base C# class that does 
+ *  not inherit from anything in the UnityEngine namespace.
+ */
 public class SpawnRecord : ScriptableObject
 {
     [AssetSelector(Paths = "Assets/Prefabs/GridObjects")]

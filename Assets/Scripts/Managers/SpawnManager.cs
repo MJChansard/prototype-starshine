@@ -36,14 +36,6 @@ public class SpawnManager : MonoBehaviour
             return result;
         }
     }
-    public SpawnWave GetSpawnForLevel
-    {
-        get
-        {
-            SpawnWave result = CreateSpawnLevel(thisLevel.numberOfPhenomenaToSpawn, thisLevel.numberOfStationsToSpawn);
-            return result;
-        }
-    }
     public bool ForceSpawnEveryTurn { get { return forceSpawnEveryTurn; } }
 
     List<Vector2Int> remainingPerimeterSpawns
@@ -245,7 +237,7 @@ public class SpawnManager : MonoBehaviour
             {
                 SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
 
-                if (Random.Range(1, 10) > 5)
+                if (Random.Range(1, 11) > 2)
                     sr.GridObject = hazards[Random.Range(0, hazards.Count)];
                 else
                     sr.GridObject = loot[Random.Range(0, loot.Count)];
@@ -348,8 +340,12 @@ public class SpawnManager : MonoBehaviour
             spawnBorderTracker.Clear();
         }
     }
-    SpawnWave CreateSpawnLevel(int phenomenaCount, int stationCount)
+    SpawnWave CreateSpawnsForLevel(int phenomenaCount, int stationCount)
     {
+        /*  NOTE
+         * 
+         *  Not currently used but keeping here in case I can re-use the interior spawning logic
+         */
         SpawnWave level = SpawnWave.CreateSpawnWave(phenomenaCount + stationCount);
         
         if (phenomenaCount > 0 || stationCount > 0)
