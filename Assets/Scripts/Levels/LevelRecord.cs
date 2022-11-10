@@ -17,6 +17,8 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     [TabGroup("Settings")]  public bool saturation;
     [TabGroup("Settings")]  public int jumpFuelAmount;  // Need to remove eventually
 
+    [TabGroup("Settings")][Title("System")] public bool VerboseLogging;
+
     //[TabGroup("Settings")]  public int numberOfPhenomenaToSpawn;
     //[TabGroup("Settings")]  public int numberOfStationsToSpawn;
 
@@ -122,24 +124,19 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
         int gridLocationX = BoundaryLeftActual;        
         for (int i = 0; i < width; i++)
         {
-            int gridLocationY = BoundaryBottomActual;
+            int gridLocationY = BoundaryTopActual;
             for (int j = 0; j < height; j++)
             {
-                topographyIndexToGridLocation[i, j] = new Vector2Int(gridLocationX, gridLocationY);
-                gridLocationY++;
+                Vector2Int element = new Vector2Int(gridLocationX, gridLocationY);
+                topographyIndexToGridLocation[i, j] = element;
+                gridLocationY--;
+
+                if (VerboseLogging)
+                    Debug.LogFormat("At index [{0},{1}], location {2} added.", i, j, element.ToString());
+                
             }
             gridLocationX++;
         }
-
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-                Debug.LogFormat("X: {0}\nY: {1}\nVector2Int: {2}", i, j, topographyIndexToGridLocation[i, j].ToString());
-            }
-        }
-
-
     }
 
     // CONSTRUCTOR
