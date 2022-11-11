@@ -18,6 +18,7 @@ MonoBehaviour:
     ReferencedUnityObjects:
     - {fileID: -584646058905006761, guid: f991b8c8e754e494b83a17fc33d1838f, type: 3}
     - {fileID: -3623116190331690636, guid: 84f75344d57642d4dbbe12b065bf59e4, type: 3}
+    - {fileID: 5706007830160095333, guid: 38180cfc29e24094989a019bbcb5780e, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -31,22 +32,7 @@ MonoBehaviour:
       Data: 99
     - Name: ranks
       Entry: 1
-      Data: 9|11
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
+      Data: 11|9
     - Name: 
       Entry: 6
       Data: 
@@ -141,6 +127,24 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: 
+      Entry: 10
+      Data: 0
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
       Entry: 6
       Data: 
     - Name: 
@@ -149,9 +153,6 @@ MonoBehaviour:
     - Name: 
       Entry: 10
       Data: 0
-    - Name: 
-      Entry: 6
-      Data: 
     - Name: 
       Entry: 6
       Data: 
@@ -177,6 +178,33 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 10
+      Data: 0
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 10
+      Data: 2
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 6
+      Data: 
+    - Name: 
       Entry: 10
       Data: 0
     - Name: 
@@ -207,12 +235,6 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
       Entry: 10
       Data: 0
     - Name: 
@@ -237,29 +259,8 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
       Entry: 10
       Data: 0
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 6
-      Data: 
     - Name: 
       Entry: 6
       Data: 
@@ -341,9 +342,10 @@ MonoBehaviour:
   scarcity: 0
   saturation: 0
   jumpFuelAmount: 0
+  VerboseLogging: 0
   bordersEligibleForSpawn: 00000000
   eligibleForSpawn:
   - {fileID: 0}
-  width: 9
-  height: 11
-  playerSpawnLocation: {x: 0, y: 9}
+  width: 11
+  height: 9
+  playerSpawnLocation: {x: 0, y: 0}
