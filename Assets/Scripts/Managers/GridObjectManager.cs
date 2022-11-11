@@ -10,13 +10,13 @@ public class GridObjectManager : MonoBehaviour
 
     //  # INSPECTOR
     [Header("Spawn Management")]
-    [SerializeField] int minTicksUntilSpawn = 2;
-    [SerializeField] int maxTicksUntilSpawn = 4;
+    [SerializeField] int minTicksUntilSpawn = 2;        //  #TODO - No longer needed - SpawnManager now handles it
+    [SerializeField] int maxTicksUntilSpawn = 4;        //  #TODO - No longer needed - SpawnManager now handles it
 
     [HideInInspector] public List<SpawnWave> insertSpawnSequences = new List<SpawnWave>();
     Queue<SpawnRecord> spawnQueue = new Queue<SpawnRecord>();
     
-
+    //  #TODO - This library should be populated by the LevelRecord
     [Header("GridObject Library")]
     [SerializeField] GridObject[] gridObjectPrefabs;
     List<GridObject> hazards;
@@ -26,7 +26,7 @@ public class GridObjectManager : MonoBehaviour
 
     //  #PROPERTIES
     public GameManager.GameState currentGameState;
-    public GamePhase currentGamePhase;
+    public GamePhase currentGamePhase;                  //  #TODO - Can this be deleted?
     public bool IsAnimationComplete
     {
         get { return gridObjectAnimationInProgress.Count == 0; }
@@ -84,14 +84,14 @@ public class GridObjectManager : MonoBehaviour
         }
     }
 
-
+    
     // #FIELDS
     GridManager gridM;
     Player player;
     InputManager inputM;
     PlayerHUD pHUD;
 
-    public GameObject playerPrefab;
+    //public GameObject playerPrefab;
     //int currentTick = 0;
     Vector2Int minVector2;
     Vector2Int maxVector2;
@@ -158,21 +158,16 @@ public class GridObjectManager : MonoBehaviour
          *   - Identify next tick requiring a spawn
          *   - Handle Player
          *   - Insert Spawn Sequence data if present
-         * 
          */
         
         //minVector2 = new Vector2Int(gridM.BoundaryLeftActual, gridM.BoundaryBottomActual);
         //maxVector2 = new Vector2Int(gridM.BoundaryRightActual, gridM.BoundaryTopActual);
 
         ticksUntilNewSpawn = Random.Range(minTicksUntilSpawn, maxTicksUntilSpawn);
-        //currentTick = 1;
-
-        
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        gridObjectsInPlay.Add(player, null);
-                
+        //currentTick = 1;            
 
         // Populate GridObject Lists
+        // #TODO - Needs to be populated by the LevelRecord
         for (int i = 0; i < gridObjectPrefabs.Length; i++)
         {
             if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Hazard)
@@ -209,40 +204,21 @@ public class GridObjectManager : MonoBehaviour
                 {
                     Debug.LogFormat("Element at ({0},{1}) contains GridObject to spawn", x, y);
                     Vector2Int gridLocation = level.IndexToGrid(x, y);
-                    GameObject instance = Instantiate(element.gameObject, gridM.GridToWorld(gridLocation), Quaternion.identity);
+                    GameObject instance = Instantiate(element.gameObject, gridM.GridToWorld(gridLocation), element.gameObject.transform.rotation);
                     Debug.LogFormat("Instantiated a {0}", instance.name);
 
                     if (instance == null)
                         Debug.Log("Grrrr, null reference dood");
-                    //GridObject spawn = topography[x, y].gameObject.GetComponent<GridObject>();
+                    
 
                     GridObject go = instance.GetComponent<GridObject>();
                     if (go == null)
                         Debug.Log("Something is wrong with GetComponent<>()");
 
                     PlaceGridObjectInPlay(go, gridLocation);
-                }
-
-                /*
-                GameObject go = element.gameObject;
-                if (go == null)
-                    Debug.Log("Unable to find attached GameObject.");
-                else
-                    Debug.LogFormat("Found {0} at element ({1},{2})", go.name, x, y);
-
-                GridObject spawn = go.GetComponent<GridObject>();
-                if (spawn == null)
-                    Debug.Log("Unable to find attached GridObject Component");
-                else
-                    Debug.Log("Found attached GridObject Component");
-
-                //GridObject spawn = topography[x, y].gameObject.GetComponent<GridObject>();
-                if (spawn == null)
-                    Debug.Log("Can't find the attached GameObject.");
-                */                
+                }                              
             }
         }
-
     }
 
 
@@ -275,6 +251,8 @@ public class GridObjectManager : MonoBehaviour
         }
         else return;
     }
+
+    //  #TODO - 0 References to this so can this method be deleted?
     GridObject SelectGridObject(GridObjectType type)
     {
         if (type == GridObjectType.Hazard)
@@ -307,6 +285,7 @@ public class GridObjectManager : MonoBehaviour
             return null;
         }
     }
+    // #TODO - Empty method here
     void CreateGridObject(SpawnRecord spawnStep)
     {
 

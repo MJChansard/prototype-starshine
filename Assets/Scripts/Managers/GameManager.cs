@@ -84,28 +84,19 @@ public class GameManager : MonoBehaviour
         gridM.ReceiveLevelData(level);
         gridM.Init();
         
-
-        // Setup Player
-        Vector2Int startLocation = new Vector2Int(0, 0);
-        GameObject playerObject = Instantiate(gridObjectM.playerPrefab, gridM.GridToWorld(startLocation), Quaternion.identity);
-        if (VerboseConsole)
-        {
-            Debug.Log(playerObject.name + " has been instantiated.");
-            Debug.Log("Adding Player to Grid.");
-        }
-        gridM.AddObjectToGrid(playerObject, startLocation);
-        player = playerObject.GetComponent<Player>();
-        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
-        player.NextLevel(levelM.CurrentLevelData.jumpFuelAmount);
-
-
-        // Initialize GridObjectManager now that player exists
+        
+        // Initialize GridObjectManager
         if (level.levelTopography == null)
             Debug.Log("The topography for this level is NULL.");
         else
             Debug.Log("The topography for this level has been found.");
         gridObjectM.Init(level);
         //gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
+        
+
+        // Cache reference and setup Player
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        player.NextLevel(level.jumpFuelAmount);
 
 
         // Initialize SpawnManager
