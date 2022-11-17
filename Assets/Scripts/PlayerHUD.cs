@@ -12,8 +12,6 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private GameObject RefToHpNodeGameObject;
     [SerializeField] private Image batteryBar;
     [SerializeField] private Text batteryLabel;
-    [SerializeField] private Image fuelBar;
-    [SerializeField] private Text fuelLabel;
     [SerializeField] private PlayerHUDEntry playerHUDEntryPrefab;
 
     // Color hex for disabled node 
@@ -155,9 +153,9 @@ public class PlayerHUD : MonoBehaviour
     }
 
 
-    public void UpdateFuelHUD(int currentFuelAmount, int maxFuelAmount, float animateDelay)
+    public void UpdateBatteryHUD(int percentAmount, float animateDelay)
     {
-        StartCoroutine(UpdateFuelHUDCoroutine(currentFuelAmount, maxFuelAmount, animateDelay));
+        StartCoroutine(UpdateBatteryHUDCoroutine(percentAmount, animateDelay));
     }
     public void UpdateHpHUD(int currentPlayerHP, int maxPlayerHP, float animateDelay)
     {
@@ -165,12 +163,11 @@ public class PlayerHUD : MonoBehaviour
     }
 
 
-    private IEnumerator UpdateFuelHUDCoroutine(int currentFuel, int maxFuel, float delaySeconds)
+    private IEnumerator UpdateBatteryHUDCoroutine(int percentAmount, float delaySeconds)
     {
         yield return new WaitForSeconds(delaySeconds);
 
-        fuelLabel.text = string.Format("FUEL [ {0} / {1} ]", currentFuel, maxFuel);
-        fuelBar.fillAmount = (float)currentFuel / (float)maxFuel;
+        batteryBar.fillAmount += (float)percentAmount;
     }
     private IEnumerator UpdateHpHUDCoroutine(int currentHP, float delaySeconds)
     {
