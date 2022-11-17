@@ -9,18 +9,24 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private bool VerboseLogging;
     [SerializeField] private Image hpBar;
     [SerializeField] private Text hpLabel;
+    [SerializeField] private GameObject RefToHpNodeGameObject;
     [SerializeField] private Image batteryBar;
     [SerializeField] private Text batteryLabel;
     [SerializeField] private Image fuelBar;
     [SerializeField] private Text fuelLabel;
     [SerializeField] private PlayerHUDEntry playerHUDEntryPrefab;
 
-    
+    // Color hex for disabled node 
+
 
     //  #FIELDS
     private GameObject modulesGroupHUD;
     private PlayerHUDEntry[] entryArrayHUD;// = new PlayerHUDEntry[6];
     private int entryArrayHUDIndex;
+    private Image[] hpNodes;
+    private Color activeNode;       //#00FFF0
+    private Color inactiveNode;     //#383838
+
     //  References
     private InputManager inputM;
 
@@ -31,6 +37,10 @@ public class PlayerHUD : MonoBehaviour
     private void Awake()
     {
         entryArrayHUDIndex = 0;
+
+        activeNode = new Color(0, 255, 240);
+        inactiveNode = new Color(56, 56, 56);
+
 
         if (VerboseLogging)
             Debug.Log("PlayerHUD.Awake() commencing.");
@@ -49,6 +59,19 @@ public class PlayerHUD : MonoBehaviour
                 Destroy(modulesGroupHUD.transform.GetChild(i).gameObject);
             }
         }
+
+
+        if (RefToHpNodeGameObject == null)
+            Debug.Log("Please assign reference to UI HP Node GameObject.");
+        else
+        {
+            for (int i = 0; i < RefToHpNodeGameObject.transform.childCount; i++)
+            {
+                hpNodes[i] = RefToHpNodeGameObject.transform.GetChild(i).GetComponent<Image>();
+            }
+            
+        }
+
 
        // entry = modulesGroupHUD?.GetComponentInChildren<PlayerHUDEntry>();      // Try clearing the reference in Inspector
         //if (entry == null)
@@ -95,7 +118,7 @@ public class PlayerHUD : MonoBehaviour
             }
         }
 
-        UpdateFuelHUD(0, maxFuelAmount, 0.0f);
+        //UpdateFuelHUD(0, maxFuelAmount, 0.0f);
         UpdateHpHUD(maxPlayerHP, maxPlayerHP, 0.0f);
     }
     
@@ -138,7 +161,7 @@ public class PlayerHUD : MonoBehaviour
     }
     public void UpdateHpHUD(int currentPlayerHP, int maxPlayerHP, float animateDelay)
     {
-        StartCoroutine(UpdateHpHUDCoroutine(currentPlayerHP, maxPlayerHP, animateDelay));
+        StartCoroutine(UpdateHpHUDCoroutine(currentPlayerHP, animateDelay));
     }
 
 
@@ -149,11 +172,17 @@ public class PlayerHUD : MonoBehaviour
         fuelLabel.text = string.Format("FUEL [ {0} / {1} ]", currentFuel, maxFuel);
         fuelBar.fillAmount = (float)currentFuel / (float)maxFuel;
     }
-    private IEnumerator UpdateHpHUDCoroutine(int currentHP, int maxHP, float delaySeconds)
+    private IEnumerator UpdateHpHUDCoroutine(int currentHP, float delaySeconds)
     {
         yield return new WaitForSeconds(delaySeconds);
 
-        hpLabel.text = string.Format("HP: [{0}/{1}]", currentHP, maxHP);
-        hpBar.fillAmount = (float)currentHP / (float)maxHP;
+        int maxHP = RefToHpNodeGameObject.transform.childCount;
+        //hpLabel.text = string.Format("HP: [{0}/{1}]", currentHP, maxHP);
+        //hpBar.fillAmount = (float)currentHP / (float)maxHP;
+
+        for (int i =  maxHP - 1; i > currentHP - 1; i--)
+        {
+            hpNodes[i].color = inactiveNode;
+        }
     }    
 }
