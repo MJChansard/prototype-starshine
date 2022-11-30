@@ -27,6 +27,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 749.14124, y: 58.066372, z: -1.7252073}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -45,21 +46,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   VerboseConsole: 0
   moduleName: Missile Launcher
-  mode: 1
-  resourceType: 1
-  resourceCost: 1
-  hasCoolDown: 0
-  doesDamage: 0
+  ammoType: 2
+  hasCoolDown: 1
+  doesDamage: 1
   doesPlaceObjectInWorld: 1
   hasAnimation: 0
-  activeIcon: {fileID: 21300000, guid: a83d658d001f1d847bfebd8055ef7c03, type: 3}
-  inactiveIcon: {fileID: 21300000, guid: f026481ed9cb7294a84905720570cb83, type: 3}
+  availableIcon: {fileID: 21300000, guid: f026481ed9cb7294a84905720570cb83, type: 3}
+  useIcon: {fileID: 21300000, guid: a83d658d001f1d847bfebd8055ef7c03, type: 3}
+  cooldownIcon: {fileID: 21300000, guid: e200217689e75f1439cc7d224f03d561, type: 3}
   objectPlacedInWorld: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
     type: 3}
+  cooldownLength: 1
   capacityAmmo: 5
   startAmmo: 2
-  cooldownLength: 0
+  usageAmmoCost: 1
   weaponType: 2
-  baseDamage: 0
+  baseDamage: 2
   damageMultiplier: 0
   doesPenetrate: 0
