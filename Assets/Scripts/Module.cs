@@ -7,9 +7,10 @@ public class Module : MonoBehaviour
 {
     public class InitializationData
     {
-        public Sprite activeIcon;
-        public Sprite inactiveIcon;
-        public ResourceType resourceType;
+        public Sprite availableIcon;
+        public Sprite useIcon;
+        public Sprite cooldownIcon;
+        public AmmunitionType ammoType;
         public int capacityAmmo;
     }
 
@@ -28,20 +29,21 @@ public class Module : MonoBehaviour
 
         public int newAmmoAmount;
     }
-    // Don't keep two different things
-    // Look into public properties approach
-    // Or could have module-lite serialized class that doesn't Inherit from MonoBehavior
 
-    public enum Type
-    {
-        Functional = 1,
-        Augment = 2
-    }
 
     public enum ResourceType
     {
+        None = 0,
         Ammunition = 1,
         Battery = 2
+    }
+
+    public enum AmmunitionType
+    {
+        None = 0,
+        Rounds = 1,
+        Missiles = 2,
+        Batteires = 3
     }
 
     public enum WeaponType
@@ -54,42 +56,41 @@ public class Module : MonoBehaviour
 
     // #INSPECTOR
     [SerializeField] private bool VerboseConsole;
+  
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private string moduleName;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private AmmunitionType ammoType;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasCoolDown;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool doesDamage;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool doesPlaceObjectInWorld;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasAnimation;
 
-    [BoxGroup("GENERAL MODULE SETTINGS", centerLabel: true)]
-    [TitleGroup("GENERAL MODULE SETTINGS/CONFIGURATION")] [SerializeField] private string moduleName;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private Type mode;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private ResourceType resourceType;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private int resourceCost;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private bool hasCoolDown;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private bool doesDamage;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private bool doesPlaceObjectInWorld;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private bool hasAnimation;
 
-    [TitleGroup("GENERAL MODULE SETTINGS/ASSETS")]
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private Sprite activeIcon;
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private Sprite inactiveIcon;
+    [TitleGroup("ASSETS")][SerializeField] private Sprite availableIcon;
+    [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
+    [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;
+    [ShowIf("doesPlaceObjectInWorld")][TitleGroup("ASSETS")][SerializeField] private GameObject objectPlacedInWorld;
 
-    [ShowIf("doesPlaceObjectInWorld")]
-    [BoxGroup("GENERAL MODULE SETTINGS")] [SerializeField] private GameObject objectPlacedInWorld;
 
-    [ShowIf("doesUseAmmo")] [BoxGroup("AMMO RESOURCE CONFIGURATION", centerLabel: true)] [SerializeField]   private int capacityAmmo;
-    [ShowIf("doesUseAmmo")] [BoxGroup("AMMO RESOURCE CONFIGURATION")] [SerializeField]                      private int startAmmo;
-    [ShowIf("doesUseAmmo")] [BoxGroup("AMMO RESOURCE CONFIGURATION")] [DisplayAsString]                     private int displayAmmoInspector;
+    [ShowIf("hasCoolDown")][TitleGroup("COOLDOWN SETTINGS")][SerializeField] private int cooldownLength;
+    [ShowIf("hasCoolDown")][TitleGroup("COOLDOWN SETTINGS")][DisplayAsString] private int cooldownCounter;
 
-    [ShowIf("hasCoolDown")] [BoxGroup("COOLDOWN CONFIGURATION", centerLabel: true)] [SerializeField]    private int cooldownLength;
-    [ShowIf("hasCoolDown")] [BoxGroup("COOLDOWN CONFIGURATION")] [DisplayAsString]                      private int cooldownCounter;
 
-    [ShowIf("doesDamage")] [BoxGroup("WEAPON CONFIGURATION", centerLabel: true)] [SerializeField]   private WeaponType weaponType;
-    [ShowIf("doesDamage")] [BoxGroup("WEAPON CONFIGURATION")] [SerializeField]                      private int baseDamage;
-    [ShowIf("doesDamage")] [BoxGroup("WEAPON CONFIGURATION")] [SerializeField]                      private float damageMultiplier;
-    [ShowIf("doesDamage")] [BoxGroup("WEAPON CONFIGURATION")] [SerializeField]                      private bool doesPenetrate;
+    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int capacityAmmo;
+    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int startAmmo;
+    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int usageAmmoCost;
+    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][DisplayAsString] private int displayCurrentAmmoInspector;
+
+    
+    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private WeaponType weaponType;
+    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private int baseDamage;
+    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private float damageMultiplier;
+    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private bool doesPenetrate;
 
     // Might need a new field indicating whether grid distance impacts damage?
 
 
     // #PROPERTIES
-    public bool doesUseAmmo { get { return resourceType == ResourceType.Ammunition; } }
-    public bool doesUseBattery { get { return resourceType == ResourceType.Battery; } }
+    
     public bool isEquipped { get; set; }
     public InitializationData Data
     {
@@ -97,9 +98,10 @@ public class Module : MonoBehaviour
         {
             InitializationData data = new InitializationData();
 
-            data.activeIcon = activeIcon;
-            data.inactiveIcon = inactiveIcon;
-            data.resourceType = resourceType;
+            data.availableIcon = availableIcon;
+            data.useIcon = useIcon;
+            data.cooldownIcon = cooldownIcon;
+            data.ammoType = ammoType;
             data.capacityAmmo = capacityAmmo;
 
             return data;
@@ -117,16 +119,18 @@ public class Module : MonoBehaviour
         if(hasAnimation)
         {
             animator = GetComponent<IModuleAnimator>();
+            if (TryGetComponent<ParticleSystem>(out ParticleSystem ps))
+                ps.Stop();
         }
         currentAmmo = startAmmo;
-        displayAmmoInspector = currentAmmo;
+        displayCurrentAmmoInspector = currentAmmo;
     }
 
 
     //  #METHODS
     public bool UseModule(out UsageData data)
     {
-        bool sufficientResource = ConsumeResource(resourceType);
+        bool sufficientResource = ConsumeResource(ammoType);
         data = new UsageData
         {
             doesDamage = this.doesDamage,
@@ -168,27 +172,20 @@ public class Module : MonoBehaviour
          
     }
 
-    private bool ConsumeResource(ResourceType r)
+    private bool ConsumeResource(AmmunitionType r)
     {
-        if (r == ResourceType.Ammunition)
+        if (currentAmmo > 0)
         {
-            if (currentAmmo > 0)
-            {
-                currentAmmo--;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            currentAmmo--;
+            return true;
         }
         else
         {
             return false;
-        }       
+        }     
     }
 
-    public void SupplyResource(ResourceType r)
+    public void SupplyResource(AmmunitionType r)
     {
 
     }
