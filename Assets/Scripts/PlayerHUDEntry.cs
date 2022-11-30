@@ -5,13 +5,14 @@ using UnityEngine.UI;
 
 public class PlayerHUDEntry : MonoBehaviour
 {
-    public Sprite activeIcon { get; private set; }
-    public Sprite inactiveIcon { get; private set; }
+    public Sprite availableIcon { get; private set; }
+    public Sprite useIcon { get; private set; }
+    public Sprite cooldownIcon { get; private set; }
     public bool EntryIsActive
     {
         get
         {
-            if (spriteElementUI.sprite == activeIcon)
+            if (spriteElementUI.sprite == availableIcon)
                 return true;
             else
                 return false;
@@ -36,11 +37,11 @@ public class PlayerHUDEntry : MonoBehaviour
         textElementUI = gameObject.GetComponentInChildren<Text>();
         textElementUI.color = Color.white;
 
-        activeIcon = iData.activeIcon;
-                    
-        inactiveIcon = iData.inactiveIcon;
-        spriteElementUI.sprite = inactiveIcon;
+        availableIcon = iData.availableIcon;
+        useIcon = iData.useIcon;
+        cooldownIcon = iData.cooldownIcon;
 
+        spriteElementUI.sprite = availableIcon;
         textElementUI.text = iData.capacityAmmo.ToString();
     }
 
@@ -58,9 +59,9 @@ public class PlayerHUDEntry : MonoBehaviour
     private void ToggleIcon(bool active)
     {
         if (active)
-            spriteElementUI.sprite = activeIcon;
+            spriteElementUI.sprite = availableIcon;
         else
-            spriteElementUI.sprite = inactiveIcon;
+            spriteElementUI.sprite = useIcon;
     }
 
     private void UpdateText(int value)
