@@ -63,8 +63,7 @@ public class Player : GridObject
     private GridMover movePattern;
     private Health hp;
     private Transform weaponSource;
-    private Weapon[] weaponInventory;
-
+    
     private Module[] equippedModules;
     private Module[] moduleInventory;
     private int selectModule = 0;
@@ -107,14 +106,7 @@ public class Player : GridObject
 
         hp = GetComponent<Health>();
 
-        weaponInventory = new Weapon[weaponObjects.Length];
-        for (int i = 0; i < weaponObjects.Length; i++)
-        {
-            Weapon toInsert = weaponObjects[i].GetComponent<Weapon>();
-            weaponInventory[i] = toInsert;
-            Debug.LogFormat("Added {0} to weaponInventory.", toInsert.Name);
-        }
-
+        
         equippedModules = new Module[6];
         GameObject playerModuleTray = transform.Find("Modules").gameObject;
         moduleInventory = new Module[playerModuleTray.transform.childCount];
@@ -191,16 +183,7 @@ public class Player : GridObject
 
     public void AcceptAmmo(WeaponType type, int amount)
     {
-        for (int i = 0; i < weaponInventory.Length; i++)
-        {
-            if (weaponInventory[i].weaponType == type)
-            {
-                weaponInventory[i].SupplyAmmo(amount);
-                OnAmmoAmountChange?.Invoke(i, weaponInventory[i].currentAmmunition, 1.0f);
-             
-                break;
-            }
-        }
+
     }
 
     public void AcceptFuel(int amount)
