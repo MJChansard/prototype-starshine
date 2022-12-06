@@ -30,20 +30,17 @@ public class Module : MonoBehaviour
         public int newAmmoAmount;
     }
 
+    public class MoveData
+    {
+
+    }
+
 
     public enum ResourceType
     {
         None = 0,
         Ammunition = 1,
         Battery = 2
-    }
-
-    public enum AmmunitionType
-    {
-        None = 0,
-        Rounds = 1,
-        Missiles = 2,
-        Batteires = 3
     }
 
     public enum WeaponType
@@ -130,35 +127,49 @@ public class Module : MonoBehaviour
     //  #METHODS
     public bool UseModule(out UsageData data)
     {
-        bool sufficientResource = ConsumeResource(ammoType);
-        data = new UsageData
+        /*  NOTES
+         * 
+         *  - If this method needs to be able to handle a Thruster & a Shield module then
+         *      there is a lot of work that needs to be done here
+         *      
+         *  - Also the UsageData class becomes really useless in its current form since it is
+         *      so tailored to weapons
+         */
+        if (ammoType != AmmunitionType.None)
         {
-            doesDamage = this.doesDamage,
-            baseDamage = this.baseDamage,
-            dynamicDamage = damageMultiplier > 0.0,
-            damageMultiplier = this.damageMultiplier,
+            bool sufficientResource = ConsumeResource(ammoType);
 
-            doesPenetrate = this.doesPenetrate,
+            data = new UsageData
+            {
+                doesDamage = this.doesDamage,
+                baseDamage = this.baseDamage,
+                dynamicDamage = damageMultiplier > 0.0,
+                damageMultiplier = this.damageMultiplier,
 
-            doesPlaceObjectInWorld = this.doesPlaceObjectInWorld,
-            objectToPlaceInWorld = this.objectPlacedInWorld,
+                doesPenetrate = this.doesPenetrate,
 
-            //hasAnimation = this.hasAnimation,
+                doesPlaceObjectInWorld = this.doesPlaceObjectInWorld,
+                objectToPlaceInWorld = this.objectPlacedInWorld,
 
-            newAmmoAmount = currentAmmo
-        };
+                //hasAnimation = this.hasAnimation,
 
-        if (VerboseConsole)
-        {
-            if (sufficientResource)
+                newAmmoAmount = currentAmmo
+            };
+            
+            if (VerboseConsole)
                 Debug.LogFormat("Module: {0} usage successful.", moduleName);
-            else
+
+            // #TODO UI needs to be updated
+
+            return sufficientResource;
+        } 
+        else
+        {
+            data = new UsageData();
+            if (VerboseConsole)
                 Debug.LogFormat("Module {0} usage unsuccessful.  Insufficient resource.", moduleName);
+            return false; 
         }
-        
-        // UI needs to be updated
-                    
-        return sufficientResource;
     }
 
     public void AnimateModule(GridBlock gb)
