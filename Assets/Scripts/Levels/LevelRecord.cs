@@ -15,7 +15,7 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     [TabGroup("Settings")]  public int minGridObjectsOnGrid;
     [TabGroup("Settings")]  public bool scarcity;
     [TabGroup("Settings")]  public bool saturation;
-    [TabGroup("Settings")]  public int jumpFuelAmount;  // Need to remove eventually
+    [TabGroup("Settings")]  public int jumpFuelAmount;      //  #TODO - Need to remove eventually
 
     [TabGroup("Settings")][Title("System")] public bool VerboseLogging;
 
@@ -28,7 +28,6 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     //  #TOPOGRAPHY
     [TabGroup("Topography")]    public int width;
     [TabGroup("Topography")]    public int height;
-    [TabGroup("Topography")]    public Vector2Int playerSpawnLocation;
         
     [TabGroup("Topography")][Button("New")]
     private void CreateNewTopography()
@@ -140,6 +139,8 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     }
 
     // CONSTRUCTOR
+
+    //  #TODO - Reconsider this constructor given changes to class
     public static LevelRecord CreateLevelRecord(int w, int h, int f, int p, int s)
     {
         LevelRecord lr = LevelRecord.CreateInstance<LevelRecord>();
@@ -152,6 +153,7 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
         return lr;
     }
 
+    //  #TODO - 0 references to this method, delete?
     public void InitSpawn(int _minObjectsPerWave, int _maxObjectsPerWave, int _minGridObjectsOnGrid, GridBorder[] _bordersEligibleForSpawn)
     {
         minObjectsPerWave           = _minObjectsPerWave;
@@ -160,6 +162,7 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
         bordersEligibleForSpawn     = _bordersEligibleForSpawn;
     }
 
+    //  Required method for Inspector Rendering
     static TopographyElementIcon DrawCell(Rect rect, TopographyElementIcon value)
     {
         return (TopographyElementIcon)SirenixEditorFields.UnityPreviewObjectField(

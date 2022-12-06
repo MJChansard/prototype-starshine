@@ -16,3 +16,12 @@ public enum GridObjectType
     Station = 3,
     Loot = 4
 };
+
+public enum AmmunitionType
+{
+    None = 0,
+    Rounds = 1,
+    Missiles = 2,
+    Batteries = 3
+}
+

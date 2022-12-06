@@ -67,7 +67,6 @@ public class GridMover : MonoBehaviour
             
             else return true;
         }
-
     }
 
 
