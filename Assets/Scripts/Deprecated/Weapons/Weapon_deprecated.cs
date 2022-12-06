@@ -11,7 +11,7 @@ public enum WeaponType
 };
 
 
-public abstract class Weapon : MonoBehaviour
+public abstract class Weapon_deprecated : MonoBehaviour
 {
     virtual public string Name { get { return weaponName; } }
     [BoxGroup("WEAPON CONFIGURATION", centerLabel:true)] public WeaponType weaponType;

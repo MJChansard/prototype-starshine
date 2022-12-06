@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 
-public class RailGun : Weapon
+public class RailGun : Weapon_deprecated
 {
     override public string Name
     {

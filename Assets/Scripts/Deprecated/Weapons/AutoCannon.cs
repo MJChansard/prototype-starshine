@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AutoCannon : Weapon
+public class AutoCannon : Weapon_deprecated
 {
     override public string Name
     {

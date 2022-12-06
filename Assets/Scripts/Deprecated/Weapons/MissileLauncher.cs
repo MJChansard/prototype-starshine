@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MissileLauncher : Weapon
+public class MissileLauncher : Weapon_deprecated
 {
     override public string Name
     {
