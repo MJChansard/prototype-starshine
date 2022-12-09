@@ -1,37 +1,60 @@
-using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
+using System.Runtime.CompilerServices;
 
-public class ModuleThruster : MonoBehaviour
+public class Thruster : Module
 {
     // #INSPECTOR
     [SerializeField] private bool VerboseConsole;
-
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private string moduleName;    
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasAnimation;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private int cooldownDuration;
-
-    [TitleGroup("ASSETS")][SerializeField] private Sprite availableIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;  
     
-    [TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int capacityAmmo;
-    [TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int startAmmo;
-    [TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int usageAmmoCost;
-    
-    [TitleGroup("CURRENT STATUS")][DisplayAsString] private int displayCurrentAmmoInspector;
-    [TitleGroup("CURRENT STATUS")][DisplayAsString] private int cooldownCounter;
-
     // #FIELDS
-    private Vector2Int direction;
+    private Vector2Int currentDirection;
+    private int slowTicksRemaining;
+    private bool hasMovedOnPlayerPhase;
 
     // #PROPERTIES
+    public bool CanCurrentlyMove
+    {
+        get
+        {
+            if (slowTicksRemaining == 0 && !hasMovedOnPlayerPhase)
+                return true;
+            else
+                return false;
+        }
+    }
+
+    // #UNITY
+    private void Awake()
+    {
+        currentDirection = Vector2Int.up;
+        slowTicksRemaining = 0;
+        hasMovedOnPlayerPhase = false;
+    }
 
     // #METHODS
-
-    public void UseModule()
+    public override bool UseModule(out Module.UsageData data)
     {
+        data = new Module.UsageData()
+        {
+            doesMove = true,
+            doesDamage = false,
+            doesPenetrate = false,
+            doesPlaceObjectInWorld = false
+        };
+        
+        if (this.CanCurrentlyMove)
+        {
+            return true;
+        }
+        else { return false; }
+    
+    }
 
+    public override void AnimateModule(GridBlock gb)
+    {
+        throw new System.NotImplementedException();
     }
 }

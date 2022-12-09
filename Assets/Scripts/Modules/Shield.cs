@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ModuleShield : MonoBehaviour
+public class Shield : Module
 {
     // #INSPECTOR
     [SerializeField] private bool VerboseConsole;
@@ -16,7 +16,6 @@ public class ModuleShield : MonoBehaviour
     [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
     [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;
 
-    [TitleGroup("SHIELD SETTINGS")][SerializeField] private int cooldownLength;
     [TitleGroup("SHIELD SETTINGS")][SerializeField] private int capacityAmmo;
     [TitleGroup("SHIELD SETTINGS")][SerializeField] private int startAmmo;
     [TitleGroup("SHIELD SETTINGS")][SerializeField] private int usageAmmoCost;
@@ -31,4 +30,13 @@ public class ModuleShield : MonoBehaviour
         cooldownCounter = 0;
     }
 
+    public override bool UseModule(out UsageData data)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void AnimateModule(GridBlock gb)
+    {
+        throw new System.NotImplementedException();
+    }
 }
