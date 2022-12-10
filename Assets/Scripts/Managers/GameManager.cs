@@ -150,7 +150,16 @@ public class GameManager : MonoBehaviour
         {
             activateModuleReceived = false;
             
-            Module.UsageData uData = player.UseCurrentModule();
+            player.UseCurrentModule();
+            if (player.thrusterUsageData != null)
+            {
+                gridObjectM.OnPlayerActivateModule(player.thrusterUsageData);
+            }
+            else if (player.weaponUsageData != null)
+            {
+                gridObjectM.OnPlayerActivateModule(player.weaponUsageData);
+            }
+
             if (uData != null)
             {
                 gridObjectM.OnPlayerActivateModule(uData);

@@ -50,12 +50,17 @@ public class Player : GridObject
             return array;
         }
     }
-   
+
+    public GameObject currentSelectedModule;
     public Vector2Int Direction { get { return movePattern.DirectionOnGrid; } }
     public int CurrentJumpFuel { get { return currentJumpFuel; } }
 
+    public Thruster.UsageData thrusterUsageData { get; private set; }
+    public Weapon.UsageData weaponUsageData { get; private set; }
+    public Shield.UsageData shieldUsageData { get; private set; }
+
     [HideInInspector] public bool IsAttackingThisTick = false;
-    
+
 
 
     // # FIELDS
@@ -66,7 +71,7 @@ public class Player : GridObject
     
     private Module[] equippedModules;
     private Module[] moduleInventory;
-    private int selectModule = 0;
+    private int moduleSelector = 0;
     
     private int currentJumpFuel = 0;
     private int maxFuelAmount = 10;
@@ -78,6 +83,7 @@ public class Player : GridObject
 
     public System.Action<int, int, float> OnAmmoAmountChange;
     public System.Action<int, int, float> OnFuelAmountChange;
+
 
     //  # DELEGATES
     public System.Action<int> OnActivateSelectedWeapon;
@@ -120,7 +126,7 @@ public class Player : GridObject
         inputM.ChangeDirectionButtonPressed += ChangeDirectionFacing;
         inputM.NextModuleButtonPressed += NextModule;
         inputM.PreviousModuleButtonPressed += PreviousModule;
-
+        
         Debug.Log("Successfully subscribed to InputManager.ChangeDirectionButtonPressed");
     }
     
@@ -141,23 +147,34 @@ public class Player : GridObject
     }
     void NextModule()
     {
-        if (selectModule < moduleInventory.Length)
-            selectModule++;
+        if (moduleSelector < moduleInventory.Length)
+            moduleSelector++;
     }
     void PreviousModule()
     {
-        if (selectModule > 0)
-            selectModule--;
+        if (moduleSelector > 0)
+            moduleSelector--;
     }
     
     //  # METHODS/Modules
-    public Module.UsageData UseCurrentModule()
+    public void UseCurrentModule()
     {
-        bool success = moduleInventory[selectModule].UseModule(out Module.UsageData uData);
-        if (success)
-            return uData;
-        else
-            return null;
+        if (moduleInventory[moduleSelector].UseModule())
+        {
+            if (moduleInventory[moduleSelector] is Thruster)
+            {
+                Thruster module = moduleInventory[moduleSelector] as Thruster;
+                thrusterUsageData = module.LatestUsageData;
+                weaponUsageData = null;
+            }
+            else if (moduleInventory[moduleSelector] is Weapon)
+            {
+                Weapon module = moduleInventory[moduleSelector] as Weapon;
+                weaponUsageData = module.LatestUsageData;
+                thrusterUsageData = null;
+            }
+        }
+
     }
     
 
@@ -166,7 +183,7 @@ public class Player : GridObject
         if (slot >= 0 && slot <= 5)
         {
             equippedModules[slot] = module;
-            module.isEquipped = true;
+            //module.isEquipped = true;
             return true;
         }
         else
@@ -178,7 +195,7 @@ public class Player : GridObject
     public void StartAttackAnimation(GridBlock gridBlock)
     {
         //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-        equippedModules[selectModule].AnimateModule(gridBlock);
+        equippedModules[moduleSelector].AnimateModule(gridBlock);
     }
 
     public void AcceptAmmo(WeaponType type, int amount)

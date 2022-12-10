@@ -20,7 +20,10 @@ public class Shield : Module
     [TitleGroup("SHIELD SETTINGS")][SerializeField] private int startAmmo;
     [TitleGroup("SHIELD SETTINGS")][SerializeField] private int usageAmmoCost;
 
+    public class UsageData
+    {
 
+    }
 
     // # Fields
 
@@ -30,7 +33,7 @@ public class Shield : Module
         cooldownCounter = 0;
     }
 
-    public override bool UseModule(out UsageData data)
+    public override bool UseModule()
     {
         throw new System.NotImplementedException();
     }

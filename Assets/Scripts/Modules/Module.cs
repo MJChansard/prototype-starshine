@@ -15,23 +15,7 @@ public abstract class Module : MonoBehaviour
         public int capacityAmmo;
         public int cooldownDuration;
     }
-
-    public class UsageData
-    {
-        public bool doesMove;
-        
-        public bool doesDamage;
-        public bool doesPenetrate;
-
-        public int baseDamage;
-        public bool dynamicDamage;
-        public float damageMultiplier;
-        
-        public bool doesPlaceObjectInWorld;
-        public GameObject objectToPlaceInWorld;
-
-        public int newAmmoAmount;
-    }
+  
     
     public enum AmmunitionType
     {
@@ -72,8 +56,9 @@ public abstract class Module : MonoBehaviour
         }
     }
 
+
     // #METHODS
-    public abstract bool UseModule(out UsageData data);
+    public abstract bool UseModule();
     public abstract void AnimateModule(GridBlock gb);
     
 }

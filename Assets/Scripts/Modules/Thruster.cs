@@ -8,7 +8,21 @@ public class Thruster : Module
 {
     // #INSPECTOR
     [SerializeField] private bool VerboseConsole;
+
     
+    public class UsageData
+    {
+        public bool EligibleToMove { get; private set; }
+        public Vector2Int DirectionToMove { get; private set; }
+        public int NumberOfMoves { get; private set; }
+
+        public UsageData(bool eligibleToMove, int numberOfMoves)
+        {
+            EligibleToMove = eligibleToMove;
+            NumberOfMoves = numberOfMoves;
+        }
+    }
+
     // #FIELDS
     private Vector2Int currentDirection;
     private int slowTicksRemaining;
@@ -25,6 +39,7 @@ public class Thruster : Module
                 return false;
         }
     }
+    public UsageData LatestUsageData { get; private set; }
 
     // #UNITY
     private void Awake()
@@ -35,18 +50,11 @@ public class Thruster : Module
     }
 
     // #METHODS
-    public override bool UseModule(out Module.UsageData data)
-    {
-        data = new Module.UsageData()
-        {
-            doesMove = true,
-            doesDamage = false,
-            doesPenetrate = false,
-            doesPlaceObjectInWorld = false
-        };
-        
+    public override bool UseModule()
+    {        
         if (this.CanCurrentlyMove)
         {
+            LatestUsageData = new Thruster.UsageData(CanCurrentlyMove, 1);
             return true;
         }
         else { return false; }

@@ -315,57 +315,59 @@ public class GridObjectManager : MonoBehaviour
     
 
     //  #CORE FUNCTIONALITY
-    public void OnPlayerActivateModule(Module.UsageData uData)
+    public void OnPlayerActivateModule(Thruster.UsageData uData)
     {
-        if (uData.doesDamage)
-        {
-            Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
-            List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
+
+    }
+    public void OnPlayerActivateModule(Weapon.UsageData uData)
+    {
+        Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
+        List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
             
-            for (int i = 0; i < possibleTargets.Count; i++)
+        for (int i = 0; i < possibleTargets.Count; i++)
+        {
+            for (int j = 0; j < possibleTargets[i].objectsOnBlock.Count; j++)
             {
-                for (int j = 0; j < possibleTargets[i].objectsOnBlock.Count; j++)
+                Health hp = possibleTargets[i].objectsOnBlock[j].GetComponent<Health>();
+                if (hp != null)
                 {
-                    Health hp = possibleTargets[i].objectsOnBlock[j].GetComponent<Health>();
-                    if (hp != null)
+                    if (uData.DynamicDamage)
                     {
-                        if (uData.dynamicDamage)
-                        {
-                            int gridBlockDistance = i;
-                            int damageAmount = CalculateDamage(gridBlockDistance, uData.baseDamage, uData.damageMultiplier);
-                            hp.SubtractHealth(damageAmount);
-                        }
-                        else
-                        {
-                            hp.SubtractHealth(uData.baseDamage);
-                        }
+                        int gridBlockDistance = i;
+                        int damageAmount = CalculateDamage(gridBlockDistance, uData.baseDamage, uData.damageMultiplier);
+                        hp.SubtractHealth(damageAmount);
+                    }
+                    else
+                    {
+                        hp.SubtractHealth(uData.BaseDamage);
+                    }
 
 
-                        if (!uData.doesPenetrate)
-                        {
-                            //  #TO-DO: Execute appropriate animation
-                            player.StartAttackAnimation(possibleTargets[i]);
-                            break;
-                        }
+                    if (!uData.DoesPenetrate)
+                    {
+                        //  #TO-DO: Execute appropriate animation
+                        player.StartAttackAnimation(possibleTargets[i]);
+                        break;
                     }
                 }
             }
-            // End animation at end of targetBlocks List
-            
         }
+        // End animation at end of targetBlocks List
 
-
-        if (uData.doesPlaceObjectInWorld)
+        if (uData.DoesPlaceObjectInWorld)
         {
             Vector3 playerWorldLocation = gridM.GridToWorld(gridM.FindGridBlockContainingObject(player.gameObject).location);
-            GameObject instance = Instantiate(uData.objectToPlaceInWorld, playerWorldLocation, player.transform.rotation);
+            GameObject instance = Instantiate(uData.ObjectToPlace, playerWorldLocation, player.transform.rotation);
             instance.GetComponent<GridMover>().SetMovePattern(player.Direction);
 
             GridObject newObject = instance.GetComponent<GridObject>();
             PlaceGridObjectInPlay(newObject, gridM.WorldToGrid(playerWorldLocation));
         }
     }
+    public void OnPlayerActivateModule(Shield.UsageData udata)
+    {
 
+    }
 
     public void NewGridUpdateSteps(bool checkHealth = true, bool checkMove = true, bool checkLoot = true, bool includePlayer = true)
     {

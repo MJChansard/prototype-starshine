@@ -11,7 +11,6 @@ public class Weapon : Module
         Ammunition = 1,
         Battery = 2
     }
-
     public enum WeaponType
     {
         AutoCannon = 1,
@@ -19,6 +18,26 @@ public class Weapon : Module
         RailGun = 3
     }
 
+    public class UsageData
+    {
+        public bool DynamicDamage { get; private set; }
+        public bool DoesPenetrate { get; private set; }
+        public int BaseDamage { get; private set; }
+        public float DamageMultiplier { get; private set; }
+
+        public bool DoesPlaceObjectInWorld { get; private set; }
+        public GameObject ObjectToPlace { get; private set; }
+
+        public UsageData(bool dynamicDamage, bool doesPenetrate, int baseDamage, float damageMultipler, bool placesObject, GameObject objectToPlace = null)
+        {
+            DynamicDamage = dynamicDamage;
+            DoesPenetrate = doesPenetrate;
+            BaseDamage = baseDamage;
+            DamageMultiplier = damageMultipler;
+            DoesPlaceObjectInWorld = placesObject;
+            ObjectToPlace = objectToPlace;
+        }
+    }
 
     // #INSPECTOR
     [SerializeField] private bool VerboseConsole;
@@ -73,6 +92,7 @@ public class Weapon : Module
             return data;
         }
     }
+    public UsageData LatestUsageData { get; private set; }
 
     // #FIELDS
     private bool isActive;
@@ -94,7 +114,7 @@ public class Weapon : Module
 
 
     //  #METHODS
-    public override bool UseModule(out UsageData data)
+    public override bool UseModule()
     {
         /*  NOTES
          * 
