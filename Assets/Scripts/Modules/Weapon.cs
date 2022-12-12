@@ -1,6 +1,7 @@
 using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Weapon : Module
@@ -17,6 +18,14 @@ public class Weapon : Module
         MissileLauncher = 2,
         RailGun = 3
     }
+
+    public new class InitializationData : Module.InitializationData
+    {
+        public AmmunitionType ammoType { get; set; }
+        public int ammoCapacity { get; set; }
+        public int ammoAvailable { get; set; }
+    }
+
 
     public class UsageData
     {
@@ -75,24 +84,27 @@ public class Weapon : Module
 
 
     // #PROPERTIES
-
     public bool isEquipped { get; set; }
-    public InitializationData Data
+    public Weapon.InitializationData HUDInitializationData
     {
         get
         {
-            InitializationData data = new InitializationData();
+            var data = new Weapon.InitializationData
+            {
+                availableIcon = availableIcon,
+                useIcon = useIcon,
+                cooldownIcon = cooldownIcon,
 
-            data.availableIcon = availableIcon;
-            data.useIcon = useIcon;
-            data.cooldownIcon = cooldownIcon;
-            //data.ammoType = ammoType;
-            //data.capacityAmmo = capacityAmmo;
+                ammoType = ammoType,
+                ammoCapacity = capacityAmmo,
+                ammoAvailable = currentAmmo
+            };
 
             return data;
         }
     }
     public UsageData LatestUsageData { get; private set; }
+
 
     // #FIELDS
     private bool isActive;
