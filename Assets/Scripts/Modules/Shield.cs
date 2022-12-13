@@ -5,34 +5,26 @@ using UnityEngine;
 
 public class Shield : Module
 {
-    // #INSPECTOR
-    [SerializeField] private bool VerboseConsole;
-
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private AmmunitionType ammoType = AmmunitionType.Batteries;
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private int displayCurrentAmmoInspector;
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private int cooldownCounter;
-
-    [TitleGroup("ASSETS")][SerializeField] private Sprite availableIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;
-
-    [TitleGroup("SHIELD SETTINGS")][SerializeField] private int capacityAmmo;
-    [TitleGroup("SHIELD SETTINGS")][SerializeField] private int startAmmo;
-    [TitleGroup("SHIELD SETTINGS")][SerializeField] private int usageAmmoCost;
-
-    public class UsageData
+    public new class UsageData : Module.UsageData
     {
+
+
+        
 
     }
 
-    // # Fields
+    // #INSPECTOR
 
+    // #FIELDS
+
+    // #UNITY
     private void Awake()
     {
         displayCurrentAmmoInspector = 0;
         cooldownCounter = 0;
     }
 
+    // #METHODS
     public override bool UseModule()
     {
         throw new System.NotImplementedException();

@@ -6,10 +6,7 @@ using System.Runtime.CompilerServices;
 
 public class Thruster : Module
 {
-    // #INSPECTOR
-    [SerializeField] private bool VerboseConsole;
-
-    
+    // #INSPECTOR    
     public class UsageData
     {
         public bool EligibleToMove { get; private set; }

@@ -26,22 +26,21 @@ public class Weapon : Module
         public int ammoAvailable { get; set; }
     }
 
-
-    public class UsageData
+    public new class UsageData : Module.UsageData
     {
-        public bool DynamicDamage { get; private set; }
-        public bool DoesPenetrate { get; private set; }
-        public int BaseDamage { get; private set; }
-        public float DamageMultiplier { get; private set; }
+        public int BaseDamage { get; set; }
+        public bool DoesPenetrate { get; set; }
+        public bool DynamicDamage { get; set; }
+        public float DamageMultiplier { get; set; }
 
-        public bool DoesPlaceObjectInWorld { get; private set; }
-        public GameObject ObjectToPlace { get; private set; }
-
-        public UsageData(bool dynamicDamage, bool doesPenetrate, int baseDamage, float damageMultipler, bool placesObject, GameObject objectToPlace = null)
+        public bool DoesPlaceObjectInWorld { get; set; }
+        public GameObject ObjectToPlace { get; set; }
+                
+        public UsageData(int baseDamage, bool doesPenetrate, float damageMultipler,  bool placesObject, GameObject objectToPlace = null)
         {
-            DynamicDamage = dynamicDamage;
-            DoesPenetrate = doesPenetrate;
             BaseDamage = baseDamage;
+            DoesPenetrate = doesPenetrate;
+            DynamicDamage = DamageMultiplier > 0.0;
             DamageMultiplier = damageMultipler;
             DoesPlaceObjectInWorld = placesObject;
             ObjectToPlace = objectToPlace;
@@ -49,31 +48,10 @@ public class Weapon : Module
     }
 
     // #INSPECTOR
-    [SerializeField] private bool VerboseConsole;
-
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private string moduleName;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private AmmunitionType ammoType;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasCoolDown;
     [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool doesDamage;
     [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool doesPlaceObjectInWorld;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasAnimation;
-
-
-    [TitleGroup("ASSETS")][SerializeField] private Sprite availableIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;
+    
     [ShowIf("doesPlaceObjectInWorld")][TitleGroup("ASSETS")][SerializeField] private GameObject objectPlacedInWorld;
-
-
-    [ShowIf("hasCoolDown")][TitleGroup("COOLDOWN SETTINGS")][SerializeField] private int cooldownLength;
-    [ShowIf("hasCoolDown")][TitleGroup("COOLDOWN SETTINGS")][DisplayAsString] private int cooldownCounter;
-
-
-    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int capacityAmmo;
-    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int startAmmo;
-    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] private int usageAmmoCost;
-    [ShowIf("@ammoType != AmmunitionType.None")][TitleGroup("AMMUNITION SETTINGS")][DisplayAsString] private int displayCurrentAmmoInspector;
-
 
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private WeaponType weaponType;
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private int baseDamage;
@@ -140,23 +118,15 @@ public class Weapon : Module
         {
             bool sufficientResource = ConsumeResource(ammoType);
 
-            data = new UsageData
-            {
-                doesDamage = this.doesDamage,
-                baseDamage = this.baseDamage,
-                dynamicDamage = damageMultiplier > 0.0,
-                damageMultiplier = this.damageMultiplier,
-
-                doesPenetrate = this.doesPenetrate,
-
-                doesPlaceObjectInWorld = this.doesPlaceObjectInWorld,
-                objectToPlaceInWorld = this.objectPlacedInWorld,
-
-                //hasAnimation = this.hasAnimation,
-
-                newAmmoAmount = currentAmmo
-            };
-
+            var data = new Weapon.UsageData
+            (
+                baseDamage: this.baseDamage,
+                doesPenetrate: this.doesPenetrate,
+                damageMultipler: this.damageMultiplier,
+                placesObject: this.doesPlaceObjectInWorld,
+                objectToPlace: this.objectPlacedInWorld
+            );
+            
             if (VerboseConsole)
                 Debug.LogFormat("Module: {0} usage successful.", moduleName);
 
@@ -166,7 +136,6 @@ public class Weapon : Module
         }
         else
         {
-            data = new UsageData();
             if (VerboseConsole)
                 Debug.LogFormat("Module {0} usage unsuccessful.  Insufficient resource.", moduleName);
             return false;

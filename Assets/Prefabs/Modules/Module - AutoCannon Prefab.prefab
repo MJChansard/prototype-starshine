@@ -44,27 +44,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 6619469085846121842}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fad3b02cf3afbd43954f35c32b79653, type: 3}
+  m_Script: {fileID: 11500000, guid: cb7beae1619268548a143a6fdad1bac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   VerboseConsole: 0
+  cooldownCounter: 0
+  displayAmmoType: 0
+  displayCurrentAmmoInspector: 0
   moduleName: AutoCannon
-  ammoType: 1
-  hasCoolDown: 1
-  doesDamage: 1
-  doesPlaceObjectInWorld: 0
+  usesAmmo: 1
   hasAnimation: 1
-  availableIcon: {fileID: 21300000, guid: b14863a2fb16fd14987a92d991f19490, type: 3}
-  useIcon: {fileID: 21300000, guid: cdc9eaaca10828f419512aae6745da50, type: 3}
-  cooldownIcon: {fileID: 21300000, guid: 0504e373cb8cc9a4c9b5132b1cea20ae, type: 3}
-  objectPlacedInWorld: {fileID: 0}
-  cooldownLength: 0
+  cooldownDuration: 1
+  availableIcon: {fileID: 21300000, guid: 83cabedf2d2a3d948b8ea849253c3442, type: 3}
+  useIcon: {fileID: 21300000, guid: cd0b37d79098027429c0cd5e6f0ffc29, type: 3}
+  cooldownIcon: {fileID: 21300000, guid: 50f06ddc0c3858c4f91833e9460864bf, type: 3}
+  ammoType: 1
   capacityAmmo: 20
   startAmmo: 10
   usageAmmoCost: 1
-  weaponType: 1
-  baseDamage: 10
-  damageMultiplier: 0.5
+  doesDamage: 1
+  doesPlaceObjectInWorld: 0
+  objectPlacedInWorld: {fileID: 0}
+  weaponType: 0
+  baseDamage: 0
+  damageMultiplier: 0
   doesPenetrate: 0
 --- !u!198 &2820014247734865222
 ParticleSystem:

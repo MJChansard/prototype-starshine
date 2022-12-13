@@ -43,28 +43,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 6680625310065878456}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fad3b02cf3afbd43954f35c32b79653, type: 3}
+  m_Script: {fileID: 11500000, guid: d9c5944f9613dd646a028ab6f4f5c34f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   VerboseConsole: 0
-  moduleName: Thruster
-  ammoType: 0
-  hasCoolDown: 1
-  doesDamage: 0
-  doesPlaceObjectInWorld: 0
-  hasAnimation: 1
+  cooldownCounter: 0
+  displayAmmoType: 0
+  displayCurrentAmmoInspector: 0
+  moduleName: 
+  usesAmmo: 0
+  hasAnimation: 0
+  cooldownDuration: 0
   availableIcon: {fileID: 21300000, guid: 83cabedf2d2a3d948b8ea849253c3442, type: 3}
   useIcon: {fileID: 21300000, guid: cd0b37d79098027429c0cd5e6f0ffc29, type: 3}
   cooldownIcon: {fileID: 21300000, guid: 50f06ddc0c3858c4f91833e9460864bf, type: 3}
-  objectPlacedInWorld: {fileID: 0}
-  cooldownLength: 1
+  ammoType: 0
   capacityAmmo: 0
   startAmmo: 0
   usageAmmoCost: 0
-  weaponType: 0
-  baseDamage: 0
-  damageMultiplier: 0
-  doesPenetrate: 0
+  VerboseConsole: 0
 --- !u!198 &6680625310065878458
 ParticleSystem:
   m_ObjectHideFlags: 0

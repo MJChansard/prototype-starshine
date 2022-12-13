@@ -41,25 +41,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 7880948429677287885}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fad3b02cf3afbd43954f35c32b79653, type: 3}
+  m_Script: {fileID: 11500000, guid: cb7beae1619268548a143a6fdad1bac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   VerboseConsole: 0
+  cooldownCounter: 0
+  displayAmmoType: 0
+  displayCurrentAmmoInspector: 0
   moduleName: Missile Launcher
-  ammoType: 2
-  hasCoolDown: 1
-  doesDamage: 1
-  doesPlaceObjectInWorld: 1
-  hasAnimation: 0
+  usesAmmo: 1
+  hasAnimation: 1
+  cooldownDuration: 0
   availableIcon: {fileID: 21300000, guid: f026481ed9cb7294a84905720570cb83, type: 3}
   useIcon: {fileID: 21300000, guid: a83d658d001f1d847bfebd8055ef7c03, type: 3}
   cooldownIcon: {fileID: 21300000, guid: e200217689e75f1439cc7d224f03d561, type: 3}
-  objectPlacedInWorld: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
-    type: 3}
-  cooldownLength: 1
+  ammoType: 2
   capacityAmmo: 5
   startAmmo: 2
   usageAmmoCost: 1
+  doesDamage: 1
+  doesPlaceObjectInWorld: 1
+  objectPlacedInWorld: {fileID: 524358875914407805, guid: 5641a3c4c819ed64eab6bb779d0cb13c,
+    type: 3}
   weaponType: 2
   baseDamage: 2
   damageMultiplier: 0

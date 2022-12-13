@@ -1,20 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Sirenix.OdinInspector;
 
 public abstract class Module : MonoBehaviour
 {
     public class InitializationData
     {
-        public Sprite availableIcon;
-        public Sprite useIcon;
-        public Sprite cooldownIcon;
+        public Sprite availableIcon { get; set; }
+        public Sprite useIcon { get; set; }
+        public Sprite cooldownIcon { get; set; }
 
-        public bool usesAmmo;
-        public int capacityAmmo;
-        public int cooldownDuration;
+        public bool usesAmmo { get; set; }
+        //public int capacityAmmo;
+        public int cooldownDuration { get; set; }
     }
+
+    public class UsageData { }
   
     
     public enum AmmunitionType
@@ -26,21 +29,26 @@ public abstract class Module : MonoBehaviour
     }
 
     // #INSPECTOR
-    [SerializeField] private bool VerboseConsole;
+    [SerializeField] protected bool VerboseConsole;
 
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private AmmunitionType displayAmmoType;
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private int displayCurrentAmmoInspector;
-    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] private int cooldownCounter;
+    [TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] protected int cooldownCounter;
+    [ShowIf("usesAmmo")][TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] protected AmmunitionType displayAmmoType;
+    [ShowIf("usesAmmo")][TitleGroup("CURRENT STATUS")][SerializeField][DisplayAsString] protected int displayCurrentAmmoInspector;
 
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private string moduleName;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private bool hasAnimation;
-    [TitleGroup("GENERAL SETTINGS")][SerializeField] private int cooldownDuration;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] protected string moduleName;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] protected bool usesAmmo;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] protected bool hasAnimation;
+    [TitleGroup("GENERAL SETTINGS")][SerializeField] protected int cooldownDuration;
 
-    [TitleGroup("ASSETS")][SerializeField] private Sprite availableIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite useIcon;
-    [TitleGroup("ASSETS")][SerializeField] private Sprite cooldownIcon;
+    [TitleGroup("ASSETS")][SerializeField] protected Sprite availableIcon;
+    [TitleGroup("ASSETS")][SerializeField] protected Sprite useIcon;
+    [TitleGroup("ASSETS")][SerializeField] protected Sprite cooldownIcon;
 
-    [TitleGroup("SHIELD SETTINGS")][SerializeField] private int cooldownLength;
+    [ShowIf("usesAmmo")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] protected AmmunitionType ammoType;
+    [ShowIf("usesAmmo")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] protected int capacityAmmo;
+    [ShowIf("usesAmmo")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] protected int startAmmo;
+    [ShowIf("usesAmmo")][TitleGroup("AMMUNITION SETTINGS")][SerializeField] protected int usageAmmoCost;
+    
 
     // #PROPERTIES
     public InitializationData InitData
