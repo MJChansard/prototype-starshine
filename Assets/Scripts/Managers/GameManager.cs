@@ -59,12 +59,12 @@ public class GameManager : MonoBehaviour
         
 
         PlayerHUD pHUD = FindObjectOfType<PlayerHUD>();
-        pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
-        
+        //pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
+                
 
         mainGamePhase = GamePhase.Player;
     }
-    void Start()
+    private void Start()
     {
         stateManager.SwitchState(GameState.Launch);
         stateManager.SwitchState(GameState.Player);
@@ -75,7 +75,7 @@ public class GameManager : MonoBehaviour
     }
 
     //  #METHODS
-    void LaunchEnter()
+    private void LaunchEnter()
     {
         levelM.Init();
         LevelRecord level = levelM.CurrentLevelData;
@@ -129,6 +129,7 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("GameManager successfully located PlayerHUD.");
             pHUD.Init(player.GetEquippedModules, level.jumpFuelAmount, player.GetComponent<Health>().MaxHP);
+
         }
         else
         {
@@ -136,20 +137,20 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void PlayerEnter()
+    private void PlayerEnter()
     {
         gridObjectM.currentGamePhase = GamePhase.Player;
         playerTurnFulfilled = false;
         inputM.SetInputActive(true);
     }
 
-    void PlayerUpdate()
+    private void PlayerUpdate()
     {
         // Could potentially put movement stuff in here
         if (activateModuleReceived)
         {
             activateModuleReceived = false;
-            
+
             player.UseCurrentModule();
             if (player.thrusterUsageData != null)
             {
@@ -157,14 +158,10 @@ public class GameManager : MonoBehaviour
             }
             else if (player.weaponUsageData != null)
             {
-                gridObjectM.OnPlayerActivateModule(player.weaponUsageData);
-            }
-
-            if (uData != null)
-            {
+                Weapon.UsageData uData = player.weaponUsageData;
                 gridObjectM.OnPlayerActivateModule(uData);
 
-                if (uData.doesPlaceObjectInWorld)
+                if (uData.DoesPlaceObjectInWorld)
                 {
                     gridObjectM.NewGridUpdateSteps(includePlayer: false);
                     gridObjectM.LoadGridUpdateSteps();
@@ -172,14 +169,14 @@ public class GameManager : MonoBehaviour
                     gridObjectM.AnimateMovement();
                     gridCurrentlyAnimating = true;
                 }
-                pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
             }
+            // This needs to be set up as a delegate
+            // pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
             else
             {
                 Debug.Log("No uData available for current module.");
             }
         }
-        
 
         if (playerMoveReceived)
         {
@@ -210,10 +207,10 @@ public class GameManager : MonoBehaviour
         }
 
         if (playerTurnFulfilled && gridObjectM.IsAnimationComplete)
-            stateManager.SwitchState(GameState.Board);
+            { stateManager.SwitchState(GameState.Board); }
     }   
     
-    void PlayerExit()
+    private void PlayerExit()
     {
         //gridObjectM.AnimateMovement();
         gridObjectM.ResolveCollisionsOnGridBlocks();
@@ -262,23 +259,24 @@ public class GameManager : MonoBehaviour
 
 
     
-    private void OnPlayerActivateModule(Module.UsageData data)
+    private void OnPlayerActivateModule()
     {
-        pHUD.OnPlayerHUDModuleActivate -= OnPlayerActivateModule;
+        //pHUD.OnPlayerHUDModuleActivate -= OnPlayerActivateModule;
 
-        if (previousModuleData != null)
-            StopCoroutine(OnPlayerActivateModuleCoroutine(previousModuleData));
+        //if (previousModuleData != null)
+            //StopCoroutine(OnPlayerActivateModuleCoroutine(previousModuleData));
                      
-        StartCoroutine(OnPlayerActivateModuleCoroutine(data));
-        previousModuleData = data;
+        //StartCoroutine(OnPlayerActivateModuleCoroutine(data));
+       // previousModuleData = data;
     }
-    private IEnumerator OnPlayerActivateModuleCoroutine(Module.UsageData data)
+    /*private IEnumerator OnPlayerActivateModuleCoroutine(Module.UsageData data)
     {
         gridObjectM.OnPlayerActivateModule(data);
         yield return new WaitForSecondsRealtime(2.0f);
         pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
         yield return null;
     }
+    */
     private void OnPlayerMove()
     {
         playerMoveReceived = true;

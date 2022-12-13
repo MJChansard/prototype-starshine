@@ -42,7 +42,15 @@ public class PlayerHUDEntry : MonoBehaviour
         cooldownIcon = iData.cooldownIcon;
 
         spriteElementUI.sprite = availableIcon;
-        textElementUI.text = iData.capacityAmmo.ToString();
+        // #TODO-Need to decide whether this can decrement ammo itself or whether Module
+        //  should submit its value
+        //if (iData.usesAmmo)
+           // textElementUI.text = iData.capacityAmmo.ToString();
+    }
+
+    public void OnModuleUse()
+    {
+        StartCoroutine(OnModuleUseCoroutine());
     }
 
     public void Refresh(int ammoAmount, bool active)
@@ -67,5 +75,12 @@ public class PlayerHUDEntry : MonoBehaviour
     private void UpdateText(int value)
     {
         textElementUI.text = value.ToString();
+    }
+
+    private IEnumerator OnModuleUseCoroutine()
+    {
+        spriteElementUI.sprite = useIcon;
+        yield return new WaitForSeconds(1.0f);
+        spriteElementUI.sprite = cooldownIcon;
     }
 }
