@@ -96,6 +96,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  currentSelectedModule: {fileID: 0}
   IsAttackingThisTick: 0
 --- !u!114 &4287194383628620724
 MonoBehaviour:
@@ -297,7 +298,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3405520458615634523}
-  - component: {fileID: 5992447983397819602}
   m_Layer: 0
   m_Name: Module - Shield Prefab
   m_TagString: Untagged
@@ -320,37 +320,6 @@ Transform:
   m_Father: {fileID: 7330904728967511141}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5992447983397819602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5528561639239193494}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fad3b02cf3afbd43954f35c32b79653, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  VerboseConsole: 0
-  moduleName: Shield
-  ammoType: 0
-  hasCoolDown: 0
-  doesDamage: 0
-  doesPlaceObjectInWorld: 0
-  hasAnimation: 1
-  availableIcon: {fileID: 0}
-  useIcon: {fileID: 0}
-  cooldownIcon: {fileID: 0}
-  objectPlacedInWorld: {fileID: 0}
-  cooldownLength: 0
-  capacityAmmo: 0
-  startAmmo: 0
-  usageAmmoCost: 0
-  weaponType: 0
-  baseDamage: 0
-  damageMultiplier: 0
-  doesPenetrate: 0
 --- !u!1001 &578320576586650829
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -708,6 +677,24 @@ PrefabInstance:
       propertyPath: m_Name
       value: Module - AutoCannon Prefab
       objectReference: {fileID: 0}
+    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
+        type: 3}
+      propertyPath: useIcon
+      value: 
+      objectReference: {fileID: 21300000, guid: cdc9eaaca10828f419512aae6745da50,
+        type: 3}
+    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
+        type: 3}
+      propertyPath: cooldownIcon
+      value: 
+      objectReference: {fileID: 21300000, guid: 0504e373cb8cc9a4c9b5132b1cea20ae,
+        type: 3}
+    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
+        type: 3}
+      propertyPath: availableIcon
+      value: 
+      objectReference: {fileID: 21300000, guid: b14863a2fb16fd14987a92d991f19490,
+        type: 3}
     - target: {fileID: 6619469085846121844, guid: f92be1077e55ba04e9f172833c2faba8,
         type: 3}
       propertyPath: m_RootOrder
@@ -917,6 +904,11 @@ PrefabInstance:
         type: 3}
       propertyPath: prewarm
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6680625310065878458, guid: 6753a2f36658f804799b6c4856f2eb54,
+        type: 3}
+      propertyPath: stopAction
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6680625310065878458, guid: 6753a2f36658f804799b6c4856f2eb54,
         type: 3}
