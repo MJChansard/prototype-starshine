@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     StateManager <GameState> stateManager = new StateManager<GameState>();
 
     Module.UsageData previousModuleData;
-    bool activateModuleReceived = false;
+    bool activateModuleButtonPressed = false;
     bool playerMoveReceived = false;
     bool endTurnReceived = false;
     bool playerTurnFulfilled = false;
@@ -38,8 +38,6 @@ public class GameManager : MonoBehaviour
     Player player;
     DebugHUD debugHUD;
 
-
-
     
     void Awake()
     {
@@ -53,7 +51,7 @@ public class GameManager : MonoBehaviour
         stateManager.RegisterStateMethods(this, true);
 
         inputM = FindObjectOfType<InputManager>();
-        inputM.ActivateModuleButtonPressed += ActivateModule;
+        inputM.ActivateModuleButtonPressed += ToggleModuleActivation;
         inputM.MoveButtonPressed += OnPlayerMove;
         inputM.EndTurnButtonPressed += EndPlayerTurn;
         
@@ -146,15 +144,18 @@ public class GameManager : MonoBehaviour
 
     private void PlayerUpdate()
     {
-        // Could potentially put movement stuff in here
-        if (activateModuleReceived)
+        // Should move the movement stuff here so the pattern is consistent
+        if (activateModuleButtonPressed)
         {
-            activateModuleReceived = false;
+            activateModuleButtonPressed = false;
 
             player.UseCurrentModule();
             if (player.thrusterUsageData != null)
             {
+                inputM.SetInputActive(false);
                 gridObjectM.OnPlayerActivateModule(player.thrusterUsageData);
+                playerTurnFulfilled = true;
+                gridCurrentlyAnimating = true;
             }
             else if (player.weaponUsageData != null)
             {
@@ -176,18 +177,6 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("No uData available for current module.");
             }
-        }
-
-        if (playerMoveReceived)
-        {
-            playerMoveReceived = false;
-            playerTurnFulfilled = true;
-            inputM.SetInputActive(false);
-            gridObjectM.NewGridUpdateSteps();
-            gridObjectM.LoadGridUpdateSteps();
-            gridObjectM.RunGridUpdate();
-            gridObjectM.AnimateMovement();
-            gridCurrentlyAnimating = true;
         }
 
         if (endTurnReceived)
@@ -252,10 +241,7 @@ public class GameManager : MonoBehaviour
             
     }
 
-    void ActivateModule()
-    {
-        activateModuleReceived = true;
-    }
+    void ToggleModuleActivation() { activateModuleButtonPressed = true; }
 
 
     
