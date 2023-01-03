@@ -7,43 +7,53 @@ using System.Runtime.CompilerServices;
 public class Thruster : Module
 {
     // #INSPECTOR    
-    public class UsageData
+    public new class UsageData : Module.UsageData
     {
         public bool EligibleToMove { get; private set; }
         public Vector2Int DirectionToMove { get; private set; }
         public int NumberOfMoves { get; private set; }
 
-        public UsageData(bool eligibleToMove, int numberOfMoves)
+        public override string ToString()
+        {
+            string result = string.Format("Eligible To Move: {0}\nDirection To Move: {1}\nNumberOfMoves: {2}", EligibleToMove, DirectionToMove, NumberOfMoves);
+            return result;
+        }
+
+        public UsageData(bool eligibleToMove, Vector2Int direction, int numberOfMoves)
         {
             EligibleToMove = eligibleToMove;
+            DirectionToMove = direction;
             NumberOfMoves = numberOfMoves;
         }
     }
 
     // #FIELDS
-    private Vector2Int currentDirection;
     private int slowTicksRemaining;
     private bool hasMovedOnPlayerPhase;
+    ParticleSystem ps;
+
 
     // #PROPERTIES
     public bool CanCurrentlyMove
     {
         get
         {
-            if (slowTicksRemaining == 0 && !hasMovedOnPlayerPhase)
+            if (slowTicksRemaining == 0 && hasMovedOnPlayerPhase == false)
                 return true;
             else
                 return false;
         }
     }
+    public Vector2Int CurrentDirectionFacing { get; set; }
     public UsageData LatestUsageData { get; private set; }
 
     // #UNITY
     private void Awake()
     {
-        currentDirection = Vector2Int.up;
+        CurrentDirectionFacing = Vector2Int.up;
         slowTicksRemaining = 0;
         hasMovedOnPlayerPhase = false;
+        ps = GetComponent<ParticleSystem>();
     }
 
     // #METHODS
@@ -51,15 +61,17 @@ public class Thruster : Module
     {        
         if (this.CanCurrentlyMove)
         {
-            LatestUsageData = new Thruster.UsageData(CanCurrentlyMove, 1);
+            hasMovedOnPlayerPhase = true;
+            LatestUsageData = new Thruster.UsageData(true, CurrentDirectionFacing, 1);
+            StartCoroutine(AnimateCoroutine());
             return true;
         }
         else { return false; }
-    
     }
 
-    public override void AnimateModule(GridBlock gb)
+    private IEnumerator AnimateCoroutine()
     {
-        throw new System.NotImplementedException();
+        ps.Play();
+        yield return new WaitForSeconds(1.0f);
     }
 }
