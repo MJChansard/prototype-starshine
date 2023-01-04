@@ -71,6 +71,6 @@ public class Thruster : Module
     {
         ps.Play();
         yield return new WaitForSeconds(1.0f);
-        ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+        ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
     }
 }
