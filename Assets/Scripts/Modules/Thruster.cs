@@ -29,7 +29,6 @@ public class Thruster : Module
 
     // #FIELDS
     private int slowTicksRemaining;
-    private bool hasMovedOnPlayerPhase;
     ParticleSystem ps;
 
 
@@ -38,7 +37,7 @@ public class Thruster : Module
     {
         get
         {
-            if (slowTicksRemaining == 0 && hasMovedOnPlayerPhase == false)
+            if (slowTicksRemaining == 0)
                 return true;
             else
                 return false;
@@ -52,16 +51,15 @@ public class Thruster : Module
     {
         CurrentDirectionFacing = Vector2Int.up;
         slowTicksRemaining = 0;
-        hasMovedOnPlayerPhase = false;
         ps = GetComponent<ParticleSystem>();
     }
+
 
     // #METHODS
     public override bool UseModule()
     {        
         if (this.CanCurrentlyMove)
         {
-            hasMovedOnPlayerPhase = true;
             LatestUsageData = new Thruster.UsageData(true, CurrentDirectionFacing, 1);
             StartCoroutine(AnimateCoroutine());
             return true;
@@ -73,5 +71,6 @@ public class Thruster : Module
     {
         ps.Play();
         yield return new WaitForSeconds(1.0f);
+        ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 }
