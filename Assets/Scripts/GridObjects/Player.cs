@@ -25,15 +25,6 @@ public class Player : GridObject
     {
         get
         {
-            int total = 0;
-            for (int i = 0; i < equippedModules.Length; i++)
-            {
-                if (equippedModules[i] != null)
-                    total++;
-            }
-
-//            return total;
-
             return equippedModules.Length;
         }
     }
