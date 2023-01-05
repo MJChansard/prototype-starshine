@@ -79,8 +79,7 @@ public class PlayerHUD : MonoBehaviour
         inputM = FindObjectOfType<InputManager>();
         if (inputM != null)
         {
-            inputM.NextModuleButtonPressed += SelectNextModule;
-            inputM.PreviousModuleButtonPressed += SelectPreviousModule;
+            inputM.NewModuleButtonPressed += SelectNewModule;
             inputM.ActivateModuleButtonPressed += OnModuleUse;
         }
         else
@@ -133,20 +132,19 @@ public class PlayerHUD : MonoBehaviour
     }
     */
 
-    public void SelectNextModule()
+    private void SelectNewModule(ModuleSelect index)
     {
         entryArrayHUD[entryArrayHUDIndex].SetSelector(false);
-        if(entryArrayHUDIndex < entryArrayHUD.Length)
+        
+        if (index == ModuleSelect.Next && entryArrayHUDIndex < entryArrayHUD.Length)
             entryArrayHUDIndex++;
-        entryArrayHUD[entryArrayHUDIndex].SetSelector(true);
-    }
-    public void SelectPreviousModule()
-    {
-        entryArrayHUD[entryArrayHUDIndex].SetSelector(false);
-        if (entryArrayHUDIndex > 0)
+        
+        if (index == ModuleSelect.Previous && entryArrayHUDIndex > 0)
             entryArrayHUDIndex--;
+
         entryArrayHUD[entryArrayHUDIndex].SetSelector(true);
     }
+
     private void OnModuleUse()
     {
         entryArrayHUD[entryArrayHUDIndex].OnModuleUse();

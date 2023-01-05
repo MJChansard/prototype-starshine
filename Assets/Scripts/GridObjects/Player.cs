@@ -112,9 +112,8 @@ public class Player : GridObject
 
         InputManager inputM = FindObjectOfType<InputManager>();
         inputM.ChangeDirectionButtonPressed += ChangeDirectionFacing;
-        inputM.NextModuleButtonPressed += NextModule;
-        inputM.PreviousModuleButtonPressed += PreviousModule;
-        
+        inputM.NewModuleButtonPressed += SelectNewModule;
+                
         Debug.Log("Successfully subscribed to InputManager.ChangeDirectionButtonPressed");
     }
 
@@ -166,16 +165,15 @@ public class Player : GridObject
         else if(direction == Vector2Int.right)
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
     }
-    void NextModule()
+    void SelectNewModule(ModuleSelect index)
     {
-        if (moduleSelector < equippedModules.Length)
+        if (index == ModuleSelect.Next && moduleSelector < equippedModules.Length)
             moduleSelector++;
-    }
-    void PreviousModule()
-    {
-        if (moduleSelector > 0)
+
+        if (index == ModuleSelect.Previous && moduleSelector > 0)
             moduleSelector--;
     }
+        
     
     //  # METHODS/Modules
     public void UseCurrentModule()

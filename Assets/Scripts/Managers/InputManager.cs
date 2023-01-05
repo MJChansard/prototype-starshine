@@ -10,9 +10,8 @@ public class InputManager : MonoBehaviour
     public bool InputActive { get; private set; }
 
     // #DELEGATES
-    public System.Action NextModuleButtonPressed;
-    public System.Action PreviousModuleButtonPressed;
-
+    public System.Action<ModuleSelect> NewModuleButtonPressed;
+    
     public System.Action EndTurnButtonPressed;
     public System.Action MoveButtonPressed;
     public System.Action ActivateModuleButtonPressed;
@@ -61,14 +60,14 @@ public class InputManager : MonoBehaviour
         // #MODULE CONTROL
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            if (PreviousModuleButtonPressed != null)
-                PreviousModuleButtonPressed();
+            if (NewModuleButtonPressed != null)
+                NewModuleButtonPressed(ModuleSelect.Previous);
         }
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (NextModuleButtonPressed != null)
-                NextModuleButtonPressed();
+            if (NewModuleButtonPressed != null)
+                NewModuleButtonPressed(ModuleSelect.Next);
         }
 
         if (Input.GetKeyDown(KeyCode.A))
