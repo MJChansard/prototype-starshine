@@ -30,7 +30,7 @@ public class PlayerHUD : MonoBehaviour
 
     // #DELEGATES
     public System.Action OnPlayerAdvance;
-    public System.Action<Module.UsageData> OnPlayerHUDModuleActivate;
+    public System.Action OnPlayerHUDModuleActivate;
 
     private void Awake()
     {
@@ -81,6 +81,7 @@ public class PlayerHUD : MonoBehaviour
         {
             inputM.NextModuleButtonPressed += SelectNextModule;
             inputM.PreviousModuleButtonPressed += SelectPreviousModule;
+            inputM.ActivateModuleButtonPressed += OnModuleUse;
         }
         else
         {
@@ -102,7 +103,7 @@ public class PlayerHUD : MonoBehaviour
             if (entry != null)
             {
                 entryArrayHUD[i] = entry;
-                entry.Init(modulesForUI[i].Data);
+                entry.Init(modulesForUI[i].InitData);
                 entry.ReferenceToModuleOnPlayer = modulesForUI[i];
             }                    
             else
@@ -134,7 +135,7 @@ public class PlayerHUD : MonoBehaviour
 
     public void SelectNextModule()
     {
-        entryArrayHUD[entryArrayHUDIndex].SetSelector(false);  
+        entryArrayHUD[entryArrayHUDIndex].SetSelector(false);
         if(entryArrayHUDIndex < entryArrayHUD.Length)
             entryArrayHUDIndex++;
         entryArrayHUD[entryArrayHUDIndex].SetSelector(true);
@@ -145,6 +146,10 @@ public class PlayerHUD : MonoBehaviour
         if (entryArrayHUDIndex > 0)
             entryArrayHUDIndex--;
         entryArrayHUD[entryArrayHUDIndex].SetSelector(true);
+    }
+    private void OnModuleUse()
+    {
+        entryArrayHUD[entryArrayHUDIndex].OnModuleUse();
     }
 
     public void RefreshHUDEntry(int newAmmoAmount, bool currentlySelected)

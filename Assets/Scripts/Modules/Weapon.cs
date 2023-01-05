@@ -142,7 +142,7 @@ public class Weapon : Module
         }
     }
 
-    public override void AnimateModule(GridBlock gb)
+    public void AnimateModule(GridBlock gb)
     {
         //StartCoroutine(animator.TriggerModuleAnimationCoroutine(gb));
         animator.StartModuleAnimationCoroutine(gb);

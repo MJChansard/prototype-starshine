@@ -75,7 +75,7 @@ public class InputManager : MonoBehaviour
         {
             if (ActivateModuleButtonPressed != null)
             {
-                Debug.Log("Module button Pressed!");
+                Debug.LogFormat("Module button Pressed! {0}", Time.time.ToString());
                 ActivateModuleButtonPressed();
             }
         }

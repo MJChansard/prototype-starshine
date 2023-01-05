@@ -5,8 +5,8 @@ using Sirenix.OdinInspector;
 
 public class GridBlock
 {
-    [ReadOnly] public Vector2Int location;
-    [ReadOnly] public List<GameObject> objectsOnBlock;
+    public Vector2Int location;
+    public List<GameObject> objectsOnBlock;
 
     
     public GameObject DebugRenderPoint

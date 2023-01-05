@@ -6,9 +6,13 @@ using Sirenix.OdinInspector;
 
 public class GridObjectManager : MonoBehaviour
 {
-    [SerializeField] bool VerboseConsole = true;
+
 
     //  # INSPECTOR
+    [TitleGroup("DEBUGGING")][SerializeField] bool VerboseDebugging;
+    [TitleGroup("DEBUGGING")][SerializeField] bool EnableInitializationDebugging;
+    [TitleGroup("DEBUGGING")][SerializeField] bool EnableAnimationDebugging;
+
     [Header("Spawn Management")]
     [SerializeField] int minTicksUntilSpawn = 2;        //  #TODO - No longer needed - SpawnManager now handles it
     [SerializeField] int maxTicksUntilSpawn = 4;        //  #TODO - No longer needed - SpawnManager now handles it
@@ -199,17 +203,22 @@ public class GridObjectManager : MonoBehaviour
             {
                 TopographyElementIcon element = level.levelTopography[x, y];
                 if (element == null)
-                    Debug.LogFormat("Element at ({0},{1}) is NULL", x, y);
+                {
+                    if (VerboseDebugging || EnableInitializationDebugging)
+                        Debug.LogFormat("Element at ({0},{1}) is NULL", x, y);
+                }
                 else
                 {
-                    Debug.LogFormat("Element at ({0},{1}) contains GridObject to spawn", x, y);
+                    if (EnableInitializationDebugging || VerboseDebugging)
+                        Debug.LogFormat("Element at ({0},{1}) contains GridObject to spawn", x, y);
+
                     Vector2Int gridLocation = level.IndexToGrid(x, y);
                     GameObject instance = Instantiate(element.gameObject, gridM.GridToWorld(gridLocation), element.gameObject.transform.rotation);
                     Debug.LogFormat("Instantiated a {0}", instance.name);
 
                     if (instance == null)
                         Debug.Log("Grrrr, null reference dood");
-                    
+
 
                     GridObject go = instance.GetComponent<GridObject>();
                     if (go == null)
@@ -259,25 +268,25 @@ public class GridObjectManager : MonoBehaviour
         {
 
             int selector = Random.Range(0, hazards.Count - 1);
-            if (VerboseConsole) Debug.Log("Selected a Hazard.");
+            if (VerboseDebugging) Debug.Log("Selected a Hazard.");
             return hazards[selector];
         }
         else if (type == GridObjectType.Station)
         {
             int selector = Random.Range(0, stations.Count - 1);
-            if (VerboseConsole) Debug.Log("Selected a Station.");
+            if (VerboseDebugging) Debug.Log("Selected a Station.");
             return stations[selector];
         }
         else if (type == GridObjectType.Phenomena)
         {
             int selector = Random.Range(0, phenomena.Count);
-            if (VerboseConsole) Debug.Log("Selected a Phenomenon.");
+            if (VerboseDebugging) Debug.Log("Selected a Phenomenon.");
             return phenomena[selector];
         }
         else if (type == GridObjectType.Loot)
         {
             int selector = Random.Range(0, loot.Count);
-            if (VerboseConsole) Debug.Log("Selected a Loot.");
+            if (VerboseDebugging) Debug.Log("Selected a Loot.");
             return loot[selector];
         }
         else
@@ -292,7 +301,7 @@ public class GridObjectManager : MonoBehaviour
     }
     void PlaceGridObjectInPlay(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
-        if (VerboseConsole) Debug.Log("GridObjectManager.PlaceGridObjectInPlay() called.");
+        if (VerboseDebugging) Debug.Log("GridObjectManager.PlaceGridObjectInPlay() called.");
 
         Vector3 worldLocation = gridM.GridToWorld(gridLocation);
 
@@ -317,7 +326,11 @@ public class GridObjectManager : MonoBehaviour
     //  #CORE FUNCTIONALITY
     public void OnPlayerActivateModule(Thruster.UsageData uData)
     {
-
+        Debug.LogFormat("Thruster.UsageData received. \n{0}", uData.ToString());
+        NewGridUpdateSteps();
+        LoadGridUpdateSteps(uData);
+        RunGridUpdate();
+        AnimateMovement();
     }
     public void OnPlayerActivateModule(Weapon.UsageData uData)
     {
@@ -334,7 +347,7 @@ public class GridObjectManager : MonoBehaviour
                     if (uData.DynamicDamage)
                     {
                         int gridBlockDistance = i;
-                        int damageAmount = CalculateDamage(gridBlockDistance, uData.baseDamage, uData.damageMultiplier);
+                        int damageAmount = CalculateDamage(gridBlockDistance, uData.BaseDamage, uData.DamageMultiplier);
                         hp.SubtractHealth(damageAmount);
                     }
                     else
@@ -405,6 +418,8 @@ public class GridObjectManager : MonoBehaviour
             {
                 if (gridObjectForStep.TryGetComponent<GridMover>(out GridMover _))
                     newStep.canMove = true;
+                else if (gridObjectForStep.TryGetComponent<Thruster>(out Thruster _))
+                    newStep.canMove = true;
                 else
                     newStep.canMove = false;
             }
@@ -420,7 +435,7 @@ public class GridObjectManager : MonoBehaviour
             gridObjectsInPlay[gridObjectForStep] = newStep;
         }
     }
-    public void LoadGridUpdateSteps()
+    public void LoadGridUpdateSteps(Thruster.UsageData uData = null)
     {
         /*  DESCRIPTION
          *   - Process a list of GridObjects' data
@@ -431,7 +446,7 @@ public class GridObjectManager : MonoBehaviour
          *      ~ Nothing
          */
 
-        if (VerboseConsole) Debug.Log("GridObjectManager.FillBoardUpdateSteps called.");
+        if (VerboseDebugging) Debug.Log("GridObjectManager.LoadGridUpdateSteps called.");
 
         Vector2Int[] allOriginGridLocations = new Vector2Int[gridObjectsInPlay.Count];          // Fly-By Tracker 1
         Vector2Int[] allDestinationGridLocations = new Vector2Int[gridObjectsInPlay.Count];     // Fly-By Tracker 2
@@ -442,14 +457,14 @@ public class GridObjectManager : MonoBehaviour
             allDestinationGridLocations[i].Set(99, 99);
         }
 
-        if (VerboseConsole) Debug.Log("Processing grid object movement.");
+        if (VerboseDebugging) Debug.Log("Processing grid object movement.");
         for (int i = 0; i < gridObjectsInPlay.Count; i++)
         {
             KeyValuePair<GridObject, GridUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
             if (kvp.Value.activeInThisPhase == false)
                 continue;
 
-            if (kvp.Value.canMove)
+            if (kvp.Value.canMove && uData == null)
             {
                 GridMover mp = kvp.Key.GetComponent<GridMover>();
                 mp.OnTickUpdate();
@@ -464,14 +479,27 @@ public class GridObjectManager : MonoBehaviour
                     kvp.Value.isMoving = true;
 
                     if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
-                    {
                         kvp.Value.isDeparting = true;
-                    }
+                }
+            }
+            else if (kvp.Value.canMove && uData != null)
+            {
+                if (uData.EligibleToMove)
+                {
+                    kvp.Value.gridDestination = (kvp.Value.gridOrigin + uData.DirectionToMove) * uData.NumberOfMoves;
+                    Debug.LogFormat("Destination set to {0}", kvp.Value.gridDestination.ToString());
+                    allOriginGridLocations[i] = kvp.Value.gridOrigin;
+                    allDestinationGridLocations[i] = kvp.Value.gridDestination;
+
+                    kvp.Value.isMoving = true;
+
+                    if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
+                        kvp.Value.isDeparting = true;
                 }
             }
         }
 
-        if (VerboseConsole) Debug.Log("Fly-By detection starting.");
+        if (VerboseDebugging) Debug.Log("Fly-By detection starting.");
         for (int i = 0; i < allOriginGridLocations.Length; i++)
         {
             for (int j = 0; j < allDestinationGridLocations.Length; j++)
@@ -495,11 +523,11 @@ public class GridObjectManager : MonoBehaviour
             }
         }
 
-        if (VerboseConsole) Debug.Log("Begining health check");
+        if (VerboseDebugging) Debug.Log("Begining health check");
     }
     public void RunGridUpdate()
     {
-        if (VerboseConsole) Debug.Log("GridObjectManager.UpdateBoardData() called.");
+        if (VerboseDebugging) Debug.Log("GridObjectManager.UpdateBoardData() called.");
 
         for (int i = 0; i < gridObjectsInPlay.Count; i++)
         {
@@ -636,7 +664,7 @@ public class GridObjectManager : MonoBehaviour
 
         for (int i = 0; i < collisions.Count; i++)
         {
-            if (collisions[i].objectsOnBlock.Count > 1)
+            if (collisions[i].objectsOnBlock != null && collisions[i].objectsOnBlock.Count > 1)
             {
                 Debug.Log("Processing collision on " + collisions[i].location.ToString());
 
@@ -714,7 +742,7 @@ public class GridObjectManager : MonoBehaviour
                                 if (kIsLoot)
                                     kHealth.SubtractHealth(kHealth.CurrentHP);
 
-                                if (VerboseConsole)
+                                if (VerboseDebugging)
                                     Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
                             }
                             else if (kIsPlayer)
@@ -742,7 +770,7 @@ public class GridObjectManager : MonoBehaviour
                                 if (jIsLoot)
                                     jHealth.SubtractHealth(jHealth.CurrentHP);
 
-                                if (VerboseConsole)
+                                if (VerboseDebugging)
                                     Debug.LogFormat("Player is picking up {0} of {1} ammo.", cs.supplyAmount.ToString(), cs.weaponType.ToString());
                             }
                         }
@@ -763,14 +791,14 @@ public class GridObjectManager : MonoBehaviour
                                         p.AcceptFuel(kFuel.fuelAmount);
                                         s.BeginReplenish();
                                     }
-                                    if (VerboseConsole)
+                                    if (VerboseDebugging)
                                         Debug.LogFormat("{0} jump fuel retrieved.", kFuel.fuelAmount);
                                 }
                                 else
                                 {
                                     p.AcceptFuel(kFuel.fuelAmount);
 
-                                    if (VerboseConsole)
+                                    if (VerboseDebugging)
                                         Debug.LogFormat("{0} jump fuel retrieved.", kFuel.fuelAmount);
                                 }
                             }
@@ -788,7 +816,7 @@ public class GridObjectManager : MonoBehaviour
                                         p.AcceptFuel(jFuel.fuelAmount);
                                         s.BeginReplenish();
 
-                                        if (VerboseConsole)
+                                        if (VerboseDebugging)
                                             Debug.LogFormat("{0} jump fuel retrieved.", jFuel.fuelAmount);
                                     }
                                 }
@@ -796,7 +824,7 @@ public class GridObjectManager : MonoBehaviour
                                 {
                                     p.AcceptFuel(jFuel.fuelAmount);
 
-                                    if (VerboseConsole)
+                                    if (VerboseDebugging)
                                         Debug.LogFormat("{0} jump fuel retrieved.", jFuel.fuelAmount);
                                 }
                             }
@@ -886,7 +914,7 @@ public class GridObjectManager : MonoBehaviour
     // CHANGING LEVELS
     public void ClearLevel()
     {
-        if (VerboseConsole)
+        if (VerboseDebugging)
             Debug.Log("Preparing for next level. Removing all GridObjects in play.");
 
         for (int i = gridObjectsInPlay.Count - 1; i > 0; i--)
@@ -902,7 +930,7 @@ public class GridObjectManager : MonoBehaviour
         //gridObjectsInPlay[0].gameObject.SetActive(false);       //Disable Player 
         //StartCoroutine(player.AnimateNextLevel());
 
-        if (VerboseConsole)
+        if (VerboseDebugging)
             Debug.Log("Preparations for next level complete.");
     }
     public void NextLevel(int phenomenaRequired, int stationsRequired)
@@ -927,7 +955,7 @@ public class GridObjectManager : MonoBehaviour
 
         Vector2Int arriveLocation = new Vector2Int(0, 0);
 
-        if (VerboseConsole) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
+        if (VerboseDebugging) Debug.Log("Player Jump successful.  Adding Player to new Grid.");
 
         if (player.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Center)
         {
@@ -939,7 +967,7 @@ public class GridObjectManager : MonoBehaviour
         //player.animateEndWorldLocation = gridM.GridToWorld(arriveLocation);
         player.transform.position = new Vector3(arriveLocation.x, arriveLocation.y, 0);
 
-        if (VerboseConsole) Debug.Log("Player successfully added to Grid.");
+        if (VerboseDebugging) Debug.Log("Player successfully added to Grid.");
     }
 
 
@@ -1004,17 +1032,21 @@ public class GridObjectManager : MonoBehaviour
         float startTime = Time.time;
         float percentTraveled = 0.0f;
 
-        Debug.LogFormat("Instance of ID of object being move animated: {0}", objectToMove.transform.GetInstanceID().ToString());
+        if (EnableAnimationDebugging)
+            Debug.LogFormat("Instance of ID of object being move animated: {0}", objectToMove.transform.GetInstanceID().ToString());
 
         while (percentTraveled <= 1.0)
         {
-            Debug.LogFormat("Beginning to move {0} from {1} to {2}.", objectToMove.gameObject.name, startLocation.ToString(), endLocation.ToString());
+            if (EnableAnimationDebugging)
+                Debug.LogFormat("Beginning to move {0} from {1} to {2}.", objectToMove.gameObject.name, startLocation.ToString(), endLocation.ToString());
             
             float traveled = (Time.time - startTime) * 1.0f;
             percentTraveled = traveled / Distance;
             objectToMove.transform.position = Vector3.Lerp(startLocation, endLocation, Mathf.SmoothStep(0, 1, percentTraveled));
 
-            Debug.LogFormat("{0} has traveled {1}% of the distance.", objectToMove.gameObject.name, percentTraveled.ToString());
+            if (EnableAnimationDebugging)
+                Debug.LogFormat("{0} has traveled {1}% of the distance.", objectToMove.gameObject.name, percentTraveled.ToString());
+            
             yield return null;
         }
 

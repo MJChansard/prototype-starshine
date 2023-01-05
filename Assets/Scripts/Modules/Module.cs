@@ -67,8 +67,6 @@ public abstract class Module : MonoBehaviour
 
     // #METHODS
     public abstract bool UseModule();
-    public abstract void AnimateModule(GridBlock gb);
-    
 }
 
 // END OF FILE

@@ -6,7 +6,9 @@ using Sirenix.OdinInspector;
 public class GameManager : MonoBehaviour
 {
     [HideInInspector] public int CurrentTick = 1;
-    public bool VerboseConsole = true;
+    public bool VerboseConsole;
+    public bool StateManagerVerboseConsole;
+    [SerializeField] bool PlayerUpdateVerboseConsole;
 
     [TitleGroup("CUSTOM SPAWN SEQUENCES")]
     [SerializeField] bool overrideSpawnSequence;
@@ -19,6 +21,7 @@ public class GameManager : MonoBehaviour
     StateManager <GameState> stateManager = new StateManager<GameState>();
 
     Module.UsageData previousModuleData;
+    bool newDirectionButtonPressed = false;
     bool activateModuleButtonPressed = false;
     bool playerMoveReceived = false;
     bool endTurnReceived = false;
@@ -94,6 +97,7 @@ public class GameManager : MonoBehaviour
 
         // Cache reference and setup Player
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        player.Init();
         player.NextLevel(level.jumpFuelAmount);
 
 
@@ -137,6 +141,9 @@ public class GameManager : MonoBehaviour
 
     private void PlayerEnter()
     {
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.PlayerEnter() called.");
+
         gridObjectM.currentGamePhase = GamePhase.Player;
         playerTurnFulfilled = false;
         inputM.SetInputActive(true);
@@ -144,9 +151,14 @@ public class GameManager : MonoBehaviour
 
     private void PlayerUpdate()
     {
-        // Should move the movement stuff here so the pattern is consistent
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.PlayerUpdate() called.");
+
         if (activateModuleButtonPressed)
         {
+            if (PlayerUpdateVerboseConsole)
+                Debug.Log("GameManager.activateModuleButtonPressed = true");
+
             activateModuleButtonPressed = false;
 
             player.UseCurrentModule();
@@ -181,11 +193,17 @@ public class GameManager : MonoBehaviour
 
         if (endTurnReceived)
         {
+            if (PlayerUpdateVerboseConsole)
+                Debug.Log("GameManager.endTurnReceived = true");
+            
             endTurnReceived = false;
         }
 
         if (gridCurrentlyAnimating)
         {
+            if (PlayerUpdateVerboseConsole)
+                Debug.Log("GameManager.gridCurrentlyAnimating = true");
+
             if (gridObjectM.IsAnimationComplete)
             {
                 gridObjectM.ResolveCollisionsOnGridBlocks();
@@ -201,6 +219,8 @@ public class GameManager : MonoBehaviour
     
     private void PlayerExit()
     {
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.PlayerExit() called.");
         //gridObjectM.AnimateMovement();
         gridObjectM.ResolveCollisionsOnGridBlocks();
         gridObjectM.NewGridUpdateSteps(checkHealth: true, checkMove: false, checkLoot: true);
@@ -213,6 +233,9 @@ public class GameManager : MonoBehaviour
 
     void BoardEnter()
     {
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.BoardEnter() called.");
+
         gridObjectM.currentGamePhase = GamePhase.Board;
         gridObjectM.NewGridUpdateSteps();
         gridObjectM.RemoveDeadObjectsAndDropLoot();
@@ -225,12 +248,18 @@ public class GameManager : MonoBehaviour
     
     void BoardUpdate()
     {
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.BoardUpdate() called.");
+
         if (gridObjectM.IsAnimationComplete)
             stateManager.SwitchState(GameState.Player);
     }
 
     void BoardExit()
     {
+        if (StateManagerVerboseConsole)
+            Debug.Log("GameManager.BoardExit() called.");
+
         gridObjectM.ResolveCollisionsOnGridBlocks();
         gridObjectM.NewGridUpdateSteps(checkMove: false, checkHealth: true, checkLoot: true);
         gridObjectM.RemoveDeadObjectsAndDropLoot(); //Is a missile not being removed because of eligibleForProcessing?

@@ -32,7 +32,9 @@ public class Player : GridObject
                     total++;
             }
 
-            return total;
+//            return total;
+
+            return equippedModules.Length;
         }
     }
     public Module[] GetEquippedModules
@@ -52,25 +54,24 @@ public class Player : GridObject
     }
 
     public GameObject currentSelectedModule;
-    public Vector2Int Direction { get { return movePattern.DirectionOnGrid; } }
+    public Vector2Int Direction { get { return thruster.CurrentDirectionFacing; } }
     public int CurrentJumpFuel { get { return currentJumpFuel; } }
 
     public Thruster.UsageData thrusterUsageData { get; private set; }
     public Weapon.UsageData weaponUsageData { get; private set; }
     public Shield.UsageData shieldUsageData { get; private set; }
-
+    
     [HideInInspector] public bool IsAttackingThisTick = false;
 
 
 
     // # FIELDS
-    private GameObject thruster;
-    private GridMover movePattern;
     private Health hp;
     private Transform weaponSource;
     
     private Module[] equippedModules;
-    private Module[] moduleInventory;
+    private List<Module> moduleInventory;
+    private Thruster thruster;
     private int moduleSelector = 0;
     
     private int currentJumpFuel = 0;
@@ -87,40 +88,36 @@ public class Player : GridObject
 
     //  # DELEGATES
     public System.Action<int> OnActivateSelectedWeapon;
+    
 
-
-
-    //  # METHODS
+    
     private void Awake()
     {
-        
+        moduleInventory = new List<Module>();
+        /*
         for (int i = 0; i < transform.childCount; i++)
         {
             GameObject _childObject = transform.GetChild(i).gameObject;
-            if(_childObject.name == "PlayerThruster")
-                thruster = _childObject;
 
             if (_childObject.name == "WeaponSource")
+            {
                 weaponSource = _childObject.transform;
+            }
+                       else if (_childObject.name == "Modules")
+                       {
+                           moduleInventory = new Module[_childObject.transform.childCount];
+                           for (int j = 0; j < moduleInventory.Length; j++)
+                           {
+                               Module m = _childObject.transform.GetChild(j).GetComponent<Module>();
+                               moduleInventory[j] = m;
+                               EquipModule(j, m);
+                               if (m is Thruster)
+                                   thruster = m as Thruster;
+                           }
+                       }
+            */
 
-            if (thruster != null && weaponSource != null)
-                break;
-        }
-        
-        movePattern = GetComponent<GridMover>();
-        movePattern.SetMovePatternUp();
-
-        hp = GetComponent<Health>();
-
-        
-        equippedModules = new Module[6];
-        GameObject playerModuleTray = transform.Find("Modules").gameObject;
-        moduleInventory = new Module[playerModuleTray.transform.childCount];
-        for (int i = 0; i < moduleInventory.Length; i++)
-        {
-            moduleInventory[i] = playerModuleTray.transform.GetChild(i).GetComponent<Module>();
-            EquipModule(i, moduleInventory[i]);
-        }
+        hp = GetComponent<Health>();  
 
         InputManager inputM = FindObjectOfType<InputManager>();
         inputM.ChangeDirectionButtonPressed += ChangeDirectionFacing;
@@ -129,15 +126,48 @@ public class Player : GridObject
         
         Debug.Log("Successfully subscribed to InputManager.ChangeDirectionButtonPressed");
     }
-    
+
+    public override void Init()
+    {
+        base.Init();
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            GameObject _childObject = transform.GetChild(i).gameObject;
+
+            if (_childObject.name == "WeaponSource")
+            {
+                weaponSource = _childObject.transform;
+            }
+            else if (_childObject.CompareTag("Module"))
+            {
+                Debug.LogFormat("Found module: {0}", _childObject.name);
+
+                Module m = _childObject.GetComponent<Module>();
+                if (m != null)
+                    moduleInventory.Add(m);
+                else
+                    Debug.Log("Prefab configuration error.  Prefab is tagged with 'Module' but lacks a 'Module' component.");
+            }
+        }
+        
+        equippedModules = new Module[moduleInventory.Count];
+        for (int i = 0; i < moduleInventory.Count; i++)
+        {
+            Module m = moduleInventory[i];
+            EquipModule(i, m);
+            if (m is Thruster)
+                thruster = m as Thruster;
+        }
+    }
     //  # METHODS/Input
     void ChangeDirectionFacing(Vector2Int direction)
     {
-        //Debug.Log("Player.ChangeDirectionFacing()");
-        movePattern.SetMovePattern(direction);
+        thruster.CurrentDirectionFacing = direction;
+        Debug.LogFormat("Player direction Vector2Int: {0}", thruster.CurrentDirectionFacing.ToString());
 
         if(direction == Vector2Int.up)
-            transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);
+            transform.rotation = Quaternion.AngleAxis(0, Vector3.forward);    
         else if(direction == Vector2Int.down)
             transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.forward);
         else if(direction == Vector2Int.left)
@@ -147,7 +177,7 @@ public class Player : GridObject
     }
     void NextModule()
     {
-        if (moduleSelector < moduleInventory.Length)
+        if (moduleSelector < equippedModules.Length)
             moduleSelector++;
     }
     void PreviousModule()
@@ -159,22 +189,25 @@ public class Player : GridObject
     //  # METHODS/Modules
     public void UseCurrentModule()
     {
-        if (moduleInventory[moduleSelector].UseModule())
+        bool moduleIsAvailable = equippedModules[moduleSelector].UseModule();
+        if (moduleIsAvailable)
         {
-            if (moduleInventory[moduleSelector] is Thruster)
+            Debug.LogFormat("Using current module: {0}", equippedModules[moduleSelector].name);
+            if (equippedModules[moduleSelector] is Thruster)
             {
-                Thruster module = moduleInventory[moduleSelector] as Thruster;
-                thrusterUsageData = module.LatestUsageData;
+                //Module m = moduleInventory[moduleSelector];
+                //Thruster t = m as Thruster;
+                Thruster t = equippedModules[moduleSelector] as Thruster;
+                thrusterUsageData = t.LatestUsageData;
                 weaponUsageData = null;
             }
-            else if (moduleInventory[moduleSelector] is Weapon)
+            else if (equippedModules[moduleSelector] is Weapon)
             {
-                Weapon module = moduleInventory[moduleSelector] as Weapon;
+                Weapon module = equippedModules[moduleSelector] as Weapon;
                 weaponUsageData = module.LatestUsageData;
                 thrusterUsageData = null;
             }
         }
-
     }
     
 
@@ -195,7 +228,7 @@ public class Player : GridObject
     public void StartAttackAnimation(GridBlock gridBlock)
     {
         //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-        equippedModules[moduleSelector].AnimateModule(gridBlock);
+        //equippedModules[moduleSelector].AnimateModule(gridBlock);
     }
 
     public void AcceptAmmo(WeaponType type, int amount)

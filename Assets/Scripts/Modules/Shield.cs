@@ -29,9 +29,4 @@ public class Shield : Module
     {
         throw new System.NotImplementedException();
     }
-
-    public override void AnimateModule(GridBlock gb)
-    {
-        throw new System.NotImplementedException();
-    }
 }
