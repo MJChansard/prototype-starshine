@@ -58,6 +58,10 @@ public class Weapon : Module
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private float damageMultiplier;
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private bool doesPenetrate;
 
+    [TitleGroup("WEAPON DEBUGGING")][SerializeField] private bool verboseLogging;
+    [TitleGroup("WEAPON DEBUGGING")][SerializeField] private bool verboseInitializationLogging;
+
+
     // Might need a new field indicating whether grid distance impacts damage?
 
 
@@ -86,7 +90,7 @@ public class Weapon : Module
 
     // #FIELDS
     private bool isActive;
-    private IModuleAnimator animator;
+    private ParticleSystem ps;
     private int currentAmmo;
 
 
@@ -94,9 +98,11 @@ public class Weapon : Module
     {
         if (hasAnimation)
         {
-            animator = GetComponent<IModuleAnimator>();
-            if (TryGetComponent<ParticleSystem>(out ParticleSystem ps))
+            ParticleSystem ps = GetComponent<ParticleSystem>();
+            if (ps != null)
                 ps.Stop();
+            else
+                Debug.Log("Prefab configuration error!  No ParticleSystem found although an animation is expected.");
         }
         currentAmmo = startAmmo;
         displayCurrentAmmoInspector = currentAmmo;
@@ -106,19 +112,11 @@ public class Weapon : Module
     //  #METHODS
     public override bool UseModule()
     {
-        /*  NOTES
-         * 
-         *  - If this method needs to be able to handle a Thruster & a Shield module then
-         *      there is a lot of work that needs to be done here
-         *      
-         *  - Also the UsageData class becomes really useless in its current form since it is
-         *      so tailored to weapons
-         */
         if (ammoType != AmmunitionType.None)
         {
             bool sufficientResource = ConsumeResource(ammoType);
 
-            var data = new Weapon.UsageData
+            LatestUsageData = new Weapon.UsageData
             (
                 baseDamage: this.baseDamage,
                 doesPenetrate: this.doesPenetrate,
@@ -142,11 +140,6 @@ public class Weapon : Module
         }
     }
 
-    public void AnimateModule(GridBlock gb)
-    {
-        //StartCoroutine(animator.TriggerModuleAnimationCoroutine(gb));
-        animator.StartModuleAnimationCoroutine(gb);
-    }
 
     public void UpdateCounter()
     {
@@ -179,5 +172,35 @@ public class Weapon : Module
     public void ToggleModuleOnOff()
     {
 
+    }
+
+    public IEnumerator AnimateCoroutine(GridBlock gb)
+    {
+        if (gb.objectsOnBlock.Count > 0)
+        {
+            for (int i = 0; i < gb.objectsOnBlock.Count; i++)
+            {
+                if (gb.objectsOnBlock[i].TryGetComponent<GridObject>(out GridObject gridObject))
+                {
+                    var trigger = ps.trigger;
+                    trigger.enabled = true;
+
+                    trigger.SetCollider(0, gridObject.GetComponent<Collider>());
+                    trigger.radiusScale = 0.5f;
+
+                    ps.Play();
+                    yield return new WaitForSeconds(2.0f);
+                    ps.Stop();
+
+                    break;
+                }
+            }
+        }
+        else
+        {
+            ps.Play();
+            yield return new WaitForSeconds(2.0f);
+            ps.Stop();
+        }
     }
 }

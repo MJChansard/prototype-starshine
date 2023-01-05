@@ -359,11 +359,14 @@ public class GridObjectManager : MonoBehaviour
                     if (!uData.DoesPenetrate)
                     {
                         //  #TO-DO: Execute appropriate animation
-                        player.StartAttackAnimation(possibleTargets[i]);
+                        player.StartWeaponModuleAnimation(possibleTargets[i]);
                         break;
                     }
                 }
             }
+
+            if (i == possibleTargets.Count - 1)
+                player.StartWeaponModuleAnimation(possibleTargets[i]);
         }
         // End animation at end of targetBlocks List
 

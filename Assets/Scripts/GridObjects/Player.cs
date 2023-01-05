@@ -199,6 +199,11 @@ public class Player : GridObject
                 thrusterUsageData = null;
             }
         }
+        else
+        {
+            thrusterUsageData = null;
+            weaponUsageData = null;
+        }
     }
     
 
@@ -216,10 +221,11 @@ public class Player : GridObject
         }
     }
        
-    public void StartAttackAnimation(GridBlock gridBlock)
+    public void StartWeaponModuleAnimation(GridBlock gridBlock)
     {
         //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
-        //equippedModules[moduleSelector].AnimateModule(gridBlock);
+        Weapon module = equippedModules[moduleSelector] as Weapon;
+        StartCoroutine(module.AnimateCoroutine(gridBlock));
     }
 
     public void AcceptAmmo(WeaponType type, int amount)

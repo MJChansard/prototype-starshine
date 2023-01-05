@@ -292,6 +292,10 @@ public class GameManager : MonoBehaviour
         yield return null;
     }
     */
+    private void OnPlayerSelectNewModule()
+    {
+
+    }
     private void OnPlayerMove()
     {
         playerMoveReceived = true;
