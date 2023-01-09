@@ -53,14 +53,13 @@ public class GameManager : MonoBehaviour
 
         stateManager.RegisterStateMethods(this, true);
 
-        inputM = FindObjectOfType<InputManager>();
+        inputM = GetComponent<InputManager>();
         inputM.ActivateModuleButtonPressed += ToggleModuleActivation;
         inputM.MoveButtonPressed += OnPlayerMove;
         inputM.EndTurnButtonPressed += EndPlayerTurn;
         
 
         PlayerHUD pHUD = FindObjectOfType<PlayerHUD>();
-        //pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
                 
 
         mainGamePhase = GamePhase.Player;
@@ -99,10 +98,13 @@ public class GameManager : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         player.Init();
         player.NextLevel(level.jumpFuelAmount);
+        //player.SubscribeToInputActions(inputM.ChangeDirectionButtonPressed, inputM.NewModuleButtonPressed);
+        inputM.ChangeDirectionButtonPressed += player.ChangeDirectionFacing;
+        inputM.NewModuleButtonPressed += player.SelectNewModule;
 
 
         // Initialize SpawnManager
-        spawnM.Init();
+        spawnM.Init(level);
         if (spawnM.CustomSpawnSequenceExist)
         {
 
@@ -292,10 +294,6 @@ public class GameManager : MonoBehaviour
         yield return null;
     }
     */
-    private void OnPlayerSelectNewModule()
-    {
-
-    }
     private void OnPlayerMove()
     {
         playerMoveReceived = true;

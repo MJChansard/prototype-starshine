@@ -23,7 +23,7 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     //[TabGroup("Settings")]  public int numberOfStationsToSpawn;
 
     [TabGroup("Settings")]  public GridBorder[] bordersEligibleForSpawn;
-    [TabGroup("Settings")]  public GridObject[] eligibleForSpawn;
+    [TabGroup("Settings")]  public GridObject[] spawnableGridObjects;
 
     //  #TOPOGRAPHY
     [TabGroup("Topography")]    public int width;
