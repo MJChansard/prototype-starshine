@@ -9,6 +9,9 @@ public class Player : GridObject
     [BoxGroup("PLAYER PROPERTIES", centerLabel: true)]
     //[TitleGroup("PLAYER CONFIGURATION/MODULES")][SerializeField] private GameObject[] moduleInventory;
     [TitleGroup("PLAYER PROPERTIES/MODULES")] [SerializeField] private GameObject[] weaponObjects;
+    
+    [TitleGroup("PLAYER PROPERTIES/DEBUGGING")][SerializeField] private bool VerboseInputLogging;
+    [TitleGroup("PLAYER PROPERTIES/DEBUGGING")][ShowInInspector][DisplayAsString] private int IndexSelectModule { get { return moduleSelector; } }
 
     [BoxGroup("PLAYER COMMANDS")]
     [Button]
@@ -61,7 +64,7 @@ public class Player : GridObject
     private Transform weaponSource;
     
     private Module[] equippedModules;
-    private List<Module> moduleInventory;
+    private List<Module> moduleInventory = new List<Module>();
     private Thruster thruster;
     private int moduleSelector = 0;
     
@@ -84,7 +87,6 @@ public class Player : GridObject
     
     private void Awake()
     {
-        moduleInventory = new List<Module>();
         /*
         for (int i = 0; i < transform.childCount; i++)
         {
@@ -108,13 +110,7 @@ public class Player : GridObject
                        }
             */
 
-        hp = GetComponent<Health>();  
-
-        InputManager inputM = FindObjectOfType<InputManager>();
-        inputM.ChangeDirectionButtonPressed += ChangeDirectionFacing;
-        inputM.NewModuleButtonPressed += SelectNewModule;
-                
-        Debug.Log("Successfully subscribed to InputManager.ChangeDirectionButtonPressed");
+        hp = GetComponent<Health>();
     }
 
     public override void Init()
@@ -151,7 +147,7 @@ public class Player : GridObject
         }
     }
     //  # METHODS/Input
-    void ChangeDirectionFacing(Vector2Int direction)
+    public void ChangeDirectionFacing(Vector2Int direction)
     {
         thruster.CurrentDirectionFacing = direction;
         Debug.LogFormat("Player direction Vector2Int: {0}", thruster.CurrentDirectionFacing.ToString());
@@ -165,16 +161,19 @@ public class Player : GridObject
         else if(direction == Vector2Int.right)
             transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.forward);
     }
-    void SelectNewModule(ModuleSelect index)
+    public void SelectNewModule(ModuleSelect index)
     {
+        if (VerboseInputLogging)
+            Debug.LogFormat("Player.SelectNewModule({0}) called.", index);
+        
         if (index == ModuleSelect.Next && moduleSelector < equippedModules.Length)
             moduleSelector++;
 
         if (index == ModuleSelect.Previous && moduleSelector > 0)
             moduleSelector--;
     }
-        
-    
+
+
     //  # METHODS/Modules
     public void UseCurrentModule()
     {
@@ -184,8 +183,6 @@ public class Player : GridObject
             Debug.LogFormat("Using current module: {0}", equippedModules[moduleSelector].name);
             if (equippedModules[moduleSelector] is Thruster)
             {
-                //Module m = moduleInventory[moduleSelector];
-                //Thruster t = m as Thruster;
                 Thruster t = equippedModules[moduleSelector] as Thruster;
                 thrusterUsageData = t.LatestUsageData;
                 weaponUsageData = null;
@@ -203,7 +200,6 @@ public class Player : GridObject
             weaponUsageData = null;
         }
     }
-    
 
     public bool EquipModule(int slot, Module module)
     {
@@ -240,26 +236,6 @@ public class Player : GridObject
         //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
     }
 
-    public void OnTickUpdate()
-    {
-        StartCoroutine(AnimateThrusterCoroutine());
-        /*
-        if (IsAttackingThisTick)
-        {
-            return attackWaitTime;
-        }
-        else
-        {
-            StartCoroutine(AnimateThrusterCoroutine());
-            //StartCoroutine(UpdateUICoroutine());
-
-            return moveWaitTime;
-        }
-
-        //return waitWaitTime;
-        */
-    }
-
   
     public void NextLevel(int winFuelAmount)
     {
@@ -269,19 +245,7 @@ public class Player : GridObject
         OnFuelAmountChange?.Invoke(0, maxFuelAmount, 1.0f);
     }
 
-    // #COROUTINES
-    private IEnumerator AnimateThrusterCoroutine()
-    {
-        //thrusterCoroutineIsRunning = true;
-
-        ParticleSystem ps = thruster.GetComponent<ParticleSystem>();
-        ps.Play();
-        yield return new WaitForSeconds(1.0f);
-        ps.Stop();
-
-        //thrusterCoroutineIsRunning = false;
-    }
-    
+    // #COROUTINES   
     public IEnumerator AnimateNextLevel()
     {
         this.gameObject.SetActive(false);

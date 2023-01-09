@@ -63,8 +63,10 @@ public class PlayerHUD : MonoBehaviour
             Debug.Log("Please assign reference to UI HP Node GameObject.");
         else
         {
-            for (int i = 0; i < RefToHpNodeGameObject.transform.childCount; i++)
+            int countHealthNodes = RefToHpNodeGameObject.transform.childCount;
+            for (int i = 0; i < countHealthNodes; i++)
             {
+                hpNodes = new Image[countHealthNodes];
                 hpNodes[i] = RefToHpNodeGameObject.transform.GetChild(i).GetComponent<Image>();
             }
             
@@ -84,7 +86,7 @@ public class PlayerHUD : MonoBehaviour
         }
         else
         {
-            //Debug.Log("Did you forget to place the Input Manager Component?");
+            Debug.Log("PlayerHUD unable to locate InputManager!");
         }
     }
 
@@ -96,6 +98,7 @@ public class PlayerHUD : MonoBehaviour
 
 
         entryArrayHUD = new PlayerHUDEntry[modulesForUI.Length];
+        Debug.LogFormat("PlayerHUD Entry Array Length: {0}", entryArrayHUD.Length);
         for (int i = 0; i < entryArrayHUD.Length; i++)
         {
             PlayerHUDEntry entry = Instantiate(playerHUDEntryPrefab, modulesGroupHUD.transform);
@@ -134,13 +137,30 @@ public class PlayerHUD : MonoBehaviour
 
     private void SelectNewModule(ModuleSelect index)
     {
+        if (VerboseLogging)
+            Debug.Log("PlayerHUD.SelectNewModule() called");
+
         entryArrayHUD[entryArrayHUDIndex].SetSelector(false);
-        
-        if (index == ModuleSelect.Next && entryArrayHUDIndex < entryArrayHUD.Length)
+                
+        if (index == ModuleSelect.Next && entryArrayHUDIndex < entryArrayHUD.Length - 1)
+        {
+            if (VerboseLogging)
+                Debug.LogFormat("New entryArrayHUDIndex: {0}", entryArrayHUDIndex);
             entryArrayHUDIndex++;
+            if (VerboseLogging)
+                Debug.LogFormat("New entryArrayHUDIndex: {0}", entryArrayHUDIndex);
+        }
+            
         
         if (index == ModuleSelect.Previous && entryArrayHUDIndex > 0)
+        {
+            if (VerboseLogging)
+                Debug.LogFormat("New entryArrayHUDIndex: {0}", entryArrayHUDIndex);
             entryArrayHUDIndex--;
+            if (VerboseLogging)
+                Debug.LogFormat("New entryArrayHUDIndex: {0}", entryArrayHUDIndex);
+        }
+            
 
         entryArrayHUD[entryArrayHUDIndex].SetSelector(true);
     }
