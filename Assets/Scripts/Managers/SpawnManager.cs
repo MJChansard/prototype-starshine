@@ -120,10 +120,20 @@ public class SpawnManager : MonoBehaviour
     {
         get
         {
-            return availableBorderSpawns[GridBorder.Top].Count +
-                availableBorderSpawns[GridBorder.Bottom].Count +
-                availableBorderSpawns[GridBorder.Left].Count +
-                availableBorderSpawns[GridBorder.Right].Count;
+            int count = 0;
+            if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Top))
+                count += availableBorderSpawns[GridBorder.Top].Count;
+
+            if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Bottom))
+                count += availableBorderSpawns[GridBorder.Bottom].Count;
+
+            if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Left))
+                count += availableBorderSpawns[GridBorder.Left].Count;
+
+            if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Right))
+                count += availableBorderSpawns[GridBorder.Right].Count;
+            
+            return count;
         }
     }
 
