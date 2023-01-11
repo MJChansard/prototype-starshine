@@ -195,7 +195,7 @@ public class SpawnManager : MonoBehaviour
         }
         else
         {
-            EnqueueNewSpawnWave(3);
+            EnqueueNewSpawnWave(1);
         }
     }
 
@@ -207,19 +207,19 @@ public class SpawnManager : MonoBehaviour
             {
                 Vector2Int gridLocation = new Vector2Int(x, y);
 
-                if (x == thisLevel.BoundaryLeftActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
+                if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Left) && x == thisLevel.BoundaryLeftActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Left].Add(gridLocation);
                 }
-                else if (x == thisLevel.BoundaryRightActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
+                else if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Right) && x == thisLevel.BoundaryRightActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Right].Add(gridLocation);
                 }
-                else if (x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryTopActual)
+                else if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Top) && x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryTopActual)
                 {
                     availableBorderSpawns[GridBorder.Top].Add(gridLocation);
                 }
-                else if (x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryBottomActual)
+                else if (thisLevel.bordersEligibleForSpawn.Contains(GridBorder.Bottom) && x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Bottom].Add(gridLocation);
                 }
