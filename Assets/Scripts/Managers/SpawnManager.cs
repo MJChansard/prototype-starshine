@@ -274,41 +274,9 @@ public class SpawnManager : MonoBehaviour
                 }
                 else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
                 {
-                    /*
-                    GridBorder toDrop = GridBorder.None;
-                    foreach (var kvp in spawnBorderTracker)
-                    {
-                        if (kvp.Key == GridBorder.Top)
-                        {
-                            if (remainingTopSpawns.Count == 0 || kvp.Value == 0)
-                                toDrop = kvp.Key;
-                        }
-                        else if (kvp.Key == GridBorder.Bottom)
-                        {
-                            if (remainingBottomSpawns.Count == 0 || kvp.Value == 0)
-                                toDrop = kvp.Key;
-                        }
-                        else if(kvp.Key == GridBorder.Left)
-                        {
-                            if (remainingLeftSpawns.Count == 0 || kvp.Value == 0)
-                                toDrop = kvp.Key;
-                        }
-                        else if (kvp.Key == GridBorder.Right)
-                        {
-                            if (remainingRightSpawns.Count == 0 || kvp.Value == 0)
-                                toDrop = kvp.Key;
-                        }
-                    }
-                    if (toDrop != GridBorder.None)
-                        spawnBorderTracker.Remove(toDrop);
-                    */
-                    //int x = Random.Range(0, spawnBorderTracker.Count);
-                    //GridBorder selected = spawnBorderTracker.Keys.ElementAt(x);
-
                     int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
                     GridBorder selected = thisLevel.bordersEligibleForSpawn[x];
-                    //spawnBorderTracker[selected]--;
-
+                    
                     int randomizerMax = availableBorderSpawns[selected].Count;
                     sr.GridLocation = availableBorderSpawns[selected][Random.Range(0, randomizerMax)];
                     sr.Border = selected;
@@ -326,65 +294,6 @@ public class SpawnManager : MonoBehaviour
                     }
 
                     newWave.spawns[i] = sr;
-                    /*
-                    switch (selected)
-                    {
-                        case GridBorder.Top:
-                            //sr.GridLocation = remainingTopSpawns[Random.Range(0, remainingTopSpawns.Count)];
-
-                            sr.Border = GridBorder.Top;
-                            takenSpawns.Add(sr.GridLocation);
-
-                            if (sr.GridObject.spawnRules.avoidHazardPaths)
-                            {
-                                Vector2Int opposite = new Vector2Int(sr.GridLocation.x, thisLevel.BoundaryBottomActual);
-                                takenSpawns.Add(opposite);
-                            }
-                            break;
-
-                        case GridBorder.Bottom:
-                            sr.GridLocation = remainingBottomSpawns[Random.Range(0, remainingBottomSpawns.Count)];
-                            sr.Border = GridBorder.Bottom;
-                            takenSpawns.Add(sr.GridLocation);
-
-                            if (sr.GridObject.spawnRules.avoidHazardPaths)
-                            {
-                                Vector2Int opposite = new Vector2Int(sr.GridLocation.x, thisLevel.BoundaryTopActual);
-                                takenSpawns.Add(opposite);
-                            }
-                            break;
-
-                        case GridBorder.Left:
-                            sr.GridLocation = remainingLeftSpawns[Random.Range(0, remainingLeftSpawns.Count)];
-                            sr.Border = GridBorder.Left;
-                            takenSpawns.Add(sr.GridLocation);
-
-                            if (sr.GridObject.spawnRules.avoidHazardPaths)
-                            {
-                                Vector2Int opposite = new Vector2Int(thisLevel.BoundaryRightActual, sr.GridLocation.y);
-                                takenSpawns.Add(opposite);
-                            }
-                            break;
-
-                        case GridBorder.Right:
-                            sr.GridLocation = remainingRightSpawns[Random.Range(0, remainingRightSpawns.Count)];
-                            sr.Border = GridBorder.Right;
-                            takenSpawns.Add(sr.GridLocation);
-
-                            if (sr.GridObject.spawnRules.avoidHazardPaths)
-                            {
-                                Vector2Int opposite = new Vector2Int(thisLevel.BoundaryLeftActual, sr.GridLocation.y);
-                                takenSpawns.Add(opposite);
-                            }
-                            break;
-                    }
-                }
-                else
-                {
-
-                }
-*/
-//                newWave.spawns[i] = sr;
                 }
                 spawnQueue.Enqueue(newWave);
             }
