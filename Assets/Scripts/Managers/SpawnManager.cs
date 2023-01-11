@@ -6,6 +6,7 @@ using UnityEngine;
 public class SpawnManager : MonoBehaviour
 {
     //  # INSPECTOR
+    [TitleGroup("CURRENT STATUS")][ShowInInspector][DisplayAsString] Dictionary<GridBorder, List<Vector2Int>> AvailableSpawns;
     [BoxGroup("GENERAL COMPONENT CONFIGURATION", centerLabel: true)]
     [SerializeField] bool VerboseConsole;
     [BoxGroup("GENERAL COMPONENT CONFIGURATION")][SerializeField] bool forceSpawnEveryTurn;
@@ -38,19 +39,6 @@ public class SpawnManager : MonoBehaviour
     }
     public bool ForceSpawnEveryTurn { get { return forceSpawnEveryTurn; } }
 
-    List<Vector2Int> remainingPerimeterSpawns
-    {
-        get
-        {
-            List<Vector2Int> result = new List<Vector2Int>();
-            foreach (var spawn in eligiblePerimeterSpawns)
-            {
-                if (!takenSpawns.Contains(spawn))
-                    result.Add(spawn);
-            }
-            return result;
-        }
-    }
     List<Vector2Int> remainingInteriorSpawns
     {
         get
@@ -128,45 +116,63 @@ public class SpawnManager : MonoBehaviour
             return result;
         }
     }
-    
+    int CountAvailableBorderSpawns
+    {
+        get
+        {
+            return availableBorderSpawns[GridBorder.Top].Count +
+                availableBorderSpawns[GridBorder.Bottom].Count +
+                availableBorderSpawns[GridBorder.Left].Count +
+                availableBorderSpawns[GridBorder.Right].Count;
+        }
+    }
+
 
 
 
     //  # FIELDS
-    List<GridObject> hazards;
-    List<GridObject> loot;
+    List<GridObject> hazards = new();
+    List<GridObject> loot = new();
     List<GridObject> phenomena;
     List<GridObject> stations;
-        
-    List<Vector2Int> eligiblePerimeterSpawns;
-    List<Vector2Int> eligibleInteriorSpawns;
-    List<Vector2Int> takenSpawns;
-    Queue<SpawnWave> spawnQueue;
+
+    //List<Vector2Int> eligiblePerimeterSpawns;
+    List<Vector2Int> eligibleInteriorSpawns = new();
+    List<Vector2Int> takenSpawns = new();
+    Queue<SpawnWave> spawnQueue = new();
+
+    Dictionary<GridBorder, List<Vector2Int>> availableBorderSpawns = new();
 
     LevelRecord thisLevel;
-    
+
 
     private void Awake()
     {
-        eligiblePerimeterSpawns = new List<Vector2Int>();
-        eligibleInteriorSpawns  = new List<Vector2Int>();
-        takenSpawns             = new List<Vector2Int>();
-        
-        customSpawnSequence     = new List<SpawnWave>();
-        spawnQueue              = new Queue<SpawnWave>();
+        availableBorderSpawns.Add(GridBorder.Top, new List<Vector2Int>());
+        availableBorderSpawns.Add(GridBorder.Bottom, new List<Vector2Int>());
+        availableBorderSpawns.Add(GridBorder.Left, new List<Vector2Int>());
+        availableBorderSpawns.Add(GridBorder.Right, new List<Vector2Int>());
+
+        customSpawnSequence = new List<SpawnWave>();
+
+        AvailableSpawns = availableBorderSpawns;
     }
 
-    //void Init(LevelRecord level)
-    public void Init()
+    public void Init(LevelRecord level)
     {
-        GridObjectManager gom = GetComponent<GridObjectManager>();
-        hazards     = gom.HazardList;
-        loot        = gom.LootList;
-        phenomena   = gom.PhenomenaList;
-        stations    = gom.StationList;
-
-        LevelManager lm = GetComponent<LevelManager>();
-        thisLevel = lm.CurrentLevelData;
+        thisLevel = level;
+        for (int i = 0; i < level.spawnableGridObjects.Length; i++)
+        {
+            GridObject go = level.spawnableGridObjects[i];
+            if (go is Hazard)
+                hazards.Add(go as Hazard);
+            else if (go is Loot)
+                loot.Add(go as Loot);
+            else if (go is Phenomena)
+                phenomena.Add(go as Phenomena);
+            else if (go is Station)
+                stations.Add(go as Station);
+        }
 
         FindEligibleSpawns();
 
@@ -195,13 +201,21 @@ public class SpawnManager : MonoBehaviour
 
                 Vector2Int gridLocation = new Vector2Int(locationX, locationY);
 
-                if ((locationX == thisLevel.BoundaryLeftActual || locationX == thisLevel.BoundaryRightActual) && locationY != thisLevel.BoundaryTopActual && locationY != thisLevel.BoundaryBottomActual)
+                if (locationX == thisLevel.BoundaryLeftActual && locationY != thisLevel.BoundaryTopActual && locationY != thisLevel.BoundaryBottomActual)
                 {
-                    eligiblePerimeterSpawns.Add(gridLocation);
+                    availableBorderSpawns[GridBorder.Left].Add(gridLocation);
                 }
-                else if ((locationX != thisLevel.BoundaryLeftActual && locationX != thisLevel.BoundaryRightActual) && (locationY == thisLevel.BoundaryTopActual || locationY == thisLevel.BoundaryBottomActual))
+                else if (locationX == thisLevel.BoundaryRightActual && locationY != thisLevel.BoundaryTopActual && locationY != thisLevel.BoundaryBottomActual)
                 {
-                    eligiblePerimeterSpawns.Add(gridLocation);
+                    availableBorderSpawns[GridBorder.Right].Add(gridLocation);
+                }
+                else if (locationX != thisLevel.BoundaryLeftActual && locationX != thisLevel.BoundaryRightActual && locationY == thisLevel.BoundaryTopActual)
+                {
+                    availableBorderSpawns[GridBorder.Top].Add(gridLocation);
+                }
+                else if (locationX != thisLevel.BoundaryLeftActual && locationX != thisLevel.BoundaryRightActual && locationY == thisLevel.BoundaryBottomActual)
+                {
+                    availableBorderSpawns[GridBorder.Bottom].Add(gridLocation);
                 }
                 else if ((locationX > thisLevel.BoundaryLeftActual && locationX < thisLevel.BoundaryRightActual && locationY < thisLevel.BoundaryTopActual && locationY > thisLevel.BoundaryBottomActual))
                 {
@@ -218,29 +232,41 @@ public class SpawnManager : MonoBehaviour
     void EnqueueNewSpawnWave(int waveCount)
     {
         int numberOfObjectsInWave = 0;
-        Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
+        //Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
 
         for (int w = 0; w < waveCount; w++)
         {
-            numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, thisLevel.maxObjectsPerWave + 1);
+            int maxObjectsForWave = CountAvailableBorderSpawns >= thisLevel.maxObjectsPerWave ? thisLevel.maxObjectsPerWave : CountAvailableBorderSpawns;
+            numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
             SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
 
-
+            /*
             for (int i = 0; i < thisLevel.bordersEligibleForSpawn.Length; i++)
             {
-                GridBorder b = thisLevel.bordersEligibleForSpawn[i];               
-                spawnBorderTracker.Add(b, thisLevel.MaxSpawnOnBorder(b));
+                GridBorder b = thisLevel.bordersEligibleForSpawn[i];
+                int numberSpawnsRemaining = thisLevel.MaxSpawnOnBorder(b) <= availableBorderSpawns[b].Count ? thisLevel.MaxSpawnOnBorder(b) : availableBorderSpawns[b].Count;
+                
+                if (numberSpawnsRemaining > 0)
+                    spawnBorderTracker.Add(b, numberSpawnsRemaining);
             }
-
+            */
 
             for (int i = 0; i < numberOfObjectsInWave; i++)
             {
                 SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
 
-                if (Random.Range(1, 11) > 2)
-                    sr.GridObject = hazards[Random.Range(0, hazards.Count)];
+                if (loot.Count > 0)
+                {
+                    if (Random.Range(1, 11) > 2)
+                        sr.GridObject = hazards[Random.Range(0, hazards.Count)];
+                    else
+                        sr.GridObject = loot[Random.Range(0, loot.Count)];
+                }
                 else
-                    sr.GridObject = loot[Random.Range(0, loot.Count)];
+                {
+                    sr.GridObject = hazards[Random.Range(0, hazards.Count)];
+                }
+
 
                 if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Interior)
                 {
@@ -248,6 +274,7 @@ public class SpawnManager : MonoBehaviour
                 }
                 else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
                 {
+                    /*
                     GridBorder toDrop = GridBorder.None;
                     foreach (var kvp in spawnBorderTracker)
                     {
@@ -274,15 +301,37 @@ public class SpawnManager : MonoBehaviour
                     }
                     if (toDrop != GridBorder.None)
                         spawnBorderTracker.Remove(toDrop);
+                    */
+                    //int x = Random.Range(0, spawnBorderTracker.Count);
+                    //GridBorder selected = spawnBorderTracker.Keys.ElementAt(x);
 
-                    int x = Random.Range(0, spawnBorderTracker.Count);
-                    GridBorder selected = spawnBorderTracker.Keys.ElementAt(x);
-                    spawnBorderTracker[selected]--;
+                    int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
+                    GridBorder selected = thisLevel.bordersEligibleForSpawn[x];
+                    //spawnBorderTracker[selected]--;
 
+                    int randomizerMax = availableBorderSpawns[selected].Count;
+                    sr.GridLocation = availableBorderSpawns[selected][Random.Range(0, randomizerMax)];
+                    sr.Border = selected;
+                    availableBorderSpawns[selected].Remove(sr.GridLocation);
+
+                    if (sr.GridObject.spawnRules.avoidHazardPaths)
+                    {
+                        Vector2Int? oppositeGridBlock = thisLevel.GetOppositeBorderGridBlock(sr.GridLocation);
+                        if (oppositeGridBlock.HasValue)
+                        {
+                            Vector2Int target = (Vector2Int)oppositeGridBlock;
+                            GridBorder oppositeBorder = thisLevel.GetGridBorderOfGridBlock(target);
+                            availableBorderSpawns[oppositeBorder].Add(target);
+                        }
+                    }
+
+                    newWave.spawns[i] = sr;
+                    /*
                     switch (selected)
                     {
                         case GridBorder.Top:
-                            sr.GridLocation = remainingTopSpawns[Random.Range(0, remainingTopSpawns.Count)];
+                            //sr.GridLocation = remainingTopSpawns[Random.Range(0, remainingTopSpawns.Count)];
+
                             sr.Border = GridBorder.Top;
                             takenSpawns.Add(sr.GridLocation);
 
@@ -334,20 +383,22 @@ public class SpawnManager : MonoBehaviour
                 {
 
                 }
-                newWave.spawns[i] = sr;
+*/
+//                newWave.spawns[i] = sr;
+                }
+                spawnQueue.Enqueue(newWave);
             }
-            spawnQueue.Enqueue(newWave);
-            spawnBorderTracker.Clear();
         }
     }
+
     SpawnWave CreateSpawnsForLevel(int phenomenaCount, int stationCount)
     {
         /*  NOTE
-         * 
-         *  Not currently used but keeping here in case I can re-use the interior spawning logic
-         */
+            * 
+            *  Not currently used but keeping here in case I can re-use the interior spawning logic
+            */
         SpawnWave level = SpawnWave.CreateSpawnWave(phenomenaCount + stationCount);
-        
+
         if (phenomenaCount > 0 || stationCount > 0)
             level.spawns = new SpawnRecord[phenomenaCount + stationCount];
         else
@@ -366,7 +417,7 @@ public class SpawnManager : MonoBehaviour
                 arrayIndex++;
             }
         }
-        
+
         if (stationCount > 0)
         {
             for (int i = arrayIndex; i < level.spawns.Length; i++)
@@ -378,9 +429,10 @@ public class SpawnManager : MonoBehaviour
                 level.spawns[i] = current;
             }
         }
-        
+
         return level;
     }
+}
     //void AddSpawnStep(GridObject objectForSpawn)
     //{
     //    /*	SUMMARY
@@ -653,4 +705,3 @@ public class SpawnManager : MonoBehaviour
     //    }
     //    return possibleSpawns;
     //}
-}

@@ -114,6 +114,30 @@ public class LevelRecord : SerializedScriptableObject       // Inheriting from S
     {
         return topographyIndexToGridLocation[x, y];
     }
+    public Vector2Int? GetOppositeBorderGridBlock(Vector2Int origin)
+    {
+        if (origin.x == BoundaryLeftActual)
+            return new Vector2Int(BoundaryRightActual, origin.y);
+        else if (origin.x == BoundaryRightActual)
+            return new Vector2Int(BoundaryLeftActual, origin.y);
+        else if (origin.y == BoundaryTopActual)
+            return new Vector2Int(origin.x, BoundaryBottomActual);
+        else if (origin.y == BoundaryBottomActual)
+            return new Vector2Int(origin.x, BoundaryTopActual);
+        else return null;
+    }
+    public GridBorder GetGridBorderOfGridBlock(Vector2Int location)
+    {
+        if (location.x == BoundaryLeftActual)
+            return GridBorder.Left;
+        else if (location.x == BoundaryRightActual)
+            return GridBorder.Right;
+        else if (location.y == BoundaryTopActual)
+            return GridBorder.Top;
+        else if (location.y == BoundaryBottomActual)
+            return GridBorder.Bottom;
+        else return GridBorder.None;
+    }
 
     private void OnEnable()
     {
