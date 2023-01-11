@@ -191,14 +191,10 @@ public class SpawnManager : MonoBehaviour
 
     void FindEligibleSpawns()
     {
-        int x = thisLevel.BoundaryLeftActual;
-        int y = thisLevel.BoundaryBottomActual;
-        for (int i = 0; i < thisLevel.width; i++)
+        for (int x = thisLevel.BoundaryLeftActual; x <= thisLevel.BoundaryRightActual; x++)
         {
-            for (int j = 0; j < thisLevel.height; j++)
+            for (int y = thisLevel.BoundaryBottomActual; y < thisLevel.BoundaryTopActual; y++)
             {
-                if (j == 0) y = thisLevel.BoundaryBottomActual;
-
                 Vector2Int gridLocation = new Vector2Int(x, y);
 
                 if (x == thisLevel.BoundaryLeftActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
@@ -221,11 +217,7 @@ public class SpawnManager : MonoBehaviour
                 {
                     eligibleInteriorSpawns.Add(gridLocation);
                 }
-
-                y += 1;
             }
-
-            x += 1;
         }
     }
 
@@ -284,8 +276,8 @@ public class SpawnManager : MonoBehaviour
 
                     newWave.spawns[i] = sr;
                 }
-                spawnQueue.Enqueue(newWave);
             }
+            spawnQueue.Enqueue(newWave);
         }
     }
 
