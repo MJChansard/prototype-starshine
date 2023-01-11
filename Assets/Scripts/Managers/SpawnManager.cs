@@ -240,17 +240,6 @@ public class SpawnManager : MonoBehaviour
             numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
             SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
 
-            /*
-            for (int i = 0; i < thisLevel.bordersEligibleForSpawn.Length; i++)
-            {
-                GridBorder b = thisLevel.bordersEligibleForSpawn[i];
-                int numberSpawnsRemaining = thisLevel.MaxSpawnOnBorder(b) <= availableBorderSpawns[b].Count ? thisLevel.MaxSpawnOnBorder(b) : availableBorderSpawns[b].Count;
-                
-                if (numberSpawnsRemaining > 0)
-                    spawnBorderTracker.Add(b, numberSpawnsRemaining);
-            }
-            */
-
             for (int i = 0; i < numberOfObjectsInWave; i++)
             {
                 SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
