@@ -191,41 +191,41 @@ public class SpawnManager : MonoBehaviour
 
     void FindEligibleSpawns()
     {
-        int locationX = thisLevel.BoundaryLeftActual;
-        int locationY = thisLevel.BoundaryBottomActual;
+        int x = thisLevel.BoundaryLeftActual;
+        int y = thisLevel.BoundaryBottomActual;
         for (int i = 0; i < thisLevel.width; i++)
         {
             for (int j = 0; j < thisLevel.height; j++)
             {
-                if (j == 0) locationY = thisLevel.BoundaryBottomActual;
+                if (j == 0) y = thisLevel.BoundaryBottomActual;
 
-                Vector2Int gridLocation = new Vector2Int(locationX, locationY);
+                Vector2Int gridLocation = new Vector2Int(x, y);
 
-                if (locationX == thisLevel.BoundaryLeftActual && locationY != thisLevel.BoundaryTopActual && locationY != thisLevel.BoundaryBottomActual)
+                if (x == thisLevel.BoundaryLeftActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Left].Add(gridLocation);
                 }
-                else if (locationX == thisLevel.BoundaryRightActual && locationY != thisLevel.BoundaryTopActual && locationY != thisLevel.BoundaryBottomActual)
+                else if (x == thisLevel.BoundaryRightActual && y != thisLevel.BoundaryTopActual && y != thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Right].Add(gridLocation);
                 }
-                else if (locationX != thisLevel.BoundaryLeftActual && locationX != thisLevel.BoundaryRightActual && locationY == thisLevel.BoundaryTopActual)
+                else if (x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryTopActual)
                 {
                     availableBorderSpawns[GridBorder.Top].Add(gridLocation);
                 }
-                else if (locationX != thisLevel.BoundaryLeftActual && locationX != thisLevel.BoundaryRightActual && locationY == thisLevel.BoundaryBottomActual)
+                else if (x != thisLevel.BoundaryLeftActual && x != thisLevel.BoundaryRightActual && y == thisLevel.BoundaryBottomActual)
                 {
                     availableBorderSpawns[GridBorder.Bottom].Add(gridLocation);
                 }
-                else if ((locationX > thisLevel.BoundaryLeftActual && locationX < thisLevel.BoundaryRightActual && locationY < thisLevel.BoundaryTopActual && locationY > thisLevel.BoundaryBottomActual))
+                else if ((x > thisLevel.BoundaryLeftActual && x < thisLevel.BoundaryRightActual && y < thisLevel.BoundaryTopActual && y > thisLevel.BoundaryBottomActual))
                 {
                     eligibleInteriorSpawns.Add(gridLocation);
                 }
 
-                locationY += 1;
+                y += 1;
             }
 
-            locationX += 1;
+            x += 1;
         }
     }
 
@@ -321,7 +321,7 @@ public class SpawnManager : MonoBehaviour
                         {
                             Vector2Int target = (Vector2Int)oppositeGridBlock;
                             GridBorder oppositeBorder = thisLevel.GetGridBorderOfGridBlock(target);
-                            availableBorderSpawns[oppositeBorder].Add(target);
+                            availableBorderSpawns[oppositeBorder].Remove(target);
                         }
                     }
 
