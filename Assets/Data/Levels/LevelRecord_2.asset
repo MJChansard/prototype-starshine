@@ -18,6 +18,7 @@ MonoBehaviour:
     ReferencedUnityObjects:
     - {fileID: -584646058905006761, guid: f991b8c8e754e494b83a17fc33d1838f, type: 3}
     - {fileID: -3623116190331690636, guid: 84f75344d57642d4dbbe12b065bf59e4, type: 3}
+    - {fileID: 1200978640491384049, guid: 4b42328e6cd51334e9862495dadb2f4c, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -96,8 +97,8 @@ MonoBehaviour:
       Entry: 10
       Data: 1
     - Name: 
-      Entry: 6
-      Data: 
+      Entry: 10
+      Data: 2
     - Name: 
       Entry: 6
       Data: 
@@ -170,11 +171,8 @@ MonoBehaviour:
   scarcity: 0
   saturation: 0
   jumpFuelAmount: 0
-  description: 
-  numberOfPhenomenaToSpawn: 0
-  numberOfStationsToSpawn: 0
+  VerboseLogging: 0
   bordersEligibleForSpawn: 
   eligibleForSpawn: []
   width: 7
   height: 6
-  playerSpawnLocation: {x: 0, y: 0}

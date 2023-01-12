@@ -97,6 +97,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  VerboseInputLogging: 1
   currentSelectedModule: {fileID: 0}
   IsAttackingThisTick: 0
 --- !u!114 &4287194383628620724
@@ -262,39 +263,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5031352432676404082}
     m_Modifications:
-    - target: {fileID: 2820014247734865222, guid: f92be1077e55ba04e9f172833c2faba8,
-        type: 3}
-      propertyPath: TriggerModule.enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6619469085846121842, guid: f92be1077e55ba04e9f172833c2faba8,
         type: 3}
       propertyPath: m_Name
       value: Module - AutoCannon Prefab
       objectReference: {fileID: 0}
-    - target: {fileID: 6619469085846121842, guid: f92be1077e55ba04e9f172833c2faba8,
-        type: 3}
-      propertyPath: m_TagString
-      value: Module
-      objectReference: {fileID: 0}
-    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
-        type: 3}
-      propertyPath: useIcon
-      value: 
-      objectReference: {fileID: 21300000, guid: cdc9eaaca10828f419512aae6745da50,
-        type: 3}
-    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
-        type: 3}
-      propertyPath: cooldownIcon
-      value: 
-      objectReference: {fileID: 21300000, guid: 0504e373cb8cc9a4c9b5132b1cea20ae,
-        type: 3}
-    - target: {fileID: 6619469085846121843, guid: f92be1077e55ba04e9f172833c2faba8,
-        type: 3}
-      propertyPath: availableIcon
-      value: 
-      objectReference: {fileID: 21300000, guid: b14863a2fb16fd14987a92d991f19490,
-        type: 3}
     - target: {fileID: 6619469085846121844, guid: f92be1077e55ba04e9f172833c2faba8,
         type: 3}
       propertyPath: m_RootOrder
@@ -424,11 +397,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Module - MissileLauncher Prefab
-      objectReference: {fileID: 0}
-    - target: {fileID: 7880948429677287885, guid: e053ecf8e1b390242bfe46dfe1e7f89e,
-        type: 3}
-      propertyPath: m_TagString
-      value: Module
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e053ecf8e1b390242bfe46dfe1e7f89e, type: 3}

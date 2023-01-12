@@ -336,16 +336,16 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-  minObjectsPerWave: 0
-  maxObjectsPerWave: 0
+  minObjectsPerWave: 1
+  maxObjectsPerWave: 2
   minGridObjectsOnGrid: 0
   scarcity: 0
   saturation: 0
   jumpFuelAmount: 0
   VerboseLogging: 0
-  bordersEligibleForSpawn: 00000000
-  eligibleForSpawn:
-  - {fileID: 0}
+  bordersEligibleForSpawn: 0300000004000000
+  spawnableGridObjects:
+  - {fileID: 8115030682602689957, guid: 7fcde91555449fb4c8e825405c0f7c71, type: 3}
+  - {fileID: 4813689670967235141, guid: 63d749065d8ba1043a1f176714f6e892, type: 3}
   width: 11
   height: 9
-  playerSpawnLocation: {x: 0, y: 0}
