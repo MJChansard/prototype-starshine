@@ -98,7 +98,7 @@ public class Weapon : Module
     {
         if (hasAnimation)
         {
-            ParticleSystem ps = GetComponent<ParticleSystem>();
+            ps = GetComponent<ParticleSystem>();
             if (ps != null)
                 ps.Stop();
             else

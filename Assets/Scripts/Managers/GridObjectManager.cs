@@ -219,11 +219,13 @@ public class GridObjectManager : MonoBehaviour
                     if (instance == null)
                         Debug.Log("Grrrr, null reference dood");
 
-
                     GridObject go = instance.GetComponent<GridObject>();
                     if (go == null)
                         Debug.Log("Something is wrong with GetComponent<>()");
 
+                    if (go is Player)
+                        player = go as Player;
+                    
                     PlaceGridObjectInPlay(go, gridLocation);
                 }                              
             }
