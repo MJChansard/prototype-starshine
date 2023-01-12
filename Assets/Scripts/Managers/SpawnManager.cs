@@ -168,61 +168,64 @@ public class SpawnManager : MonoBehaviour
 
     void EnqueueNewSpawnWave(int waveCount)
     {
-        int numberOfObjectsInWave = 0;
-        //Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
-
-        for (int w = 0; w < waveCount; w++)
+        if (CountAvailableBorderSpawns > 0)
         {
-            int maxObjectsForWave = CountAvailableBorderSpawns >= thisLevel.maxObjectsPerWave ? thisLevel.maxObjectsPerWave : CountAvailableBorderSpawns;
-            numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
-            SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
+            int numberOfObjectsInWave = 0;
+            //Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
 
-            for (int i = 0; i < numberOfObjectsInWave; i++)
+            for (int w = 0; w < waveCount; w++)
             {
-                SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
+                int maxObjectsForWave = CountAvailableBorderSpawns >= thisLevel.maxObjectsPerWave ? thisLevel.maxObjectsPerWave : CountAvailableBorderSpawns;
+                numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
+                SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
 
-                if (loot.Count > 0)
+                for (int i = 0; i < numberOfObjectsInWave; i++)
                 {
-                    if (Random.Range(1, 11) > 2)
-                        sr.GridObject = hazards[Random.Range(0, hazards.Count)];
-                    else
-                        sr.GridObject = loot[Random.Range(0, loot.Count)];
-                }
-                else
-                {
-                    sr.GridObject = hazards[Random.Range(0, hazards.Count)];
-                }
+                    SpawnRecord sr = SpawnRecord.CreateSpawnRecord();
 
-
-                if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Interior)
-                {
-                    // Start with eligibleInteriorSpawns
-                }
-                else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
-                {
-                    int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
-                    GridBorder selected = thisLevel.bordersEligibleForSpawn[x];
-                    
-                    int randomizerMax = availableBorderSpawns[selected].Count;
-                    sr.GridLocation = availableBorderSpawns[selected][Random.Range(0, randomizerMax)];
-                    sr.Border = selected;
-                    availableBorderSpawns[selected].Remove(sr.GridLocation);
-
-                    if (sr.GridObject.spawnRules.avoidHazardPaths)
+                    if (loot.Count > 0)
                     {
-                        Vector2Int? oppositeGridBlock = thisLevel.GetOppositeBorderGridBlock(sr.GridLocation);
-                        if (oppositeGridBlock.HasValue)
-                        {
-                            Vector2Int target = (Vector2Int)oppositeGridBlock;
-                            GridBorder oppositeBorder = thisLevel.GetGridBorderOfGridBlock(target);
-                            availableBorderSpawns[oppositeBorder].Remove(target);
-                        }
+                        if (Random.Range(1, 11) > 2)
+                            sr.GridObject = hazards[Random.Range(0, hazards.Count)];
+                        else
+                            sr.GridObject = loot[Random.Range(0, loot.Count)];
+                    }
+                    else
+                    {
+                        sr.GridObject = hazards[Random.Range(0, hazards.Count)];
                     }
 
-                    newWave.spawns[i] = sr;
+
+                    if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Interior)
+                    {
+                        // Start with eligibleInteriorSpawns
+                    }
+                    else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
+                    {
+                        int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
+                        GridBorder selected = thisLevel.bordersEligibleForSpawn[x];
+
+                        int randomizerMax = availableBorderSpawns[selected].Count;
+                        sr.GridLocation = availableBorderSpawns[selected][Random.Range(0, randomizerMax)];
+                        sr.Border = selected;
+                        availableBorderSpawns[selected].Remove(sr.GridLocation);
+
+                        if (sr.GridObject.spawnRules.avoidHazardPaths)
+                        {
+                            Vector2Int? oppositeGridBlock = thisLevel.GetOppositeBorderGridBlock(sr.GridLocation);
+                            if (oppositeGridBlock.HasValue)
+                            {
+                                Vector2Int target = (Vector2Int)oppositeGridBlock;
+                                GridBorder oppositeBorder = thisLevel.GetGridBorderOfGridBlock(target);
+                                availableBorderSpawns[oppositeBorder].Remove(target);
+                            }
+                        }
+
+                        newWave.spawns[i] = sr;
+                    }
                 }
+                spawnQueue.Enqueue(newWave);
             }
-            spawnQueue.Enqueue(newWave);
         }
     }
 
