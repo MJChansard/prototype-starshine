@@ -1,6 +1,7 @@
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
+using tripolygon.UModeler;
 using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
@@ -229,6 +230,43 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
+    public void ReclaimSpawn(Vector2Int location)
+    {
+        if (location.x == thisLevel.BoundaryLeftActual)
+        {
+            availableBorderSpawns[GridBorder.Left].Add(location);
+
+            Vector2Int opposite = new Vector2Int(thisLevel.BoundaryRightActual, location.y);
+            if (!availableBorderSpawns[GridBorder.Right].Contains(opposite))
+                availableBorderSpawns[GridBorder.Right].Add(opposite);
+        }
+        else if (location.x == thisLevel.BoundaryRightActual)
+        {
+            availableBorderSpawns[GridBorder.Right].Add(location);
+
+            Vector2Int opposite = new Vector2Int(thisLevel.BoundaryLeftActual, location.y);
+            if (!availableBorderSpawns[GridBorder.Left].Contains(opposite))
+                availableBorderSpawns[GridBorder.Left].Add(opposite);
+        }
+        else if (location.y == thisLevel.BoundaryTopActual)
+        {
+            availableBorderSpawns[GridBorder.Top].Add(location);
+
+            Vector2Int opposite = new Vector2Int(location.x, thisLevel.BoundaryBottomActual);
+            if (!availableBorderSpawns[GridBorder.Bottom].Contains(opposite))
+                availableBorderSpawns[GridBorder.Bottom].Add(opposite);
+        }
+        else if (location.y == thisLevel.BoundaryBottomActual)
+        {
+            availableBorderSpawns[GridBorder.Bottom].Add(location);
+
+            Vector2Int opposite = new Vector2Int(location.x, thisLevel.BoundaryTopActual);
+
+            if (!availableBorderSpawns[GridBorder.Top].Contains(opposite))
+                availableBorderSpawns[GridBorder.Top].Add(opposite);
+        }
+            
+    }
     SpawnWave CreateSpawnsForLevel(int phenomenaCount, int stationCount)
     {
         /*  NOTE

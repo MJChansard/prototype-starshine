@@ -105,6 +105,7 @@ public class GridObjectManager : MonoBehaviour
     Dictionary<GridObject, GridUpdateStep> gridObjectsInPlay;
     List<GridObject> gridObjectAnimationInProgress;
 
+    public System.Action<Vector2Int> GridObjectHasDeparted;
 
     class GridUpdateStep
     {
@@ -546,6 +547,8 @@ public class GridObjectManager : MonoBehaviour
                 if (kvp.Value.isDeparting)
                 {
                     // Handle departing
+                    if (GridObjectHasDeparted != null)
+                        GridObjectHasDeparted(kvp.Value.gridDestination);
                 }
 
                 if (kvp.Value.collidesWith != null)

@@ -109,6 +109,7 @@ public class GameManager : MonoBehaviour
         {
 
         }
+        gridObjectM.GridObjectHasDeparted += spawnM.ReclaimSpawn;
 
         // Spawn GridObjects
         gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
