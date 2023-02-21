@@ -264,44 +264,6 @@ public class GridObjectManager : MonoBehaviour
         else return;
     }
 
-    //  #TODO - 0 References to this so can this method be deleted?
-    GridObject SelectGridObject(GridObjectType type)
-    {
-        if (type == GridObjectType.Hazard)
-        {
-
-            int selector = Random.Range(0, hazards.Count - 1);
-            if (VerboseDebugging) Debug.Log("Selected a Hazard.");
-            return hazards[selector];
-        }
-        else if (type == GridObjectType.Station)
-        {
-            int selector = Random.Range(0, stations.Count - 1);
-            if (VerboseDebugging) Debug.Log("Selected a Station.");
-            return stations[selector];
-        }
-        else if (type == GridObjectType.Phenomena)
-        {
-            int selector = Random.Range(0, phenomena.Count);
-            if (VerboseDebugging) Debug.Log("Selected a Phenomenon.");
-            return phenomena[selector];
-        }
-        else if (type == GridObjectType.Loot)
-        {
-            int selector = Random.Range(0, loot.Count);
-            if (VerboseDebugging) Debug.Log("Selected a Loot.");
-            return loot[selector];
-        }
-        else
-        {
-            return null;
-        }
-    }
-    // #TODO - Empty method here
-    void CreateGridObject(SpawnRecord spawnStep)
-    {
-
-    }
     void PlaceGridObjectInPlay(GridObject gridObject, Vector2Int gridLocation, bool placeOnGrid = true)
     {
         if (VerboseDebugging) Debug.Log("GridObjectManager.PlaceGridObjectInPlay() called.");
@@ -554,7 +516,6 @@ public class GridObjectManager : MonoBehaviour
                 if (kvp.Value.collidesWith != null)
                 {
                     GridObject iGridO = kvp.Key;
-                    //GridObject jGridO = gridObjectsInPlay[gridObjectsInPlay.IndexOf(step.collidesWith)];
                     GridObject jGridO = kvp.Value.collidesWith;
 
                     iGridO.TryGetComponent<Health>(out Health iHP);
@@ -569,9 +530,7 @@ public class GridObjectManager : MonoBehaviour
                 // Eligible to move
                 if (kvp.Value.canMove)
                 {
-                    //gridM.RemoveObjectFromGrid(gridObjectsInPlay[i].gameObject, step.gridOrigin);
                     gridM.RemoveObjectFromGrid(kvp.Key.gameObject);
-                    //gridM.AddObjectToGrid(gridObjectsInPlay[i].gameObject, step.gridDestination);
                     gridM.AddObjectToGrid(kvp.Key.gameObject, kvp.Value.gridDestination);
                 }
 
@@ -924,20 +883,9 @@ public class GridObjectManager : MonoBehaviour
         if (VerboseDebugging)
             Debug.Log("Preparations for next level complete.");
     }
-    public void NextLevel(int phenomenaRequired, int stationsRequired)
+    public void NextLevel()
     {
-        // For each phenomenaRequired, should randomly select one 
-        for (int i = 0; i < phenomenaRequired; i++)
-        {
-            //AddSpawnStep(SelectGridObject(GridObjectType.Phenomena));     #DEPRECATED, replace with SpawnManager
-            CreateGridObject(spawnQueue.Dequeue());
-        }
 
-        for (int i = 0; i < stationsRequired; i++)
-        {
-            //AddSpawnStep(SelectGridObject(GridObjectType.Station));       #DEPRECATED, replace with SpawnManager
-            CreateGridObject(spawnQueue.Dequeue());
-        }
     }
     public void ArrivePlayer()
     {
