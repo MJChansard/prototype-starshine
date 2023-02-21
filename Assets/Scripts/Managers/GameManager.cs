@@ -229,7 +229,7 @@ public class GameManager : MonoBehaviour
         gridObjectM.NewGridUpdateSteps(checkHealth: true, checkMove: false, checkLoot: true);
         gridObjectM.LoadGridUpdateSteps();
         gridObjectM.RemoveDeadObjectsAndDropLoot();
-        
+                
         if (EndOfTurn != null)
             EndOfTurn();
     }
@@ -262,15 +262,15 @@ public class GameManager : MonoBehaviour
     {
         if (StateManagerVerboseConsole)
             Debug.Log("GameManager.BoardExit() called.");
-
+        
         gridObjectM.ResolveCollisionsOnGridBlocks();
         gridObjectM.NewGridUpdateSteps(checkMove: false, checkHealth: true, checkLoot: true);
         gridObjectM.RemoveDeadObjectsAndDropLoot(); //Is a missile not being removed because of eligibleForProcessing?
+        
 
         //Spawn stuff goes here
-        if (spawnM.ForceSpawnEveryTurn || Random.Range(0, 10) > 4)    // 50%
+        if (spawnM.CountAvailableBorderSpawns > 0 && (spawnM.ForceSpawnEveryTurn || Random.Range(0, 10) > 4))    // 50%
             gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
-            
     }
 
     void ToggleModuleActivation() { activateModuleButtonPressed = true; }
