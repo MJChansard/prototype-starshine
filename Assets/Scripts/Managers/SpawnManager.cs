@@ -40,19 +40,6 @@ public class SpawnManager : MonoBehaviour
     }
     public bool ForceSpawnEveryTurn { get { return forceSpawnEveryTurn; } }
 
-    List<Vector2Int> remainingInteriorSpawns
-    {
-        get
-        {
-            List<Vector2Int> result = new List<Vector2Int>();
-            foreach (var spawn in eligibleInteriorSpawns)
-            {
-                if (!takenSpawns.Contains(spawn))
-                    result.Add(spawn);
-            }
-            return result;
-        }
-    }
     int CountAvailableBorderSpawns
     {
         get
@@ -84,7 +71,6 @@ public class SpawnManager : MonoBehaviour
     List<GridObject> stations;
 
     List<Vector2Int> eligibleInteriorSpawns = new();
-    List<Vector2Int> takenSpawns = new();
     Queue<SpawnWave> spawnQueue = new();
 
     Dictionary<GridBorder, List<Vector2Int>> availableBorderSpawns = new();
@@ -266,46 +252,5 @@ public class SpawnManager : MonoBehaviour
                 availableBorderSpawns[GridBorder.Top].Add(opposite);
         }
             
-    }
-    SpawnWave CreateSpawnsForLevel(int phenomenaCount, int stationCount)
-    {
-        /*  NOTE
-            * 
-            *  Not currently used but keeping here in case I can re-use the interior spawning logic
-            */
-        SpawnWave level = SpawnWave.CreateSpawnWave(phenomenaCount + stationCount);
-
-        if (phenomenaCount > 0 || stationCount > 0)
-            level.spawns = new SpawnRecord[phenomenaCount + stationCount];
-        else
-            return level;
-
-        int arrayIndex = 0;
-        if (phenomenaCount > 0)
-        {
-            for (int i = 0; i < phenomenaCount; i++)
-            {
-                SpawnRecord current = SpawnRecord.CreateSpawnRecord();
-                current.GridObject = phenomena[Random.Range(0, phenomena.Count)];
-                Vector2Int gridLocation = remainingInteriorSpawns[Random.Range(0, remainingInteriorSpawns.Count)];
-                takenSpawns.Add(gridLocation);
-                level.spawns[i] = current;
-                arrayIndex++;
-            }
-        }
-
-        if (stationCount > 0)
-        {
-            for (int i = arrayIndex; i < level.spawns.Length; i++)
-            {
-                SpawnRecord current = SpawnRecord.CreateSpawnRecord();
-                current.GridObject = stations[Random.Range(0, stations.Count)];
-                Vector2Int gridLocation = remainingInteriorSpawns[(Random.Range(0, stations.Count))];
-                takenSpawns.Add(gridLocation);
-                level.spawns[i] = current;
-            }
-        }
-
-        return level;
     }
 }
