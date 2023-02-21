@@ -157,13 +157,10 @@ public class SpawnManager : MonoBehaviour
     {
         if (CountAvailableBorderSpawns > 0)
         {
-            int numberOfObjectsInWave = 0;
-            //Dictionary<GridBorder, int> spawnBorderTracker = new Dictionary<GridBorder, int>();
-
             for (int w = 0; w < waveCount; w++)
             {
                 int maxObjectsForWave = CountAvailableBorderSpawns >= thisLevel.maxObjectsPerWave ? thisLevel.maxObjectsPerWave : CountAvailableBorderSpawns;
-                numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
+                int numberOfObjectsInWave = Random.Range(thisLevel.minObjectsPerWave, maxObjectsForWave + 1);
                 SpawnWave newWave = SpawnWave.CreateSpawnWave(numberOfObjectsInWave);
 
                 for (int i = 0; i < numberOfObjectsInWave; i++)
@@ -189,9 +186,25 @@ public class SpawnManager : MonoBehaviour
                     }
                     else if (sr.GridObject.spawnRules.spawnRegion == SpawnRule.SpawnRegion.Perimeter)
                     {
-                        int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
-                        GridBorder selected = thisLevel.bordersEligibleForSpawn[x];
+                        GridBorder selected;
 
+                        List<GridBorder> _listOfBorders = new();
+                        foreach (GridBorder b in thisLevel.bordersEligibleForSpawn)
+                        {
+                            if (availableBorderSpawns[b].Count > 0)
+                                _listOfBorders.Add(b);
+                        }
+
+                        if (_listOfBorders.Count == 0)
+                            return;
+                        else if (_listOfBorders.Count == 1)
+                            selected = _listOfBorders[0];
+                        else
+                        {
+                            int x = Random.Range(0, thisLevel.bordersEligibleForSpawn.Length);
+                            selected = thisLevel.bordersEligibleForSpawn[x];
+                        }
+                        
                         int randomizerMax = availableBorderSpawns[selected].Count;
                         sr.GridLocation = availableBorderSpawns[selected][Random.Range(0, randomizerMax)];
                         sr.Border = selected;
