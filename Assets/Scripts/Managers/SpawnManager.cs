@@ -40,7 +40,7 @@ public class SpawnManager : MonoBehaviour
     }
     public bool ForceSpawnEveryTurn { get { return forceSpawnEveryTurn; } }
 
-    int CountAvailableBorderSpawns
+    public int CountAvailableBorderSpawns
     {
         get
         {
