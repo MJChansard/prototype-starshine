@@ -587,24 +587,7 @@ public class GridObjectManager : MonoBehaviour
             KeyValuePair<GridObject, GridUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
             if (kvp.Value.isMoving)
             {
-                StartCoroutine(AnimateMoveCoroutine(kvp.Key, kvp.Value.AnimateDistance, kvp.Value.WorldOrigin, kvp.Value.WorldDestination));
-            }
-        }
-    }
-    public void RemoveDepartedObjects()
-    {
-        for (int i = gridObjectsInPlay.Count; i < 0; i--)
-        {
-            KeyValuePair<GridObject, GridUpdateStep> kvp = gridObjectsInPlay.ElementAt(i);
-            if (kvp.Value.isDeparting)
-            {
-                GameObject gameObjectToRemove = kvp.Key.gameObject;
-                Vector2Int gridPosition = kvp.Value.gridDestination;
-
-                gridM.RemoveObjectFromGrid(gameObjectToRemove);
-                gridObjectsInPlay.Remove(kvp.Key);
-
-                Destroy(gameObjectToRemove);
+                StartCoroutine(AnimateMoveCoroutine(kvp.Key, kvp.Value.AnimateDistance, kvp.Value.WorldOrigin, kvp.Value.WorldDestination, kvp.Value.isDeparting));
             }
         }
     }
@@ -1033,7 +1016,7 @@ public class GridObjectManager : MonoBehaviour
 
 
     // ANIMATION & MOVEMENT COROUTINES
-    IEnumerator AnimateMoveCoroutine(GridObject objectToMove, float Distance, Vector3 startLocation, Vector3 endLocation)
+    IEnumerator AnimateMoveCoroutine(GridObject objectToMove, float Distance, Vector3 startLocation, Vector3 endLocation, bool destroy=false)
     {
         gridObjectAnimationInProgress.Add(objectToMove);
 
@@ -1060,6 +1043,14 @@ public class GridObjectManager : MonoBehaviour
 
         gridObjectAnimationInProgress.Remove(objectToMove);
         Debug.Log("Move animation complete.");
+
+        if (destroy)
+        {
+            gridM.RemoveObjectFromGrid(objectToMove.gameObject);
+            gridObjectsInPlay.Remove(objectToMove);
+
+            Destroy(objectToMove.gameObject);
+        }
     }
     IEnumerator DropLootCoroutine(GridObject gridObject, Vector3 dropLocation, float delayAppear = 1.0f)
     {
