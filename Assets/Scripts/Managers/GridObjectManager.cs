@@ -14,71 +14,12 @@ public class GridObjectManager : MonoBehaviour
     [HideInInspector] public List<SpawnWave> insertSpawnSequences = new List<SpawnWave>();
     Queue<SpawnRecord> spawnQueue = new Queue<SpawnRecord>();
     
-    //  #TODO - This library should be populated by the LevelRecord
-    [Header("GridObject Library")]
-    [SerializeField] GridObject[] gridObjectPrefabs;
-    List<GridObject> hazards;
-    List<GridObject> loot;
-    List<GridObject> phenomena;
-    List<GridObject> stations;
-
+    
     //  #PROPERTIES
     public GamePhase currentGamePhase;                  //  #TODO - Can this be deleted?
     public bool IsAnimationComplete
     {
         get { return gridObjectAnimationInProgress.Count == 0; }
-    }
-    public List<GridObject> HazardList
-    {
-        get
-        {
-            List<GridObject> HazardList = new List<GridObject>();
-            for (int i = 0; i < gridObjectPrefabs.Length; i++)
-            {
-                if (gridObjectPrefabs[i] is Hazard)
-                    HazardList.Add(gridObjectPrefabs[i]);
-            }
-            return HazardList;
-        }
-    }
-    public List<GridObject> LootList
-    {
-        get
-        {
-            List<GridObject> LootList = new List<GridObject>();
-            for (int  i = 0;  i < gridObjectPrefabs.Length;  i++)
-            {
-                if (gridObjectPrefabs[i] is Loot)
-                    LootList.Add(gridObjectPrefabs[i]);
-            }
-            return LootList;
-        }
-    }
-    public List<GridObject> PhenomenaList
-    {
-        get
-        {
-            List<GridObject> PhenomenaList = new List<GridObject>();
-            for (int i = 0; i < gridObjectPrefabs.Length; i++)
-            {
-                if (gridObjectPrefabs[i] is Phenomena)
-                    PhenomenaList.Add(gridObjectPrefabs[i]);
-            }
-            return PhenomenaList;
-        }
-    }
-    public List<GridObject> StationList
-    {
-        get
-        {
-            List<GridObject> StationList = new List<GridObject>();
-            for (int i = 0; i < gridObjectPrefabs.Length; i++)
-            {
-                if (gridObjectPrefabs[i] is Station)
-                    StationList.Add(gridObjectPrefabs[i]);
-            }
-            return StationList;
-        }
     }
 
     
@@ -141,28 +82,9 @@ public class GridObjectManager : MonoBehaviour
     public void Init(LevelRecord level)
     {
         /*  SUMMARY
-         *   - Cache level boundaries
-         *   - Identify next tick requiring a spawn
-         *   - Handle Player
-         *   - Insert Spawn Sequence data if present
-         */        
-
-        // Populate GridObject Lists
-        // #TODO - Needs to be populated by the LevelRecord
-        for (int i = 0; i < gridObjectPrefabs.Length; i++)
-        {
-            if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Hazard)
-                hazards.Add(gridObjectPrefabs[i]);
-
-            if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Loot)
-                loot.Add(gridObjectPrefabs[i]);
-
-            if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Phenomena)
-                phenomena.Add(gridObjectPrefabs[i]);
-
-            if (gridObjectPrefabs[i].spawnRules.spawnCategory == GridObjectType.Station)
-                stations.Add(gridObjectPrefabs[i]);
-        }
+         *   - Process LevelTopography cell by cell and instantiate any GridObject found
+         *   - Place newly instantiated GridObject into play
+         */
 
         if (level.levelTopography == null)
             Debug.Log("Argument 'topography' is null.");
