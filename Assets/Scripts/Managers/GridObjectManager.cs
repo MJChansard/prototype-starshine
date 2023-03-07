@@ -70,11 +70,6 @@ public class GridObjectManager : MonoBehaviour
     {
         gridM = GetComponent<GridManager>();
 
-        hazards     = new List<GridObject>();
-        loot        = new List<GridObject>();
-        phenomena   = new List<GridObject>();
-        stations    = new List<GridObject>();
-
         gridObjectsInPlay               = new Dictionary<GridObject, GridUpdateStep>();
         gridObjectAnimationInProgress   = new List<GridObject>();
         collisions                      = new List<GridBlock>();
