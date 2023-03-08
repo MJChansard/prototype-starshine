@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 public class Hazard : GridObject
 {
-    [Header("Hazard Properties")]
+    [BoxGroup("HAZARD PROPERTIES", centerLabel: true)]
     [SerializeField] private Type hazardType;
     public Type HazardType { get { return hazardType; } }
     public string HazardName { get { return hazardType.ToString("G"); } }

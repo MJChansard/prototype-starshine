@@ -6,15 +6,13 @@ using Sirenix.OdinInspector;
 public class GridObject : MonoBehaviour
 {
     //  # INSPECTOR
-    [BoxGroup("GRIDOBJECT PROPERTIES", centerLabel: true)]
-    //public GameManager.GameState stateForProcessingGridObject;
-    public GamePhase processingPhase;
+    [BoxGroup("GRIDOBJECT PROPERTIES", centerLabel: true)] public bool verboseLogging;
+    [BoxGroup("GRIDOBJECT PROPERTIES")] public GamePhase processingPhase;
 
-    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")]
-    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public bool RequiresSpawnWarning;
-    [ShowIf("RequiresSpawnWarning")] public GameObject spawnWarningObject;
     [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public SpawnRule spawnRules;
-
+    [TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public bool RequiresSpawnWarning;
+    [ShowIf("RequiresSpawnWarning")][TitleGroup("GRIDOBJECT PROPERTIES/SPAWN SETTINGS")] public GameObject spawnWarningObject;
+    
 
     // MOVEMENT & ANIMATION FIELDS
     [HideInInspector] public float animateMoveSpeed;
