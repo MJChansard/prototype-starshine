@@ -173,7 +173,7 @@ public class GridObjectManager : MonoBehaviour
                 Debug.Log("gridObject reference is NULL");
             else if (gridObject.gameObject == null)
                 Debug.Log("GameObject attached to gridObject is NULL");
-                            
+
             gridObject.gameObject.transform.position = worldLocation;
             gridM.AddObjectToGrid(gridObject.gameObject, gridLocation);
             gridObjectsInPlay.Add(gridObject, null);
@@ -192,6 +192,10 @@ public class GridObjectManager : MonoBehaviour
     }
     public void OnPlayerActivateModule(Weapon.UsageData uData)
     {
+        if (VerboseDebugging)
+            Debug.LogFormat("Base damage: {0}\nDynamic damage: {1}\nDistance damage penalty: {1}",
+                uData.BaseDamage, uData.DynamicDamage, uData.DistanceDamagePenalty);
+
         Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
         List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
             
@@ -205,14 +209,13 @@ public class GridObjectManager : MonoBehaviour
                     if (uData.DynamicDamage)
                     {
                         int gridBlockDistance = i;
-                        int damageAmount = CalculateDamage(gridBlockDistance, uData.BaseDamage, uData.DamageMultiplier);
+                        int damageAmount = CalculateDamage(gridBlockDistance, uData.BaseDamage, uData.DistanceDamagePenalty, detailedLogging: true);
                         hp.SubtractHealth(damageAmount);
                     }
                     else
                     {
                         hp.SubtractHealth(uData.BaseDamage);
                     }
-
 
                     if (!uData.DoesPenetrate)
                     {
@@ -804,7 +807,7 @@ public class GridObjectManager : MonoBehaviour
 
 
     // UTILITY METHODS
-    int CalculateDamage(int gridBlockDistance, int baseDamage, float damageMultiplier, bool verboseConsole = false)
+    int CalculateDamage(int gridBlockDistance, int baseDamage, int damageModifier, bool detailedLogging = false)
     {
         /*  NOTE ON gridBlockDistance
         *    If the Player occupies a GridBlock that is immediately adjacent to the target, the distance = 0
@@ -813,22 +816,19 @@ public class GridObjectManager : MonoBehaviour
         *    If there are three GridBlocks in between the Player and the target, the distance = 3
         */
 
-        if (verboseConsole)
+        if (detailedLogging)
         {
-            Debug.LogFormat("Grid Block Distance received: {0}", gridBlockDistance);
-            Debug.LogFormat("Grid Modifier: {0}", damageMultiplier);
-            Debug.LogFormat("Base Damage: {0}", baseDamage);
+            Debug.LogFormat("Grid Block Distance: {0}\nBase Damage: {1}\nDamage Modifier: {2}",
+                gridBlockDistance, baseDamage, damageModifier);          
+        }     
+
+        int newDamageValue = baseDamage - (damageModifier * gridBlockDistance);
+        if (detailedLogging)
+        {
+            Debug.LogFormat("Calculated penalty: {0}\nApplied damage value: {1}",
+                damageModifier * gridBlockDistance, newDamageValue);
         }
-
-        float modDamageValue = Mathf.Pow((float)damageMultiplier, (float)gridBlockDistance);
-        if (verboseConsole)
-            Debug.LogFormat("Damage modifier value: {0}", modDamageValue.ToString());
-
-        float newDamageValue = baseDamage * modDamageValue;
-        if (verboseConsole)
-            Debug.LogFormat("Damage modifier value: {0}", newDamageValue.ToString());
-
-        return (int)newDamageValue;
+        return newDamageValue;
     }
     void UpdateStations()
     {

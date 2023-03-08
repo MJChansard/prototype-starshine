@@ -30,18 +30,17 @@ public class Weapon : Module
     {
         public int BaseDamage { get; set; }
         public bool DoesPenetrate { get; set; }
-        public bool DynamicDamage { get; set; }
-        public float DamageMultiplier { get; set; }
+        public bool DynamicDamage { get { return DistanceDamagePenalty != 0.0f; } }
+        public int DistanceDamagePenalty { get; set; }
 
         public bool DoesPlaceObjectInWorld { get; set; }
         public GameObject ObjectToPlace { get; set; }
                 
-        public UsageData(int baseDamage, bool doesPenetrate, float damageMultipler,  bool placesObject, GameObject objectToPlace = null)
+        public UsageData(int baseDamage, bool doesPenetrate, int damagePenalty,  bool placesObject, GameObject objectToPlace = null)
         {
             BaseDamage = baseDamage;
             DoesPenetrate = doesPenetrate;
-            DynamicDamage = DamageMultiplier > 0.0;
-            DamageMultiplier = damageMultipler;
+            DistanceDamagePenalty = damagePenalty;
             DoesPlaceObjectInWorld = placesObject;
             ObjectToPlace = objectToPlace;
         }
@@ -55,7 +54,7 @@ public class Weapon : Module
 
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private WeaponType weaponType;
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private int baseDamage;
-    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private float damageMultiplier;
+    [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private int distanceDamagePenalty;
     [ShowIf("doesDamage")][TitleGroup("WEAPON SETTINGS")][SerializeField] private bool doesPenetrate;
 
     [TitleGroup("WEAPON DEBUGGING")][SerializeField] private bool verboseLogging;
@@ -120,7 +119,7 @@ public class Weapon : Module
             (
                 baseDamage: this.baseDamage,
                 doesPenetrate: this.doesPenetrate,
-                damageMultipler: this.damageMultiplier,
+                damagePenalty: this.distanceDamagePenalty,
                 placesObject: this.doesPlaceObjectInWorld,
                 objectToPlace: this.objectPlacedInWorld
             );
