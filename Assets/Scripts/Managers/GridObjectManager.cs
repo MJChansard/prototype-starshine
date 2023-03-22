@@ -16,7 +16,7 @@ public class GridObjectManager : MonoBehaviour
     
     
     //  #PROPERTIES
-    public GamePhase currentGamePhase;                  //  #TODO - Can this be deleted?
+    public GamePhase currentGamePhase;
     public bool IsAnimationComplete
     {
         get { return gridObjectAnimationInProgress.Count == 0; }
@@ -198,34 +198,39 @@ public class GridObjectManager : MonoBehaviour
 
         Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
         List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
-            
+
+        bool targetFound = false;            
         for (int i = 0; i < possibleTargets.Count; i++)
         {
-            for (int j = 0; j < possibleTargets[i].objectsOnBlock.Count; j++)
+            if (!targetFound)
             {
-                Health hp = possibleTargets[i].objectsOnBlock[j].GetComponent<Health>();
-                if (hp != null)
+                for (int j = 0; j < possibleTargets[i].objectsOnBlock.Count; j++)
                 {
-                    if (uData.DynamicDamage)
+                    Health hp = possibleTargets[i].objectsOnBlock[j].GetComponent<Health>();
+                    if (hp != null)
                     {
-                        int gridBlockDistance = i;
-                        int damageAmount = CalculateDamage(gridBlockDistance, uData.BaseDamage, uData.DistanceDamagePenalty, detailedLogging: true);
-                        hp.SubtractHealth(damageAmount);
-                    }
-                    else
-                    {
-                        hp.SubtractHealth(uData.BaseDamage);
-                    }
+                        if (uData.DynamicDamage)
+                        {
+                            int gridBlockDistance = i;
+                            int damageAmount = CalculateDamage(gridBlockDistance, uData.BaseDamage, uData.DistanceDamagePenalty, detailedLogging: true);
+                            hp.SubtractHealth(damageAmount);
+                        }
+                        else
+                        {
+                            hp.SubtractHealth(uData.BaseDamage);
+                        }
 
-                    if (!uData.DoesPenetrate)
-                    {
-                        //  #TO-DO: Execute appropriate animation
-                        player.StartWeaponModuleAnimation(possibleTargets[i]);
-                        break;
+                        if (!uData.DoesPenetrate)
+                        {
+                            //  #TO-DO: Execute appropriate animation
+                            player.StartWeaponModuleAnimation(possibleTargets[i]);
+                            targetFound = true;
+                            break;
+                        }
                     }
                 }
             }
-
+            
             if (i == possibleTargets.Count - 1)
                 player.StartWeaponModuleAnimation(possibleTargets[i]);
         }
