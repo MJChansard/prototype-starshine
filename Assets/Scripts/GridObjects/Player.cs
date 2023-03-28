@@ -219,7 +219,8 @@ public class Player : GridObject
     {
         //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
         Weapon module = equippedModules[moduleSelector] as Weapon;
-        StartCoroutine(module.AnimateCoroutine(gridBlock));
+        if (module.HasAnimation)
+            StartCoroutine(module.AnimateCoroutine(gridBlock));
     }
 
     public void AcceptAmmo(WeaponType type, int amount)

@@ -17,9 +17,9 @@ public abstract class Module : MonoBehaviour
         public int cooldownDuration { get; set; }
     }
 
-    public class UsageData { }
+    public abstract class UsageData { }
   
-    
+
     public enum AmmunitionType
     {
         None = 0,
@@ -63,7 +63,7 @@ public abstract class Module : MonoBehaviour
             };
         }
     }
-
+    public bool HasAnimation { get { return hasAnimation; } }
 
     // #METHODS
     public abstract bool UseModule();
