@@ -196,6 +196,17 @@ public class GridObjectManager : MonoBehaviour
             Debug.LogFormat("Base damage: {0}\nDynamic damage: {1}\nDistance damage penalty: {1}",
                 uData.BaseDamage, uData.DynamicDamage, uData.DistanceDamagePenalty);
 
+        if (uData.DoesPlaceObjectInWorld)
+        {
+            Vector3 playerWorldLocation = gridM.GridToWorld(gridM.FindGridBlockContainingObject(player.gameObject).location);
+            GameObject instance = Instantiate(uData.ObjectToPlace, playerWorldLocation, player.transform.rotation);
+            instance.GetComponent<GridMover>().SetMovePattern(player.Direction);
+
+            GridObject newObject = instance.GetComponent<GridObject>();
+            PlaceGridObjectInPlay(newObject, gridM.WorldToGrid(playerWorldLocation));
+            return;
+        }
+        
         Vector2Int playerGridLocation = gridObjectsInPlay[player].gridOrigin;
         List<GridBlock> possibleTargets = GetGridBlocksInPath(playerGridLocation, player.Direction);
 
@@ -232,18 +243,7 @@ public class GridObjectManager : MonoBehaviour
             }
             
             if (i == possibleTargets.Count - 1)
-                player.StartWeaponModuleAnimation(possibleTargets[i]);
-        }
-        // End animation at end of targetBlocks List
-
-        if (uData.DoesPlaceObjectInWorld)
-        {
-            Vector3 playerWorldLocation = gridM.GridToWorld(gridM.FindGridBlockContainingObject(player.gameObject).location);
-            GameObject instance = Instantiate(uData.ObjectToPlace, playerWorldLocation, player.transform.rotation);
-            instance.GetComponent<GridMover>().SetMovePattern(player.Direction);
-
-            GridObject newObject = instance.GetComponent<GridObject>();
-            PlaceGridObjectInPlay(newObject, gridM.WorldToGrid(playerWorldLocation));
+                player.StartWeaponModuleAnimation(possibleTargets[i]);  // End animation at end of targetBlocks List
         }
     }
     public void OnPlayerActivateModule(Shield.UsageData udata)
@@ -333,31 +333,38 @@ public class GridObjectManager : MonoBehaviour
             if (kvp.Value.activeInThisPhase == false)
                 continue;
 
-            if (kvp.Value.canMove && uData == null)
+            if (kvp.Key is Player)
             {
-                GridMover mp = kvp.Key.GetComponent<GridMover>();
-                mp.OnTickUpdate();
-
-                if (mp.CanMoveThisTurn)
+                if (uData != null)
                 {
-                    kvp.Value.gridDestination = kvp.Value.gridOrigin + mp.DirectionOnGrid;
+                    if (uData.EligibleToMove)
+                    {
+                        kvp.Value.gridDestination = (kvp.Value.gridOrigin + uData.DirectionToMove) * uData.NumberOfMoves;
+                        Debug.LogFormat("Destination set to {0}", kvp.Value.gridDestination.ToString());
+                        allOriginGridLocations[i] = kvp.Value.gridOrigin;
+                        allDestinationGridLocations[i] = kvp.Value.gridDestination;
 
-                    allOriginGridLocations[i] = kvp.Value.gridOrigin;                                           // Maintain index of objects requiring additional processing
-                    allDestinationGridLocations[i] = kvp.Value.gridDestination;
+                        kvp.Value.isMoving = true;
 
-                    kvp.Value.isMoving = true;
-
-                    if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
-                        kvp.Value.isDeparting = true;
+                        if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
+                            kvp.Value.isDeparting = true;
+                    }
+                }
+                else
+                {
+                    Debug.Log("CUSTOM ERROR: Trying to load GridUpdateStep for Player but no usage data available.");
                 }
             }
-            else if (kvp.Value.canMove && uData != null)
+            else
             {
-                if (uData.EligibleToMove)
+                GridMover mover = kvp.Key.GetComponent<GridMover>();
+                mover.OnTickUpdate();
+
+                if (mover.CanMoveThisTurn)
                 {
-                    kvp.Value.gridDestination = (kvp.Value.gridOrigin + uData.DirectionToMove) * uData.NumberOfMoves;
-                    Debug.LogFormat("Destination set to {0}", kvp.Value.gridDestination.ToString());
-                    allOriginGridLocations[i] = kvp.Value.gridOrigin;
+                    kvp.Value.gridDestination = kvp.Value.gridOrigin + mover.DirectionOnGrid;
+
+                    allOriginGridLocations[i] = kvp.Value.gridOrigin;                                           // Maintain index of objects requiring additional processing
                     allDestinationGridLocations[i] = kvp.Value.gridDestination;
 
                     kvp.Value.isMoving = true;

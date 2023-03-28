@@ -50,7 +50,7 @@ MonoBehaviour:
   displayCurrentAmmoInspector: 0
   moduleName: Missile Launcher
   usesAmmo: 1
-  hasAnimation: 1
+  hasAnimation: 0
   cooldownDuration: 0
   availableIcon: {fileID: 21300000, guid: f026481ed9cb7294a84905720570cb83, type: 3}
   useIcon: {fileID: 21300000, guid: a83d658d001f1d847bfebd8055ef7c03, type: 3}
@@ -65,5 +65,7 @@ MonoBehaviour:
     type: 3}
   weaponType: 2
   baseDamage: 2
-  damageMultiplier: 0
+  distanceDamagePenalty: 0
   doesPenetrate: 0
+  verboseLogging: 0
+  verboseInitializationLogging: 0
