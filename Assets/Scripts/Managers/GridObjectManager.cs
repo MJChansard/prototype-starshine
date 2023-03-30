@@ -250,6 +250,25 @@ public class GridObjectManager : MonoBehaviour
     {
 
     }
+    public void OnPlayerActivateModule(TractorBeam.UsageData uData)
+    {
+        if (VerboseDebugging)
+            Debug.LogFormat("Beam direction: {0}\nBeam Strength: {1}\nBeam Range: {1}",
+                uData.BeamDirection, uData.BeamStrengh, uData.BeamRange);
+        Vector2Int playerGridLocation = gridM.FindGridBlockContainingObject(player.gameObject).location;
+        List<Vector2Int> possibleTargetList = gridM.GetGridPath(playerGridLocation, uData.BeamDirection);
+
+        for (int i = 0; i < uData.BeamRange; i++)
+        {
+            GridBlock gb = gridM.FindGridBlockByLocation(possibleTargetList[i]);
+            for (int j = 0; j < gb.objectsOnBlock.Count; j++)
+            {
+                GridObject go = gb.objectsOnBlock[j].gameObject;
+            }
+        }
+
+
+    }
 
     public void NewGridUpdateSteps(bool checkHealth = true, bool checkMove = true, bool checkLoot = true, bool includePlayer = true)
     {
@@ -333,15 +352,40 @@ public class GridObjectManager : MonoBehaviour
             if (kvp.Value.activeInThisPhase == false)
                 continue;
 
-            if (kvp.Key is Player)
+            if (kvp.Value.canMove)
             {
-                if (uData != null)
+                if (kvp.Key is Player)
                 {
-                    if (uData.EligibleToMove)
+                    if (uData != null)
                     {
-                        kvp.Value.gridDestination = (kvp.Value.gridOrigin + uData.DirectionToMove) * uData.NumberOfMoves;
-                        Debug.LogFormat("Destination set to {0}", kvp.Value.gridDestination.ToString());
-                        allOriginGridLocations[i] = kvp.Value.gridOrigin;
+                        if (uData.EligibleToMove)
+                        {
+                            kvp.Value.gridDestination = (kvp.Value.gridOrigin + uData.DirectionToMove) * uData.NumberOfMoves;
+                            Debug.LogFormat("Destination set to {0}", kvp.Value.gridDestination.ToString());
+                            allOriginGridLocations[i] = kvp.Value.gridOrigin;
+                            allDestinationGridLocations[i] = kvp.Value.gridDestination;
+
+                            kvp.Value.isMoving = true;
+
+                            if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
+                                kvp.Value.isDeparting = true;
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("CUSTOM ERROR: Trying to load GridUpdateStep for Player but no usage data available.");
+                    }
+                }
+                else
+                {
+                    GridMover mover = kvp.Key.GetComponent<GridMover>();
+                    mover.OnTickUpdate();
+
+                    if (mover.CanMoveThisTurn)
+                    {
+                        kvp.Value.gridDestination = kvp.Value.gridOrigin + mover.DirectionOnGrid;
+
+                        allOriginGridLocations[i] = kvp.Value.gridOrigin;                                           // Maintain index of objects requiring additional processing
                         allDestinationGridLocations[i] = kvp.Value.gridDestination;
 
                         kvp.Value.isMoving = true;
@@ -349,28 +393,6 @@ public class GridObjectManager : MonoBehaviour
                         if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
                             kvp.Value.isDeparting = true;
                     }
-                }
-                else
-                {
-                    Debug.Log("CUSTOM ERROR: Trying to load GridUpdateStep for Player but no usage data available.");
-                }
-            }
-            else
-            {
-                GridMover mover = kvp.Key.GetComponent<GridMover>();
-                mover.OnTickUpdate();
-
-                if (mover.CanMoveThisTurn)
-                {
-                    kvp.Value.gridDestination = kvp.Value.gridOrigin + mover.DirectionOnGrid;
-
-                    allOriginGridLocations[i] = kvp.Value.gridOrigin;                                           // Maintain index of objects requiring additional processing
-                    allDestinationGridLocations[i] = kvp.Value.gridDestination;
-
-                    kvp.Value.isMoving = true;
-
-                    if (!gridM.CheckIfGridBlockInBounds(kvp.Value.gridDestination))
-                        kvp.Value.isDeparting = true;
                 }
             }
         }

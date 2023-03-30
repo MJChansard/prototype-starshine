@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     GamePhase mainGamePhase;
 
     //  #FIELDS
-    [HideInInspector] public enum GameState { Launch, Player, Board};
+    [HideInInspector] public enum GameState { Launch, Player, Board };
     StateManager <GameState> stateManager = new StateManager<GameState>();
 
     Module.UsageData previousModuleData;
@@ -177,14 +177,22 @@ public class GameManager : MonoBehaviour
                 Weapon.UsageData uData = player.weaponUsageData;
                 gridObjectM.OnPlayerActivateModule(uData);
 
-                if (uData.DoesPlaceObjectInWorld)
-                {
-                    gridObjectM.NewGridUpdateSteps(includePlayer: false);
-                    gridObjectM.LoadGridUpdateSteps();
-                    gridObjectM.RunGridUpdate();
-                    gridObjectM.AnimateMovement();
-                    gridCurrentlyAnimating = true;
-                }
+                gridObjectM.NewGridUpdateSteps(includePlayer: false);
+                gridObjectM.LoadGridUpdateSteps();
+                gridObjectM.RunGridUpdate();
+                gridObjectM.AnimateMovement();
+                gridCurrentlyAnimating = true;
+            }
+            else if (player.tractorBeamUsageData != null)
+            {
+                TractorBeam.UsageData uData = player.tractorBeamUsageData;
+                gridObjectM.OnPlayerActivateModule(uData);
+
+                gridObjectM.NewGridUpdateSteps(includePlayer: false);
+                gridObjectM.LoadGridUpdateSteps();
+                gridObjectM.RunGridUpdate();
+                gridObjectM.AnimateMovement();
+                gridCurrentlyAnimating = true;
             }
             // This needs to be set up as a delegate
             // pHUD.RefreshHUDEntry(uData.newAmmoAmount, false);
@@ -200,6 +208,7 @@ public class GameManager : MonoBehaviour
                 Debug.Log("GameManager.endTurnReceived = true");
             
             endTurnReceived = false;
+            stateManager.SwitchState(GameState.Board);
         }
 
         if (gridCurrentlyAnimating)
