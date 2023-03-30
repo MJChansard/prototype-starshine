@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7708014162269473720
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2533878831889009547}
+  - component: {fileID: 4377368652097895933}
+  m_Layer: 0
+  m_Name: Module - TractorBeam Prefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2533878831889009547
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7708014162269473720}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4377368652097895933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7708014162269473720}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f7d06bf9aeb0a742b76875876f0377b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  VerboseConsole: 0
+  cooldownCounter: 0
+  displayAmmoType: 0
+  displayCurrentAmmoInspector: 0
+  moduleName: Tractor Beam
+  usesAmmo: 0
+  hasAnimation: 1
+  cooldownDuration: 1
+  availableIcon: {fileID: 21300000, guid: 74ab045c9e109ad44b6f71650198a8bc, type: 3}
+  useIcon: {fileID: 21300000, guid: acfd61e7358f7954d92dfcc0e3d81c04, type: 3}
+  cooldownIcon: {fileID: 21300000, guid: 51aca2824a508dd4ca4ef347b265eac7, type: 3}
+  ammoType: 0
+  capacityAmmo: 0
+  startAmmo: 0
+  usageAmmoCost: 0
+  beamStrength: 1
+  beamRange: 1
+  verboseLogging: 0
+  verboseInitializationLogging: 0
