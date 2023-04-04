@@ -250,7 +250,7 @@ public class GridObjectManager : MonoBehaviour
     {
 
     }
-    public void OnPlayerActivateModule(TractorBeam.UsageData uData)
+    public GridObject OnPlayerActivateModule(TractorBeam.UsageData uData)
     {
         if (VerboseDebugging)
             Debug.LogFormat("Beam direction: {0}\nBeam Strength: {1}\nBeam Range: {1}",
@@ -263,11 +263,30 @@ public class GridObjectManager : MonoBehaviour
             GridBlock gb = gridM.FindGridBlockByLocation(possibleTargetList[i]);
             for (int j = 0; j < gb.objectsOnBlock.Count; j++)
             {
-                GridObject go = gb.objectsOnBlock[j].gameObject;
-            }
+                if (gb.objectsOnBlock[j].TryGetComponent<GridObject>(out GridObject target))
+                {
+                    if (target.TryGetComponent<GridMover>(out GridMover mover))
+                    {
+                        mover.SetMovePattern(uData.BeamDirection);
+                        return target;
+                    }
+                }
+            }   
         }
 
+        return null;
+    }
+    public void ApplyGridStepOverride(GridObject keyOfStepToOverride)
+    {
+        GridUpdateStep step = new()
+        {
+            activeInThisPhase = true,
+            hasHealth = true,
+            canMove = true,
+            dropsLoot = false
+        };
 
+        gridObjectsInPlay[keyOfStepToOverride] = step;
     }
 
     public void NewGridUpdateSteps(bool checkHealth = true, bool checkMove = true, bool checkLoot = true, bool includePlayer = true)

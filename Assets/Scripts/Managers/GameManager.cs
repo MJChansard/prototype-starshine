@@ -134,7 +134,6 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("GameManager successfully located PlayerHUD.");
             pHUD.Init(player.GetEquippedModules, level.jumpFuelAmount, player.GetComponent<Health>().MaxHP);
-
         }
         else
         {
@@ -186,9 +185,10 @@ public class GameManager : MonoBehaviour
             else if (player.tractorBeamUsageData != null)
             {
                 TractorBeam.UsageData uData = player.tractorBeamUsageData;
-                gridObjectM.OnPlayerActivateModule(uData);
+                GridObject target = gridObjectM.OnPlayerActivateModule(uData);
 
                 gridObjectM.NewGridUpdateSteps(includePlayer: false);
+                gridObjectM.ApplyGridStepOverride(target);
                 gridObjectM.LoadGridUpdateSteps();
                 gridObjectM.RunGridUpdate();
                 gridObjectM.AnimateMovement();
