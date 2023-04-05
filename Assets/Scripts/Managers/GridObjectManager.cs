@@ -276,7 +276,8 @@ public class GridObjectManager : MonoBehaviour
 
         return null;
     }
-    public void ApplyGridStepOverride(GridObject keyOfStepToOverride)
+    
+    public void OverrideGridUpdateStep(GridObject keyOfStepToOverride)
     {
         GridUpdateStep step = new()
         {
@@ -286,9 +287,14 @@ public class GridObjectManager : MonoBehaviour
             dropsLoot = false
         };
 
-        gridObjectsInPlay[keyOfStepToOverride] = step;
+        foreach(GridObject key in gridObjectsInPlay.Keys)
+        {
+            if (key == keyOfStepToOverride)
+                gridObjectsInPlay[key] = step;
+            else
+                gridObjectsInPlay[key].activeInThisPhase = false;
+        }
     }
-
     public void NewGridUpdateSteps(bool checkHealth = true, bool checkMove = true, bool checkLoot = true, bool includePlayer = true)
     {
         //int start = includePlayer == true ? 1 : 0;
