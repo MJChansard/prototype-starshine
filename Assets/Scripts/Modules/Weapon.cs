@@ -2,6 +2,7 @@ using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class Weapon : Module
@@ -85,6 +86,7 @@ public class Weapon : Module
         }
     }
     public UsageData LatestUsageData { get; private set; }
+    public Transform TargetTransform { get; set; }
 
 
     // #FIELDS
@@ -173,27 +175,19 @@ public class Weapon : Module
 
     }
 
-    public IEnumerator AnimateCoroutine(GridBlock gb)
+    public IEnumerator AnimateCoroutine()
     {
-        if (gb.objectsOnBlock.Count > 0)
+        var trigger = ps.trigger;
+        trigger.enabled = true;
+
+        if (TargetTransform.TryGetComponent<Collider>(out Collider target))
         {
-            for (int i = 0; i < gb.objectsOnBlock.Count; i++)
-            {
-                if (gb.objectsOnBlock[i].TryGetComponent<GridObject>(out GridObject gridObject))
-                {
-                    var trigger = ps.trigger;
-                    trigger.enabled = true;
+            trigger.SetCollider(0, target);
+            trigger.radiusScale = 0.5f;
 
-                    trigger.SetCollider(0, gridObject.GetComponent<Collider>());
-                    trigger.radiusScale = 0.5f;
-
-                    ps.Play();
-                    yield return new WaitForSeconds(2.0f);
-                    ps.Stop();
-
-                    break;
-                }
-            }
+            ps.Play();
+            yield return new WaitForSeconds(2.0f);
+            ps.Stop();
         }
         else
         {

@@ -186,9 +186,9 @@ public class GameManager : MonoBehaviour
             {
                 TractorBeam.UsageData uData = player.tractorBeamUsageData;
                 GridObject target = gridObjectM.OnPlayerActivateModule(uData);
-
+                
                 gridObjectM.NewGridUpdateSteps(includePlayer: false);
-                gridObjectM.ApplyGridStepOverride(target);
+                gridObjectM.OverrideGridUpdateStep(target);
                 gridObjectM.LoadGridUpdateSteps();
                 gridObjectM.RunGridUpdate();
                 gridObjectM.AnimateMovement();

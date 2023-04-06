@@ -54,6 +54,7 @@ public class Player : GridObject
     public Thruster.UsageData thrusterUsageData { get; private set; }
     public Weapon.UsageData weaponUsageData { get; private set; }
     public Shield.UsageData shieldUsageData { get; private set; }
+    public TractorBeam.UsageData tractorBeamUsageData { get; private set; }
     
     [HideInInspector] public bool IsAttackingThisTick = false;
 
@@ -186,11 +187,21 @@ public class Player : GridObject
                 Thruster t = equippedModules[moduleSelector] as Thruster;
                 thrusterUsageData = t.LatestUsageData;
                 weaponUsageData = null;
+                tractorBeamUsageData = null;
             }
             else if (equippedModules[moduleSelector] is Weapon)
             {
                 Weapon module = equippedModules[moduleSelector] as Weapon;
                 weaponUsageData = module.LatestUsageData;
+                thrusterUsageData = null;
+                tractorBeamUsageData = null;
+            }
+            else if (equippedModules[moduleSelector] is TractorBeam)
+            {
+                TractorBeam beam = equippedModules[moduleSelector] as TractorBeam;
+                tractorBeamUsageData = beam.LatestUsageData;
+                tractorBeamUsageData.BeamDirection = Direction;
+                weaponUsageData = null;
                 thrusterUsageData = null;
             }
         }
@@ -215,12 +226,11 @@ public class Player : GridObject
         }
     }
        
-    public void StartWeaponModuleAnimation(GridBlock gridBlock)
+    public void StartModuleAnimation()
     {
-        //weaponInventory[indexSelectedWeapon].StartAnimationCoroutine(gridBlock);
         Weapon module = equippedModules[moduleSelector] as Weapon;
         if (module.HasAnimation)
-            StartCoroutine(module.AnimateCoroutine(gridBlock));
+            StartCoroutine(module.AnimateCoroutine());
     }
 
     public void AcceptAmmo(WeaponType type, int amount)
@@ -235,6 +245,21 @@ public class Player : GridObject
 
         OnFuelAmountChange?.Invoke(amount, maxFuelAmount, 1.0f);
         //ui.UpdateHUDFuel(currentJumpFuel, maxFuelAmount);
+    }
+
+    public void AcceptModuleTarget(Transform target)
+    {
+        Module currentModule = equippedModules[moduleSelector];
+        if (currentModule is Weapon)
+        {
+            Weapon w = currentModule as Weapon;
+            w.TargetTransform = target;
+        }
+        else if (currentModule is TractorBeam)
+        {
+            TractorBeam tb = currentModule as TractorBeam;
+            tb.TargetTransform = target;
+        }
     }
 
   

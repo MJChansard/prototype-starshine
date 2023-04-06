@@ -14,6 +14,7 @@ public class TractorBeam : Module
         public int BeamStrengh { get; set; }
         public int BeamRange { get; set; }
         public Vector2Int BeamDirection { get; set; }
+        public LineRenderer refToRenderer { get; set; }
     }
 
     // #INSPECTOR
@@ -25,13 +26,16 @@ public class TractorBeam : Module
 
     // #PROPERTIES
     public UsageData LatestUsageData { get; private set; }
+    public Transform TargetTransform { get; set; }
 
     // #FIELDS
-    int currentAmmo;
+    private int currentAmmo;
+    private LineRenderer lr;
 
     private void Awake()
     {
         currentAmmo = startAmmo;
+        lr = GetComponent<LineRenderer>();
     }
 
     // #METHODS
@@ -45,8 +49,8 @@ public class TractorBeam : Module
             BeamRange = beamRange
             //BeamDirection will be set by Player.cs
         };
-         
-        return sufficientResources;
+        
+        return sufficientResources;       
     }
 
     private bool ConsumeResource(AmmunitionType r)
@@ -60,5 +64,15 @@ public class TractorBeam : Module
         {
             return false;
         }
+    }
+
+    public IEnumerator AnimateCoroutine(Transform player, Transform target)
+    {
+
+        lr.SetPosition(0, player.position);
+        lr.SetPosition(1, target.position);
+        
+        yield return new WaitForFixedUpdate();
+
     }
 }

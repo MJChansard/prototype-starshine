@@ -234,16 +234,17 @@ public class GridObjectManager : MonoBehaviour
                         if (!uData.DoesPenetrate)
                         {
                             //  #TO-DO: Execute appropriate animation
-                            player.StartWeaponModuleAnimation(possibleTargets[i]);
+                            player.AcceptModuleTarget(possibleTargets[i].objectsOnBlock[j].transform);
+                            player.StartModuleAnimation();
                             targetFound = true;
                             break;
                         }
                     }
                 }
             }
-            
+
             if (i == possibleTargets.Count - 1)
-                player.StartWeaponModuleAnimation(possibleTargets[i]);  // End animation at end of targetBlocks List
+                player.StartModuleAnimation();
         }
     }
     public void OnPlayerActivateModule(Shield.UsageData udata)
@@ -263,11 +264,13 @@ public class GridObjectManager : MonoBehaviour
             GridBlock gb = gridM.FindGridBlockByLocation(possibleTargetList[i]);
             for (int j = 0; j < gb.objectsOnBlock.Count; j++)
             {
-                if (gb.objectsOnBlock[j].TryGetComponent<GridObject>(out GridObject target))
+                if (gb.objectsOnBlock[j].TryGetComponent<Hazard>(out Hazard target))
                 {
                     if (target.TryGetComponent<GridMover>(out GridMover mover))
                     {
                         mover.SetMovePattern(uData.BeamDirection);
+                        player.AcceptModuleTarget(target.transform);
+                        player.StartModuleAnimation();
                         return target;
                     }
                 }
