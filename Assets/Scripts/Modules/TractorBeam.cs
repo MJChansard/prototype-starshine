@@ -41,16 +41,17 @@ public class TractorBeam : Module
     // #METHODS
     public override bool UseModule()
     {
-        bool sufficientResources = ConsumeResource(ammoType);
-
+        //bool sufficientResources = ConsumeResource(ammoType);
+        
         LatestUsageData = new TractorBeam.UsageData()
         {
             BeamStrengh = beamStrength,
             BeamRange = beamRange
             //BeamDirection will be set by Player.cs
         };
-        
-        return sufficientResources;       
+
+        //return sufficientResources;       
+        return true;
     }
 
     private bool ConsumeResource(AmmunitionType r)
@@ -66,13 +67,36 @@ public class TractorBeam : Module
         }
     }
 
-    public IEnumerator AnimateCoroutine(Transform player, Transform target)
+    public IEnumerator AnimateCoroutine(Transform player)
     {
-
+        Vector3 direction = (TargetTransform.position - player.position).normalized;
+        float distance = Vector3.Distance(TargetTransform.position, player.position);
         lr.SetPosition(0, player.position);
-        lr.SetPosition(1, target.position);
-        
-        yield return new WaitForFixedUpdate();
 
+        // Set animationEndPosition to tractor beam target's destination after movement
+        Vector3 animationEndPosition = new Vector3();
+        if (direction == Vector3.up || direction == Vector3.down)
+        {
+            float y = TargetTransform.position.y + direction.y;
+            animationEndPosition.Set(player.position.x, y, player.position.z);
+        }
+        else if(direction == Vector3.right || direction == Vector3.left)
+        {
+            float x = TargetTransform.position.x + direction.x;
+            animationEndPosition.Set(x, player.position.y, player.position.z);
+        }
+
+        float startTime = Time.time;
+        float percentTraveled = 0.0f;
+
+        while (percentTraveled <= 1.0f)
+        {
+            float traveled = (Time.time - startTime) * 1.0f;
+            percentTraveled = traveled / distance;
+            lr.SetPosition(1, Vector3.Lerp(lr.GetPosition(0), animationEndPosition, Mathf.SmoothStep(0, 1, percentTraveled)));
+            yield return null;
+        }
+
+        lr.SetPosition(1, lr.GetPosition(0));
     }
 }
