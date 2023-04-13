@@ -10,10 +10,6 @@ public class GameManager : MonoBehaviour
     public bool StateManagerVerboseConsole;
     [SerializeField] bool PlayerUpdateVerboseConsole;
 
-    [TitleGroup("CUSTOM SPAWN SEQUENCES")]
-    [SerializeField] bool overrideSpawnSequence;
-    [ShowIf("overrideSpawnSequence")] [SerializeField] SpawnWave[] customSpawnSequence;
-
     GamePhase mainGamePhase;
 
     //  #FIELDS
@@ -91,8 +87,7 @@ public class GameManager : MonoBehaviour
         else
             Debug.Log("The topography for this level has been found.");
         gridObjectM.Init(level);
-        //gridObjectM.NextLevel(level.numberOfPhenomenaToSpawn, level.numberOfStationsToSpawn);
-        
+                
 
         // Cache reference and setup Player
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
@@ -105,28 +100,11 @@ public class GameManager : MonoBehaviour
 
         // Initialize SpawnManager
         spawnM.Init(level);
-        if (spawnM.CustomSpawnSequenceExist)
-        {
-
-        }
         gridObjectM.GridObjectHasDeparted += spawnM.ReclaimSpawn;
 
         // Spawn GridObjects
         gridObjectM.ApplySpawnWave(spawnM.GetSpawnWave);
 
-        /*  STORING AS ALTERNATE IMPLEMENTATION
-        bool spawnCountBelowThreshold = true;
-        int spawnCount = 0;
-        while (spawnCountBelowThreshold)
-        {
-            SpawnWave wave = spawnM.GetSpawnWave;
-            spawnCount += wave.spawns.Length;
-            gridObjectM.ApplySpawnWave(wave);
-
-            if (spawnCount >= level.MaxObjectsOnGrid)
-                spawnCountBelowThreshold = false;
-        }      
-        */
 
         // PlayerHUD
         pHUD = GameObject.FindGameObjectWithTag("Player HUD").GetComponent<PlayerHUD>();
@@ -188,7 +166,7 @@ public class GameManager : MonoBehaviour
                 GridObject target = gridObjectM.OnPlayerActivateModule(uData);
                 
                 gridObjectM.NewGridUpdateSteps(includePlayer: false);
-                gridObjectM.OverrideGridUpdateStep(target);
+                gridObjectM.OverrideGridUpdateStepSetActive(target);
                 gridObjectM.LoadGridUpdateSteps();
                 gridObjectM.RunGridUpdate();
                 gridObjectM.AnimateMovement();
@@ -286,24 +264,6 @@ public class GameManager : MonoBehaviour
 
 
     
-    private void OnPlayerActivateModule()
-    {
-        //pHUD.OnPlayerHUDModuleActivate -= OnPlayerActivateModule;
-
-        //if (previousModuleData != null)
-            //StopCoroutine(OnPlayerActivateModuleCoroutine(previousModuleData));
-                     
-        //StartCoroutine(OnPlayerActivateModuleCoroutine(data));
-       // previousModuleData = data;
-    }
-    /*private IEnumerator OnPlayerActivateModuleCoroutine(Module.UsageData data)
-    {
-        gridObjectM.OnPlayerActivateModule(data);
-        yield return new WaitForSecondsRealtime(2.0f);
-        pHUD.OnPlayerHUDModuleActivate += OnPlayerActivateModule;
-        yield return null;
-    }
-    */
     private void OnPlayerMove()
     {
         playerMoveReceived = true;
