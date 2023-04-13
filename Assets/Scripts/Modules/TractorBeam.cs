@@ -69,25 +69,14 @@ public class TractorBeam : Module
 
     public IEnumerator AnimateCoroutine(Transform player)
     {
-        Vector3 direction = (TargetTransform.position - player.position).normalized;
-        float distance = Vector3.Distance(TargetTransform.position, player.position);
         lr.SetPosition(0, player.position);
 
-        // Set animationEndPosition to tractor beam target's destination after movement
-        Vector3 animationEndPosition = new Vector3();
-        if (direction == Vector3.up || direction == Vector3.down)
-        {
-            float y = TargetTransform.position.y + direction.y;
-            animationEndPosition.Set(player.position.x, y, player.position.z);
-        }
-        else if(direction == Vector3.right || direction == Vector3.left)
-        {
-            float x = TargetTransform.position.x + direction.x;
-            animationEndPosition.Set(x, player.position.y, player.position.z);
-        }
+        Vector3 direction = (TargetTransform.position - player.position).normalized;
+        Vector3 animationEndPosition = TargetTransform.position + direction;            // Tractor beam target's destination after movement     
 
         float startTime = Time.time;
         float percentTraveled = 0.0f;
+        float distance = Vector3.Distance(TargetTransform.position, player.position);
 
         while (percentTraveled <= 1.0f)
         {
